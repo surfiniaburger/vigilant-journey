@@ -1,0 +1,10 @@
+.env/
+/.env/
+*/.env/
+/.venv/
+*/.venv/
+*/.env
+*/.env/*
+.env/*
+*/.env/
+**/.env/
