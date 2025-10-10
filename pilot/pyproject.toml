@@ -2,9 +2,16 @@
 name = "adk-multiagent-mcp-app"
 version = "0.1.0"
 description = "Add your description here"
+# To fix the warning, either create a README.md file or remove the next line
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "certifi>=2025.10.5",
     "google-adk>=1.15.0",
 ]
+
+# Add this new section below
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["google_search_agent*"]
+exclude = ["static"]

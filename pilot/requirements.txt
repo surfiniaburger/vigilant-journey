@@ -1,1 +1,9 @@
 google-adk==1.10.0
+fastapi
+uvicorn
+python-dotenv
+websockets
+httpx
+pytest
+pytest-mock
+pytest-asyncio
