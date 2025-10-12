@@ -35,8 +35,6 @@ let websocket = null;
 let is_audio = false;
 
 // Get DOM elements
-const messageForm = document.getElementById("messageForm");
-const messageInput = document.getElementById("message");
 const messagesDiv = document.getElementById("messages");
 let currentMessageId = null;
 
@@ -50,10 +48,6 @@ function connectWebsocket() {
     // Connection opened messages
     console.log("WebSocket connection opened.");
     document.getElementById("messages").textContent = "Connection opened";
-
-    // Enable the Send button
-    document.getElementById("sendButton").disabled = false;
-    addSubmitHandler();
   };
 
   // Handle incoming messages
@@ -112,7 +106,6 @@ function connectWebsocket() {
   // Handle connection close
   websocket.onclose = function () {
     console.log("WebSocket connection closed.");
-    document.getElementById("sendButton").disabled = true;
     document.getElementById("messages").textContent = "Connection closed";
     setTimeout(function () {
       console.log("Reconnecting...");
@@ -125,26 +118,6 @@ function connectWebsocket() {
   };
 }
 connectWebsocket();
-
-// Add submit handler to the form
-function addSubmitHandler() {
-  messageForm.onsubmit = function (e) {
-    e.preventDefault();
-    const message = messageInput.value;
-    if (message) {
-      const p = document.createElement("p");
-      p.textContent = "> " + message;
-      messagesDiv.appendChild(p);
-      messageInput.value = "";
-      sendMessage({
-        mime_type: "text/plain",
-        data: message,
-      });
-      console.log("[CLIENT TO AGENT] " + message);
-    }
-    return false;
-  };
-}
 
 // Send a message to the server as a JSON string
 export function sendMessage(message) {
@@ -202,12 +175,21 @@ function startAudio() {
 
 // Start the audio only when the user clicked the button
 // (due to the gesture requirement for the Web Audio API)
-const startAudioButton = document.getElementById("startAudioButton");
-startAudioButton.addEventListener("click", () => {
-  startAudioButton.disabled = true;
-  startAudio();
-  is_audio = true;
-  connectWebsocket(); // reconnect with the audio mode
+const audioButton = document.getElementById("audioButton");
+let isRecording = false;
+
+audioButton.addEventListener("click", () => {
+  if (isRecording) {
+    stopAudioRecording();
+    audioButton.textContent = "🎤";
+    isRecording = false;
+  } else {
+    startAudio();
+    audioButton.textContent = "🛑";
+    isRecording = true;
+    is_audio = true;
+    connectWebsocket(); // reconnect with the audio mode
+  }
 });
 
 // Audio recorder handler
@@ -258,10 +240,23 @@ export function stopAudioRecording() {
     clearInterval(bufferTimer);
     bufferTimer = null;
   }
-  
+
   // Send any remaining buffered audio
   if (audioBuffer.length > 0) {
     sendBufferedAudio();
+  }
+
+  // Stop the microphone stream
+  if (micStream) {
+    micStream.getTracks().forEach(track => track.stop());
+  }
+
+  // Close the audio contexts
+  if (audioRecorderContext) {
+    audioRecorderContext.close();
+  }
+  if (audioPlayerContext) {
+    audioPlayerContext.close();
   }
 }
 
