@@ -5,4 +5,5 @@ Summary: Add your description here
 Requires-Python: <3.13,>=3.11
 Description-Content-Type: text/markdown
 Requires-Dist: certifi>=2025.10.5
-Requires-Dist: google-adk>=1.15.0
+Requires-Dist: google-adk>=1.16.0
+Requires-Dist: google-adk[eval]>=1.15.0

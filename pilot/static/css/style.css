@@ -1,0 +1,80 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f4f4f9;
+  }
+  
+  h1 {
+    margin-top: 20px;
+  }
+  
+  #messages {
+    width: 80%;
+    max-width: 600px;
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .chat-input-area {
+    display: flex;
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  #messageForm {
+    display: flex;
+    flex-grow: 1;
+  }
+  
+  #message {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    border-right: none;
+  }
+  
+  #sendButton {
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-left: none;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+  }
+  
+  #audioToggleButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  #audioToggleButton:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Style for when recording is active */
+  #audioToggleButton.recording {
+    background-color: #dc3545; /* Red color */
+  }
+  
+  #audioToggleButton.recording:hover {
+    background-color: #c82333;
+  }

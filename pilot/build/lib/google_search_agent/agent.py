@@ -16,7 +16,7 @@
 # limitations under the License.
 
 from google.adk.agents import Agent
-from google.adk.tools import google_search  # Import the tool
+from google.adk.tools import google_search, preload_memory_tool
 
 root_agent = Agent(
    # A unique name for the agent.
@@ -29,5 +29,5 @@ root_agent = Agent(
    # Instructions to set the agent's behavior.
    instruction="Answer the question using the Google Search tool.",
    # Add google_search tool to perform grounding with Google search.
-   tools=[google_search],
+   tools=[google_search, preload_memory_tool.PreloadMemoryTool()],
 )

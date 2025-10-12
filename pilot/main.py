@@ -21,16 +21,19 @@ import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 
+import vertexai
 from google.genai.types import (
     Part,
     Content,
     Blob,
 )
 
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
 from google.adk.agents import LiveRequestQueue
 from google.adk.agents.run_config import RunConfig
 from google.genai import types
+from google.adk.memory import VertexAiMemoryBankService
 
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
@@ -50,19 +53,60 @@ load_dotenv()
 APP_NAME = "ADK Streaming example"
 
 
+# Make sure to import vertexai
+import vertexai
+
 async def start_agent_session(user_id, is_audio=False):
     """Starts an agent session"""
 
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+    if not project_id or not location:
+        raise ValueError("Please set GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION")
+
+    # Initialize the Vertex AI client
+    client = vertexai.Client(project=project_id, location=location)
+
+    # Define the configuration for the Agent Engine's memory bank
+    # This specifies which model to use for generating memories
+    agent_engine_config = {
+        "context_spec": {
+            "memory_bank_config": {
+                "generation_config": {
+                    "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
+                }
+            }
+        }
+    }
+
+    # Create the Agent Engine using the Vertex AI SDK
+    # The SDK will handle creating a new engine with the specified config.
+    agent_engine = client.agent_engines.create(
+        config=agent_engine_config
+    )
+    
+    # Extract the generated agent_engine_id from the created resource name
+    agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+
+    # Create the memory service, passing the newly created agent_engine_id
+    memory_service = VertexAiMemoryBankService(
+        project=project_id,
+        location=location,
+        agent_engine_id=agent_engine_id,
+    )
+
     # Create a Runner
-    runner = InMemoryRunner(
+    runner = Runner(
         app_name=APP_NAME,
         agent=root_agent,
+        session_service=InMemorySessionService(),
+        memory_service=memory_service,
     )
 
     # Create a Session
     session = await runner.session_service.create_session(
         app_name=APP_NAME,
-        user_id=user_id,  # Replace with actual user ID
+        user_id=user_id,
     )
 
     # Set response modality
@@ -82,7 +126,6 @@ async def start_agent_session(user_id, is_audio=False):
         run_config=run_config,
     )
     return live_events, live_request_queue
-
 
 async def agent_to_client_messaging(websocket, live_events):
     """Agent to client communication"""
