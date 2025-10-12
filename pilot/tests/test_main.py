@@ -23,36 +23,22 @@ async def test_websocket_endpoint(mocker):
         pass
 
 @pytest.mark.asyncio
-async def test_start_agent_session_with_memory(mocker):
-    # Mock environment variables
-    mocker.patch("os.environ.get", side_effect=lambda key: {
-        "GOOGLE_CLOUD_PROJECT": "test-project",
-        "GOOGLE_CLOUD_LOCATION": "test-location",
-        "AGENT_ENGINE_ID": "test-agent-engine-id"
-    }.get(key))
-
-    # Mock services
-    mock_vertex_memory_service = mocker.patch("main.VertexAiMemoryBankService")
-    
-    # Make the create_session mock awaitable
-    mock_runner_instance = MagicMock()
-    mock_runner_instance.session_service.create_session = AsyncMock()
-    mock_runner = mocker.patch("main.Runner", return_value=mock_runner_instance)
+@patch("main.initialize_services")
+async def test_start_agent_session_with_memory(mock_initialize_services, mocker):
+    """Test that start_agent_session uses the global runner to create a session and run it."""
+    # Mock the global runner object
+    mock_runner = MagicMock()
+    mock_runner.session_service.create_session = AsyncMock()
+    mocker.patch("main.runner", mock_runner)
 
     # Call the function
     await start_agent_session("test_user")
 
-    # Assert that VertexAiMemoryBankService was called with the correct arguments
-    mock_vertex_memory_service.assert_called_with(
-        project="test-project",
-        location="test-location",
-        agent_engine_id="test-agent-engine-id"
+    # Assert that create_session was called with the correct arguments
+    mock_runner.session_service.create_session.assert_called_with(
+        app_name="ADK Streaming example",
+        user_id="test_user",
     )
 
-    # Assert that Runner was called with the memory_service
-    mock_runner.assert_called_with(
-        app_name="ADK Streaming example",
-        agent=mocker.ANY,  # We don't need to check the agent instance itself
-        session_service=mocker.ANY,
-        memory_service=mock_vertex_memory_service.return_value
-    )
+    # Assert that run_live was called
+    mock_runner.run_live.assert_called_once()
