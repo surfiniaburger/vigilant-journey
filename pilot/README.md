@@ -5,7 +5,8 @@ This is a web-based chat application that features a conversational AI agent pow
 ## Features
 
 *   **Real-time Communication:** Interact with the AI agent in real-time with low latency.
-*   **Text and Audio Support:** Send and receive messages in both text and audio formats.
+*   **Text and Audio Input:** Send messages in both text and audio formats.
+*   **Audio-Only Responses:** The agent responds with audio only.
 *   **Google Search Integration:** The agent can use Google Search to answer questions about recent events or to look up information.
 *   **Long-term Memory:** The agent uses Vertex AI Memory Bank to remember information from previous conversations.
 *   **Web-based Interface:** A simple and intuitive web interface for interacting with the agent.
@@ -73,5 +74,5 @@ This is a web-based chat application that features a conversational AI agent pow
 ## Usage
 
 1.  Open your web browser and navigate to `http://127.0.0.1:8000`.
-2.  You can start interacting with the agent by typing messages in the input box and clicking "Send".
-3.  To use audio, click the "Start Audio" button. You will be prompted for microphone access. Once enabled, you can speak to the agent and hear its responses.
+2.  **Important:** Click the "Start Audio" button to initialize the audio components. You will be prompted for microphone access. This is required to hear the agent's responses, even if you are sending text-based messages.
+3.  You can start interacting with the agent by typing messages in the input box and clicking "Send", or by speaking into your microphone.
