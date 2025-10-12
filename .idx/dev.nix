@@ -14,6 +14,7 @@
     pkgs.python3  # Provides the 'python3' command
     pkgs.uv  
     pkgs.openssh
+    pkgs.pnpm 
   ];
 
   # Sets environment variables in the workspace

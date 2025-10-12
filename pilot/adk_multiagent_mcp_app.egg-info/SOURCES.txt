@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 adk_multiagent_mcp_app.egg-info/PKG-INFO
 adk_multiagent_mcp_app.egg-info/SOURCES.txt
