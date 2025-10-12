@@ -56,37 +56,43 @@ APP_NAME = "ADK Streaming example"
 # Make sure to import vertexai
 import vertexai
 
-async def start_agent_session(user_id, is_audio=False):
-    """Starts an agent session"""
-
+def initialize_services():
+    """Initializes the services needed for the agent."""
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
     if not project_id or not location:
         raise ValueError("Please set GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION")
 
-    # Initialize the Vertex AI client
-    client = vertexai.Client(project=project_id, location=location)
+    vertexai.init(project=project_id, location=location)
 
-    # Define the configuration for the Agent Engine's memory bank
-    # This specifies which model to use for generating memories
-    agent_engine_config = {
-        "context_spec": {
-            "memory_bank_config": {
-                "generation_config": {
-                    "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
+    agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
+    if not agent_engine_id:
+        # Initialize the Vertex AI client
+        client = vertexai.Client(project=project_id, location=location)
+
+        # Define the configuration for the Agent Engine's memory bank
+        # This specifies which model to use for generating memories
+        agent_engine_config = {
+            "context_spec": {
+                "memory_bank_config": {
+                    "generation_config": {
+                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
+                    }
                 }
             }
         }
-    }
 
-    # Create the Agent Engine using the Vertex AI SDK
-    # The SDK will handle creating a new engine with the specified config.
-    agent_engine = client.agent_engines.create(
-        config=agent_engine_config
-    )
-    
-    # Extract the generated agent_engine_id from the created resource name
-    agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+        # Create the Agent Engine using the Vertex AI SDK
+        # The SDK will handle creating a new engine with the specified config.
+        agent_engine = client.agent_engines.create(
+            config=agent_engine_config
+        )
+        
+        # Extract the generated agent_engine_id from the created resource name
+        agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+        print(f"Created new agent engine: {agent_engine_id}")
+        print("Set AGENT_ENGINE_ID in your .env file to reuse it.")
+
 
     # Create the memory service, passing the newly created agent_engine_id
     memory_service = VertexAiMemoryBankService(
@@ -102,7 +108,12 @@ async def start_agent_session(user_id, is_audio=False):
         session_service=InMemorySessionService(),
         memory_service=memory_service,
     )
+    return runner
 
+runner = initialize_services()
+
+async def start_agent_session(user_id, is_audio=False):
+    """Starts an agent session"""
     # Create a Session
     session = await runner.session_service.create_session(
         app_name=APP_NAME,

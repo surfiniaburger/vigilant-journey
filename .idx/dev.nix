@@ -11,6 +11,9 @@
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
+    pkgs.python3  # Provides the 'python3' command
+    pkgs.uv  
+    pkgs.openssh
   ];
 
   # Sets environment variables in the workspace

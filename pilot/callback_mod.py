@@ -27,8 +27,8 @@ GEMINI_2_FLASH = "gemini-2.0-flash" # or your preferred model
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-import os
-os.environ["GOOGLE_API_KEY"]
+#import os
+#os.environ["GOOGLE_API_KEY"]
 
 # --- Callback Function Definitions ---
 
