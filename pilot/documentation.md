@@ -1,3 +1,4 @@
+> **Note:** This document describes a multi-agent story writing system and may not be up-to-date with the current application's functionality, which is a single-agent chat application with Google Search integration.
 
 # Agent Documentation
 
