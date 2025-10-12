@@ -16,6 +16,7 @@ This is a web-based chat application that features a conversational AI agent pow
 ### Backend
 
 *   **Python:** The backend is written in Python.
+*   **uv:** For Python packaging and dependency management.
 *   **FastAPI:** A modern, fast (high-performance) web framework for building APIs.
 *   **Google Cloud Vertex AI:** The AI agent is built on Google's Vertex AI platform.
 *   **Google Agent Development Kit (ADK):** The ADK is used to build and run the conversational agent.
@@ -32,13 +33,14 @@ This is a web-based chat application that features a conversational AI agent pow
 
 *   Python 3.9+
 *   Node.js and npm
+*   [uv](https://github.com/astral-sh/uv) - An extremely fast Python package installer and resolver.
 
 ### Backend Setup
 
 1.  **Install Python dependencies:**
 
     ```bash
-    pip install -r requirements.txt
+    uv pip install -e .
     ```
 
 2.  **Set up environment variables:**
