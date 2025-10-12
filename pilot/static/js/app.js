@@ -24,8 +24,6 @@
 
 // Connect the server with a WebSocket connection
 const sessionId = Math.random().toString().substring(10);
-// const ws_url =
-//#  "ws://" + window.location.host + "/ws/" + sessionId;
 
 
 // Determine the correct WebSocket protocol based on the page protocol
@@ -149,7 +147,7 @@ function addSubmitHandler() {
 }
 
 // Send a message to the server as a JSON string
-function sendMessage(message) {
+export function sendMessage(message) {
   if (websocket && websocket.readyState == WebSocket.OPEN) {
     const messageJson = JSON.stringify(message);
     websocket.send(messageJson);
@@ -157,7 +155,7 @@ function sendMessage(message) {
 }
 
 // Decode Base64 data to Array
-function base64ToArray(base64) {
+export function base64ToArray(base64) {
   const binaryString = window.atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
@@ -193,7 +191,7 @@ function startAudio() {
     audioPlayerContext = ctx;
   });
   // Start audio input
-  startAudioRecorderWorklet(audioRecorderHandler).then(
+  startAudioRecorderWorklet((pcmData) => audioRecorderHandler(pcmData, sendMessage)).then(
     ([node, ctx, stream]) => {
       audioRecorderNode = node;
       audioRecorderContext = ctx;
@@ -213,18 +211,18 @@ startAudioButton.addEventListener("click", () => {
 });
 
 // Audio recorder handler
-function audioRecorderHandler(pcmData) {
+export function audioRecorderHandler(pcmData, sendMessageFn = sendMessage) {
   // Add audio data to buffer
   audioBuffer.push(new Uint8Array(pcmData));
   
   // Start timer if not already running
   if (!bufferTimer) {
-    bufferTimer = setInterval(sendBufferedAudio, 200); // 0.2 seconds
+    bufferTimer = setInterval(() => sendBufferedAudio(sendMessageFn), 200); // 0.2 seconds
   }
 }
 
 // Send buffered audio data every 0.2 seconds
-function sendBufferedAudio() {
+export function sendBufferedAudio(sendMessageFn = sendMessage) {
   if (audioBuffer.length === 0) {
     return;
   }
@@ -244,18 +242,18 @@ function sendBufferedAudio() {
   }
   
   // Send the combined audio data
-  sendMessage({
+  sendMessageFn({
     mime_type: "audio/pcm",
     data: arrayBufferToBase64(combinedBuffer.buffer),
   });
-  console.log("[CLIENT TO AGENT] sent %s bytes", combinedBuffer.byteLength);
+  
   
   // Clear the buffer
   audioBuffer = [];
 }
 
 // Stop audio recording and cleanup
-function stopAudioRecording() {
+export function stopAudioRecording() {
   if (bufferTimer) {
     clearInterval(bufferTimer);
     bufferTimer = null;
@@ -268,7 +266,7 @@ function stopAudioRecording() {
 }
 
 // Encode an array buffer with Base64
-function arrayBufferToBase64(buffer) {
+export function arrayBufferToBase64(buffer) {
   let binary = "";
   const bytes = new Uint8Array(buffer);
   const len = bytes.byteLength;
