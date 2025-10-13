@@ -17,7 +17,7 @@ from google.adk.tools import google_search, preload_memory_tool
 
 root_agent = Agent(
    name="google_search_agent",
-   model="gemini-live-2.5-flash-preview-native-audio-09-2025",
+   model="gemini-live-2.5-flash-preview-native-audio",
    description="Agent to answer questions using Google Search.",
    instruction="Answer the question using the Google Search tool.",
    tools=[google_search, preload_memory_tool.PreloadMemoryTool()],
