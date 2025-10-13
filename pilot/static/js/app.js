@@ -177,17 +177,24 @@ function startAudio() {
 // (due to the gesture requirement for the Web Audio API)
 const audioButton = document.getElementById("audioButton");
 let isRecording = false;
+const REC_START_ICON = "🛑";
+const REC_STOP_ICON = "🎤";
 
 audioButton.addEventListener("click", () => {
   if (isRecording) {
     stopAudioRecording();
-    audioButton.textContent = "🎤";
+    audioButton.textContent = REC_STOP_ICON;
     isRecording = false;
   } else {
     startAudio();
-    audioButton.textContent = "🛑";
+    audioButton.textContent = REC_START_ICON;
     isRecording = true;
     is_audio = true;
+    // Explicitly close the old websocket to prevent multiple connections
+    if (websocket) {
+      websocket.onclose = null; // Prevent automatic reconnection
+      websocket.close();
+    }
     connectWebsocket(); // reconnect with the audio mode
   }
 });
