@@ -39,7 +39,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .google_search_agent.agent import root_agent
+from google_search_agent.agent import root_agent
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 

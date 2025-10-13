@@ -39,4 +39,4 @@ async def test_audio_stream(mocker):
         response = websocket.receive_json()
 
         assert response["mime_type"] == "audio/pcm"
-        assert "data" in response
+        assert response["data"] == "ZmFrZWRhdGE="
