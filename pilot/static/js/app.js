@@ -184,10 +184,12 @@ audioButton.addEventListener("click", () => {
   if (isRecording) {
     stopAudioRecording();
     audioButton.textContent = REC_STOP_ICON;
+    audioButton.classList.remove("recording");
     isRecording = false;
   } else {
     startAudio();
     audioButton.textContent = REC_START_ICON;
+    audioButton.classList.add("recording");
     isRecording = true;
     is_audio = true;
     // Explicitly close the old websocket to prevent multiple connections

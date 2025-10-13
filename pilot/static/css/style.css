@@ -9,3 +9,12 @@
     text-align: center;
     margin-top: 20px;
 }
+
+#audioButton.recording {
+    background-color: #dc3545;
+    color: white;
+}
+
+#audioButton.recording:hover {
+    background-color: #c82333;
+}
