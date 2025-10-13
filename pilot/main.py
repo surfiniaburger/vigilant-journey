@@ -39,7 +39,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from google_search_agent.agent import root_agent
+from .google_search_agent.agent import root_agent
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
@@ -110,7 +110,7 @@ def initialize_services():
     )
     return runner
 
-runner = initialize_services()
+runner = None
 
 async def start_agent_session(user_id, is_audio=False):
     """Starts an agent session"""
@@ -211,7 +211,14 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 
 app = FastAPI()
 
-STATIC_DIR = Path("static")
+@app.on_event("startup")
+async def startup_event():
+    """Initializes the agent runner when the app starts."""
+    global runner
+    if os.environ.get("APP_ENV") != "test":
+        runner = initialize_services()
+
+STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
