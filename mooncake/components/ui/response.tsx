@@ -1,10 +1,23 @@
-import { memo } from "react"
+"use client"
+
+import { memo, type ComponentProps } from "react"
+import { Streamdown } from "streamdown"
+
+import { cn } from "@/lib/utils"
+
+type ResponseProps = ComponentProps<typeof Streamdown>
 
 export const Response = memo(
-  ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
+  ({ className, ...props }: ResponseProps) => (
+    <Streamdown
+      className={cn(
+        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        className
+      )}
+      {...props}
+    />
   ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children  && prevProps.className === nextProps.className
 )
 
 Response.displayName = "Response"
