@@ -1,5 +1,3 @@
-'use client';
-
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ChatInterface } from '@/components/ui/chat-interface';

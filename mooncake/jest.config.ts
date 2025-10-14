@@ -15,6 +15,8 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    'streamdown': '<rootDir>/__mocks__/streamdown.tsx',
+    'react-markdown': '<rootDir>/__mocks__/react-markdown.tsx',
   },
 }
  

@@ -6,9 +6,9 @@ describe('Page', () => {
   it('renders the main content', () => {
     render(<Page />)
  
-    const listItem = screen.getByText(/Get started by editing/i)
+    const button = screen.getByRole('button')
  
-    expect(listItem).toBeInTheDocument()
+    expect(button).toBeInTheDocument()
   })
 
   it('renders homepage unchanged', () => {
