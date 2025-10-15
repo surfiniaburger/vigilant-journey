@@ -71,7 +71,7 @@ export const useAudio = () => {
       }
 
       // Setup WebSocket
-      const backendHostname = window.location.hostname.replace('3000-', '8000-');
+      const backendHostname = process.env.NEXT_PUBLIC_PILOT_HOSTNAME || window.location.hostname.replace('3000-', '8000-');
       const wsUrl = `wss://${backendHostname}/ws/${Math.random().toString().substring(10)}?is_audio=true`;
       websocketRef.current = new WebSocket(wsUrl);
 

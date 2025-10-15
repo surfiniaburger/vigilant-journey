@@ -4093,7 +4093,3 @@ Stay updated on new releases and features, guides, and case studies.
 you@domain.com
 Subscribe
 © 2025 Vercel, Inc.
-
-
-
-

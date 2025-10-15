@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Map renders map unchanged 1`] = `
+<div>
+  <div
+    style="width: 100%; height: 100%;"
+  />
+</div>
+`;
