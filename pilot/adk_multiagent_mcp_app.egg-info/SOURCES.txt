@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 adk_multiagent_mcp_app.egg-info/PKG-INFO
 adk_multiagent_mcp_app.egg-info/SOURCES.txt
@@ -7,4 +8,5 @@ adk_multiagent_mcp_app.egg-info/top_level.txt
 google_search_agent/__init__.py
 google_search_agent/agent.py
 tests/test_agent.py
+tests/test_audio.py
 tests/test_main.py
