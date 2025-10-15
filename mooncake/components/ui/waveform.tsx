@@ -581,7 +581,7 @@ export const MicrophoneWaveform = ({
       }
       return
     }
-  }, [processing, active])
+  }, [processing, active, data])
 
   useEffect(() => {
     if (!active) {

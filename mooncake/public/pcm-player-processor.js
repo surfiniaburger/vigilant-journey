@@ -17,7 +17,7 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
     };
   }
 
-  process(inputs, outputs, parameters) {
+  process(inputs, outputs) {
     if (!this.isPlaying) {
       return true;
     }

@@ -48,18 +48,20 @@ const Map = () => {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const mapContainer = mapRef.current;
     let map: HTMLElement;
     const initMap = async () => {
       try {
         await loadGoogleMapsScript();
-        const { Map3DElement } = await (window as any).google.maps.importLibrary('maps3d');
-        if (mapRef.current) {
+        // @ts-expect-error - google.maps is loaded dynamically
+        const { Map3DElement } = await google.maps.importLibrary('maps3d');
+        if (mapContainer) {
           map = new Map3DElement({
             center: { lat: 37.7704, lng: -122.3985, altitude: 500 },
             tilt: 67.5,
             mode: 'HYBRID',
           });
-          mapRef.current.appendChild(map);
+          mapContainer.appendChild(map);
         }
       } catch (error) {
         console.error("Failed to load Google Maps script:", error);
@@ -69,8 +71,8 @@ const Map = () => {
     initMap();
 
     return () => {
-      if (mapRef.current && map) {
-        mapRef.current.removeChild(map);
+      if (mapContainer && map) {
+        mapContainer.removeChild(map);
       }
     };
   }, []);
