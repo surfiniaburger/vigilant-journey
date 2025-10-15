@@ -50,7 +50,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 # Load Gemini API Key
 load_dotenv()
 
-APP_NAME = "ADK Streaming example"
+APP_NAME = "Alora"
 
 
 # Make sure to import vertexai
