@@ -58,12 +58,7 @@ export function useAudioVolume(
   // Memoize options to prevent unnecessary re-renders
   const memoizedOptions = useMemo(
     () => options,
-    [
-      options.fftSize,
-      options.smoothingTimeConstant,
-      options.minDecibels,
-      options.maxDecibels,
-    ]
+    [options]
   )
 
   useEffect(() => {
@@ -153,16 +148,7 @@ export function useMultibandVolume(
 ) {
   const opts = useMemo(
     () => ({ ...multibandDefaults, ...options }),
-    [
-      options.bands,
-      options.loPass,
-      options.hiPass,
-      options.updateInterval,
-      options.analyserOptions?.fftSize,
-      options.analyserOptions?.smoothingTimeConstant,
-      options.analyserOptions?.minDecibels,
-      options.analyserOptions?.maxDecibels,
-    ]
+    [options]
   )
 
   const [frequencyBands, setFrequencyBands] = useState<number[]>(() =>
