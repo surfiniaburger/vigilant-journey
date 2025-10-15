@@ -14,6 +14,7 @@ wheels = [
 [[package]]
 name = "adk-multiagent-mcp-app"
 version = "0.1.0"
+distribution = "sdist"
 source = { virtual = "." }
 dependencies = [
     { name = "certifi" },
