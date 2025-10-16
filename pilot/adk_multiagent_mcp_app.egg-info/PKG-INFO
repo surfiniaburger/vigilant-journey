@@ -7,6 +7,10 @@ Description-Content-Type: text/markdown
 Requires-Dist: certifi>=2025.10.5
 Requires-Dist: google-adk>=1.16.0
 Requires-Dist: google-adk[eval]>=1.15.0
+Requires-Dist: cloud-sql-python-connector>=1.18.5
+Requires-Dist: pg8000>=1.31.5
+Requires-Dist: sqlalchemy>=2.0.43
+Requires-Dist: google-cloud-sql
 
 # Vigilant Journey - Streaming Agent Chat
 

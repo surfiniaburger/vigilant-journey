@@ -9,6 +9,10 @@ dependencies = [
     "certifi>=2025.10.5",
     "google-adk>=1.16.0",
     "google-adk[eval]>=1.15.0",
+    "cloud-sql-python-connector>=1.18.5",
+    "pg8000>=1.31.5",
+    "sqlalchemy>=2.0.43",   
+    "google-cloud-sql", 
 ]
 
 # Add this new section below
