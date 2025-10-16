@@ -40,6 +40,7 @@ from google.adk.agents.run_config import RunConfig
 from google.genai import types
 from google.adk.memory import VertexAiMemoryBankService
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -236,15 +237,15 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 #
 # FastAPI web app
 #
-
-app = FastAPI()
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Initializes the agent runner when the app starts."""
     global runner
     if os.environ.get("APP_ENV") != "test":
         runner = initialize_services()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
