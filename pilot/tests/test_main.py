@@ -36,9 +36,43 @@ async def test_start_agent_session_with_memory(mock_initialize_services, mocker)
 
     # Assert that create_session was called with the correct arguments
     mock_runner.session_service.create_session.assert_called_with(
-        app_name="ADK Streaming example",
+        app_name="Alora",
         user_id="test_user",
     )
 
     # Assert that run_live was called
     mock_runner.run_live.assert_called_once()
+
+@patch("main.vertexai.init")
+@patch("main.Connector", new_callable=MagicMock)
+@patch("main.DatabaseSessionService", new_callable=MagicMock)
+def test_initialize_services_with_database(
+    mock_db_session_service, mock_connector, mock_vertexai_init, monkeypatch
+):
+    """Test that initialize_services initializes the database correctly."""
+    # Set environment variables for the database connection
+    monkeypatch.setenv("DB_USER", "test_user")
+    monkeypatch.setenv("DB_PASS", "test_pass")
+    monkeypatch.setenv("DB_NAME", "test_db")
+    monkeypatch.setenv("INSTANCE_CONNECTION_NAME", "test_instance")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test_project")
+    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "test_location")
+
+    # Call the function
+    from main import initialize_services
+    initialize_services()
+
+    # Assert that the DatabaseSessionService was initialized with the correct arguments
+    call_args = mock_db_session_service.call_args
+    assert call_args[1]["db_url"] == "postgresql+pg8000://"
+    # Verify the creator function's behavior
+    creator_func = call_args[1]["creator"]
+    creator_func()
+    mock_connector.return_value.connect.assert_called_once_with(
+        "test_instance",
+        "pg8000",
+        user="test_user",
+        password="test_pass",
+        db="test_db",
+        ip_type="public",
+    )
