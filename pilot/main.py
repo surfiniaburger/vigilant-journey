@@ -65,15 +65,26 @@ def initialize_services():
     """Initializes the services needed for the agent."""
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+    if not all([project_id, location]):
+        raise ValueError(
+            "Missing one or more required Google Cloud environment variables: "
+            "GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION"
+        )
     vertexai.init(project=project_id, location=location)
 
     # --- Database Connection Setup ---
 
     # 1. Get database credentials from environment variables
-    db_user = os.environ["DB_USER"]
-    db_pass = os.environ["DB_PASS"]
-    db_name = os.environ["DB_NAME"]
-    instance_connection_name = os.environ["INSTANCE_CONNECTION_NAME"]
+    db_user = os.environ.get("DB_USER")
+    db_pass = os.environ.get("DB_PASS")
+    db_name = os.environ.get("DB_NAME")
+    instance_connection_name = os.environ.get("INSTANCE_CONNECTION_NAME")
+
+    if not all([db_user, db_pass, db_name, instance_connection_name]):
+        raise ValueError(
+            "Missing one or more required database environment variables: "
+            "DB_USER, DB_PASS, DB_NAME, INSTANCE_CONNECTION_NAME"
+        )
 
     # 2. Initialize the Cloud SQL Connector
     connector = Connector()
@@ -86,7 +97,7 @@ def initialize_services():
             user=db_user,
             password=db_pass,
             db=db_name,
-            ip_type="public"
+            ip_type=os.environ.get("DB_IP_TYPE", "public")
         )
         return conn
 
@@ -110,6 +121,8 @@ def initialize_services():
         }
         agent_engine = client.agent_engines.create(config=agent_engine_config)
         agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+        print(f"Created new agent engine: {agent_engine_id}")
+        print("Set AGENT_ENGINE_ID in your .env file to reuse it.")
 
     memory_service = VertexAiMemoryBankService(
         project=project_id,
