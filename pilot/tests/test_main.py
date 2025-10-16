@@ -65,4 +65,14 @@ def test_initialize_services_with_database(
     # Assert that the DatabaseSessionService was initialized with the correct arguments
     call_args = mock_db_session_service.call_args
     assert call_args[1]["db_url"] == "postgresql+pg8000://"
-    assert callable(call_args[1]["creator"])
+    # Verify the creator function's behavior
+    creator_func = call_args[1]["creator"]
+    creator_func()
+    mock_connector.return_value.connect.assert_called_once_with(
+        "test_instance",
+        "pg8000",
+        user="test_user",
+        password="test_pass",
+        db="test_db",
+        ip_type="public",
+    )
