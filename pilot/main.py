@@ -23,6 +23,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 import vertexai
+from sqlalchemy import create_engine
+
+# New imports required for the database connection
+from google.adk.sessions import DatabaseSessionService
+from google.cloud.sql.connector import Connector
 from google.genai.types import (
     Part,
     Content,
@@ -30,7 +35,6 @@ from google.genai.types import (
 )
 
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
 from google.adk.agents import LiveRequestQueue
 from google.adk.agents.run_config import RunConfig
 from google.genai import types
@@ -61,52 +65,75 @@ def initialize_services():
     """Initializes the services needed for the agent."""
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
-    if not project_id or not location:
-        raise ValueError("Please set GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION")
-
+    if not all([project_id, location]):
+        raise ValueError(
+            "Missing one or more required Google Cloud environment variables: "
+            "GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION"
+        )
     vertexai.init(project=project_id, location=location)
+
+    # --- Database Connection Setup ---
+
+    # 1. Get database credentials from environment variables
+    db_user = os.environ.get("DB_USER")
+    db_pass = os.environ.get("DB_PASS")
+    db_name = os.environ.get("DB_NAME")
+    instance_connection_name = os.environ.get("INSTANCE_CONNECTION_NAME")
+
+    if not all([db_user, db_pass, db_name, instance_connection_name]):
+        raise ValueError(
+            "Missing one or more required database environment variables: "
+            "DB_USER, DB_PASS, DB_NAME, INSTANCE_CONNECTION_NAME"
+        )
+
+    # 2. Initialize the Cloud SQL Connector
+    connector = Connector()
+
+    # 3. Define a function to get the database connection
+    def getconn():
+        conn = connector.connect(
+            instance_connection_name,
+            "pg8000",
+            user=db_user,
+            password=db_pass,
+            db=db_name,
+            ip_type=os.environ.get("DB_IP_TYPE", "public")
+        )
+        return conn
+
+    # 4. Initialize the DatabaseSessionService
+    session_service = DatabaseSessionService(
+        db_url="postgresql+pg8000://",
+        creator=getconn
+    )
 
     agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
     if not agent_engine_id:
-        # Initialize the Vertex AI client
         client = vertexai.Client(project=project_id, location=location)
-
-        # Define the configuration for the Agent Engine's memory bank
-        # This specifies which model to use for generating memories
         agent_engine_config = {
             "context_spec": {
                 "memory_bank_config": {
                     "generation_config": {
-                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
+                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-2.5-flash"
                     }
                 }
             }
         }
-
-        # Create the Agent Engine using the Vertex AI SDK
-        # The SDK will handle creating a new engine with the specified config.
-        agent_engine = client.agent_engines.create(
-            config=agent_engine_config
-        )
-        
-        # Extract the generated agent_engine_id from the created resource name
+        agent_engine = client.agent_engines.create(config=agent_engine_config)
         agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
         print(f"Created new agent engine: {agent_engine_id}")
         print("Set AGENT_ENGINE_ID in your .env file to reuse it.")
 
-
-    # Create the memory service, passing the newly created agent_engine_id
     memory_service = VertexAiMemoryBankService(
         project=project_id,
         location=location,
         agent_engine_id=agent_engine_id,
     )
 
-    # Create a Runner
     runner = Runner(
         app_name=APP_NAME,
         agent=root_agent,
-        session_service=InMemorySessionService(),
+        session_service=session_service,
         memory_service=memory_service,
     )
     return runner
