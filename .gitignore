@@ -1,12 +1,12 @@
-.env/
-/.env/
-*/.env/
-/.venv/
-*/.venv/
-*/.env
-*/.env/*
-.env/*
-*/.env/
-**/.env/
+# Environments
+.venv/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+
+# Node
 node_modules
 js-api-samples
