@@ -1,0 +1,15 @@
+[project]
+name = "korvo"
+version = "0.1.0"
+description = "Answers any question about the Mercedes-AMG GT R by consulting the official operator's manual."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "fastmcp",
+    "elasticsearch",
+    "sentence-transformers",
+    "cohere",
+    "torch",
+    "uvicorn" # Needed by FastMCP for the http server
+]
