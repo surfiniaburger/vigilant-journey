@@ -5,8 +5,8 @@ import logging
 import os
 from typing import Dict, Any
 
-from fastapi import FastAPI
-from fastmcp import FastMCP, StreamableRequest, StreamableResponse
+
+from fastmcp import FastMCP
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
 import cohere

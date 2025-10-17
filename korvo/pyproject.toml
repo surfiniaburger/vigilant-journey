@@ -5,7 +5,8 @@ description = "Answers any question about the Mercedes-AMG GT R by consulting th
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp==2.12.4",
+    "fastapi",
+    "fastmcp",
     "elasticsearch",
     "sentence-transformers",
     "cohere",

@@ -1,0 +1,13 @@
+# Ignore Python virtual environment
+.venv/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore other tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
