@@ -26,13 +26,13 @@ describe('Map Page', () => {
     expect(screen.getByText('Authenticating...')).toBeInTheDocument();
   });
 
-  it('renders the chat interface for an authenticated user', () => {
+  it('renders the chat interface for an authenticated user', async () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: { getIdToken: () => Promise.resolve('dummy-token') },
       loading: false,
     });
     render(<MapPage />);
     // We need to wait for the token and state update
-    expect(screen.findByTestId('chat-interface')).toBeTruthy();
+    expect(await screen.findByTestId('chat-interface')).toBeInTheDocument();
   });
 });
