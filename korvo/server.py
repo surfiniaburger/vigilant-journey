@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
 
 logger.info("Initializing AI Co-Pilot services...")
-es_client = Elasticsearch(ELASTIC_CLOUD_ID, api_key=ELASTIC_API_KEY)
+es_client = Elasticsearch(cloud_id=ELASTIC_CLOUD_ID, api_key=ELASTIC_API_KEY)
 embedding_model = SentenceTransformer("unsloth/embeddinggemma-300m")
 co = cohere.Client(api_key=COHERE_API_KEY)
 logger.info("✅ All services connected and models loaded.")
