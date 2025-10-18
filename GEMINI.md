@@ -4093,3 +4093,2937 @@ Stay updated on new releases and features, guides, and case studies.
 you@domain.com
 Subscribe
 © 2025 Vercel, Inc.
+
+
+
+Google Cloud Skills Boost
+Dashboard
+Explore
+Paths
+Subscriptions
+
+Apply your skills in Google Cloud console
+
+Deploy Multi-Agent Systems with Agent Development Kit (ADK) and Agent Engine
+Course · 6 hours
+10% complete
+home
+Course overview
+
+
+Introduction
+keyboard_arrow_right
+
+Introducing Agent Development Kit
+keyboard_arrow_right
+youtube_tv
+Introducing Agent Development Kit (ADK)
+quiz
+Module quiz
+
+Develop agents with ADK
+keyboard_arrow_right
+youtube_tv
+Develop agents with ADK
+youtube_tv
+Configure ADK
+science
+Get started with Agent Development Kit (ADK)
+science
+Empower ADK agents with tools
+quiz
+Module quiz
+
+Build multi-agent systems with ADK
+keyboard_arrow_right
+youtube_tv
+Build multi-agent systems with ADK
+youtube_tv
+Callbacks
+science
+Build Multi-Agent Systems with ADK
+quiz
+Module quiz
+
+Deploy ADK agent to Agent Engine
+keyboard_arrow_right
+youtube_tv
+Deploy Agent Development Kit agents to Agent Engine
+science
+Deploy ADK agents to Agent Engine
+quiz
+Module quiz
+
+Extend agents with MCP and A2A
+keyboard_arrow_right
+science
+Use Model Context Protocol (MCP) Tools with ADK Agents
+science
+Connect to Remote Agents with ADK and the Agent2Agent (A2A) SDK
+
+Evaluate ADK agent systems
+keyboard_arrow_right
+Activity completed
+check
+youtube_tv
+Evaluate and test ADK Agent Systems
+science
+Evaluate ADK agent performance using the Vertex AI Generative AI Evaluation Service
+quiz
+Module quiz
+
+Your Next Steps
+keyboard_arrow_right
+Activity locked
+lock
+check_circle
+Course Badge
+Activity locked
+lock
+description
+Course Survey
+Course 
+navigate_next
+Extend agents with MCP and A2A 
+navigate_next
+—/100
+
+
+
+
+
+
+
+
+Lab setup instructions and requirements
+01:00:00
+Lab instructions and tasks
+GENAI120
+Objectives
+Setup and requirements
+Task 1. Install ADK and set up your environment
+Task 2. Explore the ADK agent you will make available remotely
+Task 3. Deploy the agent as an A2A Server
+Task 4. Enable another ADK agent to call this agent remotely
+Congratulations!
+Connect to Remote Agents with ADK and the Agent2Agent (A2A) SDK
+experiment
+Lab
+schedule
+1 hour
+universal_currency_alt
+7 Credits
+show_chart
+Advanced
+info
+This lab may incorporate AI tools to support your learning.
+GENAI120
+Google Cloud Self-Paced Labs
+
+The Agent2Agent (A2A) protocol addresses a critical challenge in the AI landscape: enabling Gen AI agents, built on diverse frameworks by different companies running on separate servers, to communicate and collaborate effectively - as agents, not just as tools. A2A aims to provide a common language for agents, fostering a more interconnected, powerful, and innovative AI ecosystem.
+
+A2A is built around a few core concepts that make it powerful and flexible:
+
+Standardized Communication: JSON-RPC 2.0 over HTTP(S).
+Agent Discovery: Agent Cards detail an agent's capabilities and connection info, so agents can discover each other and learn about each other's capabilities
+Rich Data Exchange: Handles text, files, and structured JSON data.
+Flexible Interaction: Supports synchronous request/response, streaming (SSE), and asynchronous push notifications.
+Enterprise-Ready: Designed with security, authentication, and observability in mind.
+Objectives
+In this lab, you will:
+
+Deploy an ADK agent as an A2A Server.
+Prepare a JSON Agent Card to describe an A2A agent's capabilities.
+Enable another ADK agent to read the Agent Card of your deployed A2A agent and use it as a sub-agent.
+Setup and requirements
+Before you click the Start Lab button
+Read these instructions. Labs are timed and you cannot pause them. The timer, which starts when you click Start Lab, shows how long Google Cloud resources will be made available to you.
+
+This Qwiklabs hands-on lab lets you do the lab activities yourself in a real cloud environment, not in a simulation or demo environment. It does so by giving you new, temporary credentials that you use to sign in and access Google Cloud for the duration of the lab.
+
+What you need
+To complete this lab, you need:
+
+Access to a standard internet browser (Chrome browser recommended).
+Time to complete the lab.
+Note: If you already have your own personal Google Cloud account or project, do not use it for this lab.
+
+Note: If you are using a Pixelbook, open an Incognito window to run this lab.
+
+How to start your lab and sign in to the Google Cloud console
+Click the Start Lab button. If you need to pay for the lab, a dialog opens for you to select your payment method. On the left is the Lab Details pane with the following:
+
+The Open Google Cloud console button
+Time remaining
+The temporary credentials that you must use for this lab
+Other information, if needed, to step through this lab
+Click Open Google Cloud console (or right-click and select Open Link in Incognito Window if you are running the Chrome browser).
+
+The lab spins up resources, and then opens another tab that shows the Sign in page.
+
+Tip: Arrange the tabs in separate windows, side-by-side.
+
+Note: If you see the Choose an account dialog, click Use Another Account.
+If necessary, copy the Username below and paste it into the Sign in dialog.
+
+"Username"
+Copied!
+You can also find the Username in the Lab Details pane.
+
+Click Next.
+
+Copy the Password below and paste it into the Welcome dialog.
+
+"Password"
+Copied!
+You can also find the Password in the Lab Details pane.
+
+Click Next.
+
+Important: You must use the credentials the lab provides you. Do not use your Google Cloud account credentials.
+Note: Using your own Google Cloud account for this lab may incur extra charges.
+Click through the subsequent pages:
+
+Accept the terms and conditions.
+Do not add recovery options or two-factor authentication (because this is a temporary account).
+Do not sign up for free trials.
+After a few moments, the Google Cloud console opens in this tab.
+
+Note: To access Google Cloud products and services, click the Navigation menu or type the service or product name in the Search field. Navigation menu icon and Search field
+Task 1. Install ADK and set up your environment
+In this lab environment, the Vertex AI API and Cloud Run API have been enabled for you. If you were to follow these steps in your own project, you would enable them by navigating to Vertex AI and following the prompt to enable it.
+
+Prepare a Cloud Shell Editor tab
+With your Google Cloud console window selected, open Cloud Shell by pressing the G key and then the S key on your keyboard. Alternatively, you can click the Activate Cloud Shell button (Activate Cloud Shell) in the upper right of the Cloud console.
+
+Click Continue.
+
+When prompted to authorize Cloud Shell, click Authorize.
+
+In the upper right corner of the Cloud Shell Terminal panel, click the Open in new window button Open in new window button.
+
+In the Cloud Shell Terminal, enter the following to open the Cloud Shell Editor to your home directory:
+
+cloudshell workspace ~
+Copied!
+Close any additional tutorial or Gemini panels that appear on the right side of the screen to save more of your window for your code editor.
+
+Throughout the rest of this lab, you can work in this window as your IDE with the Cloud Shell Editor and Cloud Shell Terminal.
+
+Download and install the ADK and code samples for this lab
+Install ADK by running the following command in the Cloud Shell Terminal. Note: You will specify the version to ensure that the version of ADK that you install corresponds to the version used in this lab:
+
+# Install ADK and the A2A Python SDK
+cd ~
+export PATH=$PATH:"/home/${USER}/.local/bin"
+python3 -m pip install google-adk==1.8.0 a2a-sdk==0.2.16
+pip install --upgrade google-genai
+# Correcting a typo in this version
+sed -i 's/{a2a_option}"/{a2a_option} "/' ~/.local/lib/python3.12/site-packages/google/adk/cli/cli_deploy.py
+Copied!
+Paste the following commands into the Cloud Shell Terminal to copy lab code from a Cloud Storage bucket and unzip it:
+
+gcloud storage cp gs://YOUR_GCP_PROJECT_ID-bucket/adk_and_a2a.zip ./adk_and_a2a.zip
+unzip adk_and_a2a.zip
+Copied!
+Click Check my progress to verify the objective.
+Install ADK and set up your environment.
+
+Task 2. Explore the ADK agent you will make available remotely
+For the purposes of this lab, imagine you work for a stadium maintenance company: Cymbal Stadiums. As part of a recent project, you developed an image generation-agent that can create illustrations according to your brand guidelines. Now, several different teams in your organization want to use it too.
+
+If you were to copy the code for use as a sub-agent by many agents, it would be very difficult to maintain and improve all of these copies.
+
+Instead, you can deploy the agent once as an agent wrapped with an A2A server, and the other teams' agents can incorporate it by querying it remotely.
+
+In the Cloud Shell Editor's file explorer pane, navigate to the adk_and_a2a/illustration_agent directory. This directory contains the ADK agent you will make available remotely. Click the directory to toggle it open.
+
+Open the agent.py file on this directory and scroll to the section labeled # Tools.
+
+Notice the generate_image() function, which will be used as a tool by this agent. It receives a prompt and performs a two-step process. First, it uses the Google Gen AI SDK to call generate_content(), which returns the raw image data directly in the response. Second, the function uses the Cloud Storage library to upload these image bytes to a GCS bucket. Finally, the tool returns the public URL of the newly created image file.
+
+Notice that the instruction provided to the root_agent provides specific instructions to the agent to use image-generation prompts that respect the company's brand guidelines. For example, it specifies:
+
+a specific illustration style: (Corporate Memphis)
+a color palette (purples and greens on sunset gradients)
+examples of stadium/sports and maintenance imagery because it is a stadium maintenance company
+To see it in action, you'll first need to write a .env file to set environment variables needed by ADK agents. Run the following in the Cloud Shell Terminal to write this file in this directory.
+
+cd ~/adk_and_a2a
+cat << EOF > illustration_agent/.env
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_CLOUD_PROJECT=YOUR_GCP_PROJECT_ID
+GOOGLE_CLOUD_LOCATION=global
+MODEL=gemini_flash_model_id
+IMAGE_MODEL=gemini_flash_image_model_id
+EOF
+Copied!
+Run the following to copy the .env to another agent directory you'll use in this lab:
+
+cp illustration_agent/.env slide_content_agent/.env
+Copied!
+Now from the Cloud Shell Terminal, launch the ADK dev UI with:
+
+adk web
+Copied!
+Output
+
+INFO:     Started server process [2434]
+INFO:     Waiting for application startup.
++-------------------------------------------------------+
+| ADK Web Server started                                |
+|                                                       |
+| For local testing, access at http://localhost:8000.   |
++-------------------------------------------------------+
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit) 
+To view the web interface in a new tab, click the http://127.0.0.1:8000 link at the bottom of the Terminal output.
+
+A new browser tab will open with the ADK Dev UI.
+
+From the Select an agent dropdown on the left, select the illustration_agent from the dropdown.
+
+Query the agent with some text that could be used in a recruitment slide deck:
+
+By supporting each other, we get big things done!
+Copied!
+After about 10 seconds, the agent should respond with the prompt it generated and a URL to preview the image. Click the image URL to preview the image, then click Back in your browser to return to the Dev UI.
+
+Example Output
+
+Example response from the model
+
+Example Image
+
+Generated image
+
+Notice that the prompt you provided to the agent didn't mention sports, stadiums, or maintenance work, but the agent took your text and the brand guidelines and combined them into a single prompt for the image generation model.
+
+When you are finished exploring the base agent, close the browser tab.
+
+Click on the Cloud Shell Terminal pane and press CTRL + C to stop the server.
+
+Click Check my progress to verify the objective.
+Explore the ADK agent.
+
+Task 3. Deploy the agent as an A2A Server
+You'll now take the steps to deploy this agent as a remote A2A agent.
+
+An A2A Agent identifies itself and its capabilities by serving an Agent Card. Run the following to create an agent.json file.
+
+touch illustration_agent/agent.json
+Copied!
+Open the agent.json file within the adk_and_a2a/illustration_agent directory and paste in the following contents:
+
+{
+    "name": "illustration_agent",
+    "description": "An agent designed to generate branded illustrations for Cymbal Stadiums.",
+    "defaultInputModes": ["text/plain"],
+    "defaultOutputModes": ["application/json"],
+    "skills": [
+    {
+        "id": "illustrate_text",
+        "name": "Illustrate Text",
+        "description": "Generate an illustration to illustrate the meaning of provided text.",
+        "tags": ["illustration", "image generation"]
+    }
+    ],
+    "url": "https://illustration-agent-Project Number.GCP_LOCATION.run.app/a2a/illustration_agent",
+    "capabilities": {},
+    "version": "1.0.0"
+}
+Copied!
+Save the file.
+
+Review the JSON in the agent.json file. Notice that it gives the agent a name and description and identifies some skills . It also indicates a url where the agent itself can be called.
+
+The agent's url is constructed to be its Cloud Run service URL once you have deployed it following the instructions in this lab.
+
+While similar in name to skills, the parameter capabilities here is reserved to indicate abilities like streaming.
+
+Run the following to create a requirements.txt file in the illustration_agent directory.
+
+touch illustration_agent/requirements.txt
+Copied!
+Select the file, and paste the following into the file.
+
+google-adk==1.8.0
+a2a-sdk==0.2.16
+Copied!
+Save the file.
+
+In the following command, you will use adk deploy cloud_run with the --a2a flag to deploy your agent to Cloud Run as an A2A server. You can learn more about deploying agents to Cloud Run by searching for the lab "Deploy ADK agents to Cloud Run". In this command:
+
+the --project and --region define the project and region in which your Cloud Run service will be deployed
+the --service_name defines the name for the Cloud Run service
+the --a2a flag indicates it should be hosted as an A2A agent. This means two things:
+your agent will be wrapped by a class which bridges ADK and A2A agents: the A2aAgentExecutor. This class translates A2A Protocol's language of tasks and messages to an ADK Runner in its language of events.
+the Agent Card will be hosted as well at CLOUD_RUN_URL/a2a/AGENT_NAME/.well-known/agent.json. Note: While this version of the card will be usable soon, the dynamic rewriting of the agent's url currently does not work with Cloud Run, so we won't use it in this version of this lab.
+Deploy the agent to Cloud Run as an A2A server with the following command:
+
+adk deploy cloud_run \
+    --project YOUR_GCP_PROJECT_ID \
+    --region GCP_LOCATION \
+    --service_name illustration-agent \
+    --a2a \
+    illustration_agent
+Copied!
+You will be prompted to allow unauthenticated responses for this container. For the sake of lab testing, enter Y into the Cloud Shell Terminal (for "yes") and press return.
+
+Note: Deployment should take about 5-10 minutes. If you encounter a PERMISSION_DENIED error, try running the above command again.
+Expected output:
+
+You will see steps relating to building a Dockerfile and deploying the container, then deploying the service, followed by:
+
+Service [illustration-agent] revision [illustration-agent-00001-xpp] has been deployed and is serving 100 percent of traffic.
+Service URL: https://illustration-agent-Project Number.GCP_LOCATION.run.app
+Click Check my progress to verify the objective.
+Deploy the Agent as an A2A Server.
+
+Task 4. Enable another ADK agent to call this agent remotely
+In this task, you will provide a second ADK agent the ability to identify your illustration agent's capabilities and call it remotely. This second agent will be an agent tasked with creating contents for slides. It will write a headline and a couple of sentences of body text, then transfer to the illustration agent to generate an image to illustrate that text.
+
+In the Cloud Shell Terminal, run the following command to copy the Agent Card JSON file to your adk_and_a2a directory and change its name to indicate that it represents the illustration_agent.
+
+cp illustration_agent/agent.json illustration-agent-card.json
+Copied!
+In the Cloud Shell Editor's file explorer pane, navigate to the adk_and_a2a/slide_content_agent and open the agent.py file.
+
+Review this agent's instruction to see it will take a user's suggestion for a slide and write a headline & body text, then transfer to your A2A agent to illustrate the slide.
+
+Paste the following code under the # Agents header to add the remote agent using the RemoteA2aAgent class from ADK:
+
+illustration_agent = RemoteA2aAgent(
+    name="illustration_agent",
+    description="Agent that generates illustrations.",
+    agent_card=(
+        "illustration-agent-card.json"
+    ),
+)
+Copied!
+Add the illustration_agent as a sub-agent of the root_agent by adding the following parameter to the root_agent:
+
+sub_agents=[illustration_agent]
+Copied!
+Save the file.
+
+Launch the UI from the Cloud Shell Terminal with:
+
+cd ~/adk_and_a2a
+adk web
+Copied!
+Once again, click the http://127.0.0.1:8000 link in the Terminal output.
+
+A new browser tab will open with the ADK Dev UI. From the Select an agent dropdown on the left, select the slide_content_agent from the dropdown.
+
+Query the agent with an idea for a slide:
+
+Create content for a slide about our excellent on-the-job training.
+Copied!
+You should see the following output:
+
+A headline and body text written by the slide_content_agent itself
+A call to transfer_to_agent, indicating a transfer to the illustration_agent
+The response from the illustration_agent with a link you can click on to see the new image.
+The agent generates text, then transfers to the illustration_agent to generate an image.
+Generated image
+
+Click Check my progress to verify the objective.
+Enable another ADK agent to call the agent remotely.
+
+Congratulations!
+In this lab, you’ve deployed an ADK agent as an A2A Server, prepared a JSON Agent Card to describe an A2A agent's capabilities, and enabled another ADK agent to read the Agent Card of your deployed A2A agent and use it as a sub-agent
+
+Google Cloud training and certification
+...helps you make the most of Google Cloud technologies. Our classes include technical skills and best practices to help you get up to speed quickly and continue your learning journey. We offer fundamental to advanced level training, with on-demand, live, and virtual options to suit your busy schedule. Certifications help you validate and prove your skill and expertise in Google Cloud technologies.
+
+Manual Last Updated October 6, 2025
+
+Lab Last Tested October 6, 2025
+
+Copyright 2023 Google LLC All rights reserved. Google and the Google logo are trademarks of Google LLC. All other company and product names may be trademarks of the respective companies with which they are associated.
+
+
+
+
+
+
+
+Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.
+
+
+Google Cloud Skills Boost
+Dashboard
+Explore
+Paths
+Subscriptions
+
+Apply your skills in Google Cloud console
+
+Deploy Multi-Agent Systems with Agent Development Kit (ADK) and Agent Engine
+Course · 6 hours
+10% complete
+home
+Course overview
+
+
+Introduction
+keyboard_arrow_right
+
+Introducing Agent Development Kit
+keyboard_arrow_right
+youtube_tv
+Introducing Agent Development Kit (ADK)
+quiz
+Module quiz
+
+Develop agents with ADK
+keyboard_arrow_right
+youtube_tv
+Develop agents with ADK
+youtube_tv
+Configure ADK
+science
+Get started with Agent Development Kit (ADK)
+science
+Empower ADK agents with tools
+quiz
+Module quiz
+
+Build multi-agent systems with ADK
+keyboard_arrow_right
+youtube_tv
+Build multi-agent systems with ADK
+youtube_tv
+Callbacks
+science
+Build Multi-Agent Systems with ADK
+quiz
+Module quiz
+
+Deploy ADK agent to Agent Engine
+keyboard_arrow_right
+youtube_tv
+Deploy Agent Development Kit agents to Agent Engine
+science
+Deploy ADK agents to Agent Engine
+quiz
+Module quiz
+
+Extend agents with MCP and A2A
+keyboard_arrow_right
+science
+Use Model Context Protocol (MCP) Tools with ADK Agents
+science
+Connect to Remote Agents with ADK and the Agent2Agent (A2A) SDK
+
+Evaluate ADK agent systems
+keyboard_arrow_right
+Activity completed
+check
+youtube_tv
+Evaluate and test ADK Agent Systems
+science
+Evaluate ADK agent performance using the Vertex AI Generative AI Evaluation Service
+quiz
+Module quiz
+
+Your Next Steps
+keyboard_arrow_right
+Activity locked
+lock
+check_circle
+Course Badge
+Activity locked
+lock
+description
+Course Survey
+Course 
+navigate_next
+Extend agents with MCP and A2A 
+navigate_next
+—/100
+
+
+
+
+Lab setup instructions and requirements
+01:00:00
+Lab instructions and tasks
+GENAI124
+Overview
+Objectives
+Setup and requirements
+Task 1. Install ADK and set up your environment
+Task 2. Using Google Maps MCP server with ADK agents (ADK as an MCP client) in adk web
+Task 3. Building an MCP server with ADK tools (MCP server exposing ADK)
+Congratulations!
+Use Model Context Protocol (MCP) Tools with ADK Agents
+experiment
+Lab
+schedule
+1 hour
+universal_currency_alt
+7 Credits
+show_chart
+Advanced
+info
+This lab may incorporate AI tools to support your learning.
+GENAI124
+Google Cloud Self-Paced Labs
+
+Overview
+In this lab, you will explore Model Context Protocol (MCP), an open standard that enables seamless integration between external services, data sources, tools, and applications. You will learn how to integrate MCP into your ADK agents, using tools provided by existing MCP servers to enhance your ADK workflows. Additionally, you will see how to expose ADK tools like load_web_page through a custom-built MCP server, enabling broader integration with MCP clients.
+
+What is Model Context Protocol (MCP)?
+
+Model Context Protocol (MCP) is an open standard designed to standardize how Large Language Models (LLMs) like Gemini and Claude communicate with external applications, data sources, and tools. Think of it as a universal connection mechanism that simplifies how LLMs obtain context, execute actions, and interact with various systems.
+
+MCP follows a client-server architecture, defining how data (resources), interactive templates (prompts), and actionable functions (tools) are exposed by an MCP server and consumed by an MCP client (which could be an LLM host application or an AI agent).
+
+This lab covers two primary integration patterns:
+
+Using existing MCP Servers within ADK: An ADK agent acts as an MCP client, leveraging tools provided by external MCP servers.
+Exposing ADK Tools via an MCP Server: Building an MCP server that wraps ADK tools, making them accessible to any MCP client.
+Objectives
+In this lab, you learn how to:
+
+Use an ADK agent as an MCP client to interact with tools from existing MCP servers.
+Configure and deploy your own MCP server to expose ADK tools to other clients.
+Connect ADK agents with external tools through standardized MCP communication.
+Enable seamless interaction between LLMs and tools using Model Context Protocol.
+Setup and requirements
+Before you click the Start Lab button
+Read these instructions. Labs are timed and you cannot pause them. The timer, which starts when you click Start Lab, shows how long Google Cloud resources will be made available to you.
+
+This Qwiklabs hands-on lab lets you do the lab activities yourself in a real cloud environment, not in a simulation or demo environment. It does so by giving you new, temporary credentials that you use to sign in and access Google Cloud for the duration of the lab.
+
+What you need
+To complete this lab, you need:
+
+Access to a standard internet browser (Chrome browser recommended).
+Time to complete the lab.
+Note: If you already have your own personal Google Cloud account or project, do not use it for this lab.
+
+Note: If you are using a Pixelbook, open an Incognito window to run this lab.
+
+How to start your lab and sign in to the Google Cloud console
+Click the Start Lab button. If you need to pay for the lab, a dialog opens for you to select your payment method. On the left is the Lab Details pane with the following:
+
+The Open Google Cloud console button
+Time remaining
+The temporary credentials that you must use for this lab
+Other information, if needed, to step through this lab
+Click Open Google Cloud console (or right-click and select Open Link in Incognito Window if you are running the Chrome browser).
+
+The lab spins up resources, and then opens another tab that shows the Sign in page.
+
+Tip: Arrange the tabs in separate windows, side-by-side.
+
+Note: If you see the Choose an account dialog, click Use Another Account.
+If necessary, copy the Username below and paste it into the Sign in dialog.
+
+"Username"
+Copied!
+You can also find the Username in the Lab Details pane.
+
+Click Next.
+
+Copy the Password below and paste it into the Welcome dialog.
+
+"Password"
+Copied!
+You can also find the Password in the Lab Details pane.
+
+Click Next.
+
+Important: You must use the credentials the lab provides you. Do not use your Google Cloud account credentials.
+Note: Using your own Google Cloud account for this lab may incur extra charges.
+Click through the subsequent pages:
+
+Accept the terms and conditions.
+Do not add recovery options or two-factor authentication (because this is a temporary account).
+Do not sign up for free trials.
+After a few moments, the Google Cloud console opens in this tab.
+
+Note: To access Google Cloud products and services, click the Navigation menu or type the service or product name in the Search field. Navigation menu icon and Search field
+Task 1. Install ADK and set up your environment
+In this lab environment, the Vertex AI API, Routes API and Directions API have been enabled for you.
+
+Prepare a Cloud Shell Editor tab
+With your Google Cloud console window selected, open Cloud Shell by pressing the G key and then the S key on your keyboard. Alternatively, you can click the Activate Cloud Shell button (Activate Cloud Shell) in the upper right of the Cloud console.
+
+Click Continue.
+
+When prompted to authorize Cloud Shell, click Authorize.
+
+In the upper right corner of the Cloud Shell Terminal panel, click the Open in new window button Open in new window button.
+
+In the Cloud Shell Terminal, enter the following to open the Cloud Shell Editor to your home directory:
+
+cloudshell workspace ~
+Copied!
+Close any additional tutorial or Gemini panels that appear on the right side of the screen to save more of your window for your code editor.
+
+Throughout the rest of this lab, you can work in this window as your IDE with the Cloud Shell Editor and Cloud Shell Terminal.
+
+Download and install ADK and code samples for this lab
+Install ADK by running the following command in the Cloud Shell Terminal.
+
+Note: You will specify the version to ensure that the version of ADK that you install corresponds to the version used in this lab. You can view the latest version number and release notes at the adk-python repo.
+sudo python3 -m pip install google-adk==1.5.0
+Copied!
+Paste the following commands into the Cloud Shell Terminal to copy a file from a Cloud Storage bucket, and unzip it, creating a project directory with code for this lab:
+
+gcloud storage cp gs://YOUR_GCP_PROJECT_ID-bucket/adk_mcp_tools.zip .
+unzip adk_mcp_tools.zip
+Copied!
+Install additional lab requirements with:
+
+python3 -m pip install -r adk_mcp_tools/requirements.txt
+Copied!
+Click Check my progress to verify the objective.
+Install ADK and set up your environment
+
+Task 2. Using Google Maps MCP server with ADK agents (ADK as an MCP client) in adk web
+This section demonstrates how to integrate tools from an external Google Maps MCP server into your ADK agents. This is the most common integration pattern when your ADK agent needs to use capabilities provided by an existing service that exposes an MCP interface. You will see how the MCPToolset class can be directly added to your agent's tools list, enabling seamless connection to an MCP server, discovery of its tools, and making them available for your agent to use. These examples primarily focus on interactions within the adk web development environment.
+
+MCPToolset
+The MCPToolset class is ADK's primary mechanism for integrating tools from an MCP server. When you include an MCPToolset instance in your agent's tools list, it automatically handles the interaction with the specified MCP server. Here's how it works:
+
+Connection Management: On initialization, MCPToolset establishes and manages the connection to the MCP server. This can be a local server process (using StdioServerParameters for communication over standard input/output) or a remote server (using SseServerParams for Server-Sent Events). The toolset also handles the graceful shutdown of this connection when the agent or application terminates.
+Tool Discovery & Adaptation: Once connected, MCPToolset queries the MCP server for its available tools (via the list_tools MCP method). It then converts the schemas of these discovered MCP tools into ADK-compatible BaseTool instances.
+Exposure to Agent: These adapted tools are then made available to your LlmAgent as if they were native ADK tools.
+Proxying Tool Calls: When your LlmAgent decides to use one of these tools, MCPToolset transparently proxies the call (using the call_tool MCP method) to the MCP server, sends the necessary arguments, and returns the server's response back to the agent.
+Filtering (Optional): You can use the tool_filter parameter when creating an MCPToolset to select a specific subset of tools from the MCP server, rather than exposing all of them to your agent.
+Get API key and Enable APIs
+In this sub-section, you will generate a new API key named GOOGLE_MAPS_API_KEY.
+
+Open the browser tab displaying the Google Cloud Console (not your Cloud Shell Editor).
+
+You can close the Cloud Shell Terminal pane on this browser tab for more console area.
+
+Search for Credentials in the search bar at the top of the page. Select it from the results.
+
+On the Credentials page, click + Create Credentials at the top of the page, then select API key.
+
+The API key created dialog will display your newly created API key. Be sure to save this key locally for later use in the lab.
+
+Click Close on the dialog box.
+
+Your newly created key will be named API Key 1 by default. Select the key, rename it to GOOGLE_MAPS_API_KEY, and click Save.
+
+Google Map Key
+
+Define your Agent with an MCPToolset for Google Maps
+In this sub-section, you will configure your agent to use the MCPToolset for Google Maps, enabling it to seamlessly provide directions and location-based information.
+
+In the Cloud Shell Editor's file explorer pane, find the adk_mcp_tools folder. Click it to toggle it open.
+
+Navigate to the directory adk_mcp_tools/google_maps_mcp_agent.
+
+Paste the following command in a plain text file, then update the YOUR_ACTUAL_API_KEY value with the Google Maps API key you generated and saved in a previous step:
+
+cd ~/adk_mcp_tools
+cat << EOF > google_maps_mcp_agent/.env
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_CLOUD_PROJECT=Project
+GOOGLE_CLOUD_LOCATION=Region
+GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_API_KEY"
+MODEL=gemini_flash_model_id
+EOF
+Copied!
+Copy and paste the updated command to Cloud Shell Terminal to run it and write a .env file which will provide authentication details for this agent directory.
+
+Copy the .env file to the other agent directory you will use in this lab by running the following command:
+
+cp google_maps_mcp_agent/.env adk_mcp_server/.env
+Copied!
+Next, add the following code where indicated in the agent.py file to add the Google maps tool to your agent. This will allow your agent to use the MCPToolset for Google Maps to provide directions or location-based information.
+
+tools=[
+    MCPToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command='npx',
+            args=[
+                "-y",
+                "@modelcontextprotocol/server-google-maps",
+            ],
+            env={
+                "GOOGLE_MAPS_API_KEY": google_maps_api_key
+            }
+        ),
+        timeout=15,
+        ),
+    )
+],
+Copied!
+From the adk_mcp_tools project directory, launch the Agent Development Kit Dev UI with the following command:
+
+adk web
+Copied!
+Output:
+
+INFO:     Started server process [2434]
+INFO:     Waiting for application startup.
++----------------------------------------------------+
+| ADK Web Server started                             |
+|                                                    |
+| For local testing, access at http://localhost:8000.|
++----------------------------------------------------+
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+To view the web interface in a new tab, click the http://127.0.0.1:8000 link in the Terminal output.
+
+A new browser tab will open with the ADK Dev UI. From the Select an agent dropdown on the left, select the google_maps_mcp_agent from the dropdown.
+
+Start a conversation with the agent and run the following prompts:
+
+Get directions from GooglePlex to SFO.
+Copied!
+Note: If your API call times out the first time you use it, click + New Session in the upper right of the ADK Dev UI and try again.
+What's the route from Paris, France to Berlin, Germany?
+Copied!
+Output:
+
+Agent Response
+
+Click the agent icon next to the agent's chat bubble with a lightning bolt, which indicates a function call. This will open up the Event inspector for this event:
+
+ADK Tool Call
+Notice that agent graph indicates several different tools, identified by the wrench emoji (🔧). Even though you only imported one MCPToolset, that tool set came with the different tools you see listed here, such as maps_place_details and maps_directions.
+
+The agent graph indicates several tools
+On the Request tab, you can see the structure of the request. You can use the arrows at the top of the Event inspector to browse the agent's thoughts, function calls, and responses.
+
+When you are finished asking questions of this agent, close the dev UI browser tab.
+
+Go back to the Cloud Shell Terminal panel and press CTRL + C to stop the server.
+
+Click Check my progress to verify the objective.
+Create API key and deploy ADK agent
+
+Task 3. Building an MCP server with ADK tools (MCP server exposing ADK)
+In this section, you'll learn how to expose the ADK load_web_page tool through a custom-built MCP server. This pattern allows you to wrap existing ADK tools and make them accessible to any standard MCP client application.
+
+Create the MCP Server Script and Implement Server Logic
+Return to your Cloud Shell Editor tab and select the adk_mcp_tools/adk_mcp_server directory.
+
+A Python file named adk_server.py has been prepared and commented for you. Take some time to review that file, reading the comments to understand how the code wraps a tool and serves it as an MCP server. Notice how it allows MCP clients to list available tools as well as invoke the ADK tool asynchronously, handling requests and responses in an MCP-compliant format.
+
+Test the Custom MCP Server with an ADK Agent
+Click on the agent.py file in the adk_mcp_server directory.
+
+Update the path to your adk_server.py file.
+
+/home/Username/adk_mcp_tools/adk_mcp_server/adk_server.py
+Copied!
+Next, add the following code where indicated in the agent.py file to add the MCPToolset to your agent. An ADK agent acts as a client to the MCP server. This ADK agent will use MCPToolset to connect to your adk_server.py script.
+
+tools=[
+    MCPToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="python3", # Command to run your MCP server script
+            args=[PATH_TO_YOUR_MCP_SERVER_SCRIPT], # Argument is the path to the script
+        ),
+        timeout=15,
+        ),
+        tool_filter=['load_web_page'] # Optional: ensure only specific tools are loaded
+    )
+],
+Copied!
+To run the MCP server, start the adk_server.py script by running the following command in Cloud Shell Terminal:
+
+python3 ~/adk_mcp_tools/adk_mcp_server/adk_server.py
+Copied!
+Output:
+
+MCP Server
+
+Open a new Cloud Shell Terminal tab by clicking the add-session-button button at the top of the Cloud Shell Terminal window.
+
+In the Cloud Shell Terminal, from the adk_mcp_tools project directory, launch the Agent Development Kit Dev UI with the following command:
+
+cd ~/adk_mcp_tools
+adk web
+Copied!
+To view the web interface in a new tab, click the http://127.0.0.1:8000 link in the Terminal output.
+
+From the Select an agent dropdown on the left, select the adk_mcp_server from the dropdown.
+
+Query the agent with:
+
+Load the content from https://example.com.
+Copied!
+Output:
+
+Agent response
+
+What happens here:
+
+The ADK agent (web_reader_mcp_client_agent) uses the MCPToolset to connect to your adk_server.py.
+The MCP server will receive the call_tool request, execute the ADK load_web_page tool, and return the result.
+The ADK agent will then relay this information. You should see logs from both the ADK Web UI (and its terminal) and from your adk_server.py terminal in the Cloud Shell Terminal tab where it is running.
+This demonstrates that ADK tools can be encapsulated within an MCP server, making them accessible to a broad range of MCP-compliant clients including ADK agents.
+
+Congratulations!
+At the end of this lab, you have learned how to integrate external Model Context Protocol (MCP) tools into your ADK agents using the MCPToolset class. You’ve discovered how to connect to an MCP server, use its tools within your agent, and expose ADK tools like load_web_page through a custom MCP server. These skills enable you to extend your ADK agents with powerful, external services, enhancing your web development workflows.
+
+Manual Last Updated October 6, 2025
+
+Lab Last Tested October 6, 2025
+
+Copyright 2023 Google LLC All rights reserved. Google and the Google logo are trademarks of Google LLC. All other company and product names may be trademarks of the respective companies with which they are associated.
+
+Sorry, Evaluate ADK agent performance using the Vertex AI Generative AI Evaluation Service is currently unavailable.
+
+close
+
+
+
+
+
+
+
+Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.
+
+Google Cloud Skills Boost
+Dashboard
+Explore
+Paths
+Subscriptions
+
+Apply your skills in Google Cloud console
+
+Deploy Multi-Agent Systems with Agent Development Kit (ADK) and Agent Engine
+Course · 6 hours
+10% complete
+home
+Course overview
+
+
+Introduction
+keyboard_arrow_right
+
+Introducing Agent Development Kit
+keyboard_arrow_right
+youtube_tv
+Introducing Agent Development Kit (ADK)
+quiz
+Module quiz
+
+Develop agents with ADK
+keyboard_arrow_right
+youtube_tv
+Develop agents with ADK
+youtube_tv
+Configure ADK
+science
+Get started with Agent Development Kit (ADK)
+science
+Empower ADK agents with tools
+quiz
+Module quiz
+
+Build multi-agent systems with ADK
+keyboard_arrow_right
+youtube_tv
+Build multi-agent systems with ADK
+youtube_tv
+Callbacks
+science
+Build Multi-Agent Systems with ADK
+quiz
+Module quiz
+
+Deploy ADK agent to Agent Engine
+keyboard_arrow_right
+youtube_tv
+Deploy Agent Development Kit agents to Agent Engine
+science
+Deploy ADK agents to Agent Engine
+quiz
+Module quiz
+
+Extend agents with MCP and A2A
+keyboard_arrow_right
+science
+Use Model Context Protocol (MCP) Tools with ADK Agents
+science
+Connect to Remote Agents with ADK and the Agent2Agent (A2A) SDK
+
+Evaluate ADK agent systems
+keyboard_arrow_right
+Activity completed
+check
+youtube_tv
+Evaluate and test ADK Agent Systems
+science
+Evaluate ADK agent performance using the Vertex AI Generative AI Evaluation Service
+quiz
+Module quiz
+
+Your Next Steps
+keyboard_arrow_right
+Activity locked
+lock
+check_circle
+Course Badge
+Activity locked
+lock
+description
+Course Survey
+Course 
+navigate_next
+Build multi-agent systems with ADK 
+navigate_next
+—/100
+
+
+
+
+
+
+
+
+Lab setup instructions and requirements
+01:30:00
+Lab instructions and tasks
+GENAI106
+Overview
+Objectives
+Setup and requirements
+Multi-Agent Systems
+Task 1. Install ADK and set up your environment
+Task 2. Explore transfers between parent, sub-agent, and peer agents
+Task 3. Use session state to store and retrieve specific information
+Workflow Agents
+Task 4. Begin building a multi-agent system with a SequentialAgent
+Task 5. Add a LoopAgent for iterative work
+Task 6. Use a "fan out and gather" pattern for report generation with a ParallelAgent
+Custom workflow agents
+Congratulations!
+Build Multi-Agent Systems with ADK
+experiment
+Lab
+schedule
+1 hour 30 minutes
+universal_currency_alt
+5 Credits
+show_chart
+Advanced
+info
+This lab may incorporate AI tools to support your learning.
+GENAI106
+Google Cloud Self-Paced Labs
+
+Overview
+This lab covers orchestrating multi-agent systems within the Google Agent Development Kit (Google ADK).
+
+This lab assumes that you are familiar with the basics of ADK and tool use as covered in the labs:
+
+Get started with Google Agent Development Kit (ADK)
+Empower ADK agents with tools
+Objectives
+In this lab, you will:
+
+Create multiple agents and relate them to one another with parent to sub-agent relationships.
+Build content across multiple turns of conversation and multiple agents by writing to a session's state dictionary.
+Instruct agents to read values from the session state to use as context for their responses.
+Use workflow agents to pass the conversation between agents directly.
+Setup and requirements
+Before you click the Start Lab button
+Read these instructions. Labs are timed and you cannot pause them. The timer, which starts when you click Start Lab, shows how long Google Cloud resources will be made available to you.
+
+This Qwiklabs hands-on lab lets you do the lab activities yourself in a real cloud environment, not in a simulation or demo environment. It does so by giving you new, temporary credentials that you use to sign in and access Google Cloud for the duration of the lab.
+
+What you need
+To complete this lab, you need:
+
+Access to a standard internet browser (Chrome browser recommended).
+Time to complete the lab.
+Note: If you already have your own personal Google Cloud account or project, do not use it for this lab.
+
+Note: If you are using a Pixelbook, open an Incognito window to run this lab.
+
+How to start your lab and sign in to the Google Cloud console
+Click the Start Lab button. If you need to pay for the lab, a dialog opens for you to select your payment method. On the left is the Lab Details pane with the following:
+
+The Open Google Cloud console button
+Time remaining
+The temporary credentials that you must use for this lab
+Other information, if needed, to step through this lab
+Click Open Google Cloud console (or right-click and select Open Link in Incognito Window if you are running the Chrome browser).
+
+The lab spins up resources, and then opens another tab that shows the Sign in page.
+
+Tip: Arrange the tabs in separate windows, side-by-side.
+
+Note: If you see the Choose an account dialog, click Use Another Account.
+If necessary, copy the Username below and paste it into the Sign in dialog.
+
+"Username"
+Copied!
+You can also find the Username in the Lab Details pane.
+
+Click Next.
+
+Copy the Password below and paste it into the Welcome dialog.
+
+"Password"
+Copied!
+You can also find the Password in the Lab Details pane.
+
+Click Next.
+
+Important: You must use the credentials the lab provides you. Do not use your Google Cloud account credentials.
+Note: Using your own Google Cloud account for this lab may incur extra charges.
+Click through the subsequent pages:
+
+Accept the terms and conditions.
+Do not add recovery options or two-factor authentication (because this is a temporary account).
+Do not sign up for free trials.
+After a few moments, the Google Cloud console opens in this tab.
+
+Note: To access Google Cloud products and services, click the Navigation menu or type the service or product name in the Search field. Navigation menu icon and Search field
+Multi-Agent Systems
+The Agent Development Kit empowers developers to get more reliable, sophisticated, multi-step behaviors from generative models. Instead of writing long, complex prompts that may not deliver results reliably, you can construct a flow of multiple, simple agents that can collaborate on complex problems by dividing tasks and responsibilities.
+
+This architectural approach offers several key advantages such as:
+
+Easier to design: You can think in terms of agents with specific jobs and skills.
+Specialized functions with more reliable performance: Specialized agents can learn from clear examples to become more reliable at their specific tasks.
+Organization: Dividing the workflow into distinct agents allows for a more organized, and therefor easier to think about, approach.
+Improvability and maintainability: It is easier to improve or fix a specialized component rather than make changes to a complex agent that may fix one behavior but might impact others.
+Modularity: Distinct agents from one workflow can be easily copied and included in other similar workflows.
+The Hierarchical Agent Tree
+Tree structure showing hierarchical agents
+
+In Agent Development Kit, you organize your agents in a tree-like structure. This helps limit the options for transfers for each agent in the tree, making it easier to control and predict the possible routes the conversation can take through the tree. Benefits of the hierarchical structure include:
+
+It draws inspiration from real-world collaborative teams, making it easier to design and reason about the behavior of the multi-agent system.
+It is intuitive for developers, as it mirrors common software development patterns.
+It provides greater control over the flow of information and task delegation within the system, making it easier to understand possible pathways and debug the system. For example, if a system has two report-generation agents at different parts of its flow with similar descriptions, the tree structure makes it easier to ensure that the correct one is invoked.
+The structure always begins with the agent defined in the root_agent variable (although it may have a different user-facing name to identify itself). The root_agent may act as a parent to one or more sub-agents. Each sub-agent agent may have its own sub-agents.
+
+Task 1. Install ADK and set up your environment
+In this lab environment, the Vertex AI API has been enabled for you. If you were to follow these steps in your own project, you would enable it by navigating to Vertex AI and following the prompt to enable it.
+
+Prepare a Cloud Shell Editor tab
+With your Google Cloud console window selected, open Cloud Shell by pressing the G key and then the S key on your keyboard. Alternatively, you can click the Activate Cloud Shell button (Activate Cloud Shell) in the upper right of the Cloud console.
+
+Click Continue.
+
+When prompted to authorize Cloud Shell, click Authorize.
+
+In the upper right corner of the Cloud Shell Terminal panel, click the Open in new window button Open in new window button.
+
+In the Cloud Shell Terminal, enter the following to open the Cloud Shell Editor to your home directory:
+
+cloudshell workspace ~
+Copied!
+Close any additional tutorial or Gemini panels that appear on the right side of the screen to save more of your window for your code editor.
+Throughout the rest of this lab, you can work in this window as your IDE with the Cloud Shell Editor and Cloud Shell Terminal.
+Download and install ADK and code samples for this lab
+Paste the following commands into the Cloud Shell Terminal to copy code files from a Cloud Storage bucket for this lab:
+
+gcloud storage cp -r gs://YOUR_GCP_PROJECT_ID-bucket/adk_multiagent_systems .
+Copied!
+Update your PATH environment variable, install ADK, and install additional lab requirements by running the following commands in the Cloud Shell Terminal.
+
+export PATH=$PATH:"/home/${USER}/.local/bin"
+python3 -m pip install google-adk -r adk_multiagent_systems/requirements.txt
+Copied!
+Task 2. Explore transfers between parent, sub-agent, and peer agents
+The conversation always begins with the agent defined as the root_agent variable.
+
+The default behavior of a parent agent is to understand the description of each sub-agent and determine if control of the conversation should be transferred to a sub-agent at any point.
+
+You can help guide those transfers in the parent's instruction by referring to the sub-agents by name (the values of their name parameter, not their variable names). Try an example:
+
+In the Cloud Shell Terminal, run the following to create a .env file to authenticate the agent in the parent_and_subagents directory.
+
+cd ~/adk_multiagent_systems
+cat << EOF > parent_and_subagents/.env
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_CLOUD_PROJECT=YOUR_GCP_PROJECT_ID
+GOOGLE_CLOUD_LOCATION=global
+MODEL=gemini_flash_model_id
+EOF
+Copied!
+Run the following command to copy that .env file to the workflow_agents directory, which you will use later in the lab:
+
+cp parent_and_subagents/.env workflow_agents/.env
+Copied!
+In the Cloud Shell Editor file explorer pane, navigate to the adk_multiagent_systems/parent_and_subagents directory.
+
+Click on the agent.py file to open it.
+
+Tip: Because Python code requires that we define our sub-agents before we can add them to an agent, in order to read an agent.py file in the order of the conversation flow, you may want to start reading with the bottom agent and work back towards the top.
+Notice that there are three agents here:
+
+a root_agent named steering (its name is used to identify it in ADK's dev UI and command line interfaces). It asks the user a question (if they know where they'd like to travel or if they need some help deciding), and the user's response to that question will help this steering agent know which of its two sub-agents to steer the conversation towards. Notice that it only has a simple instruction that does not mention the sub-agents, but it is aware of its sub-agents' descriptions.
+a travel_brainstormer that helps the user brainstorm destinations if they don't know where they would like to visit.
+an attractions_planner that helps the user build a list of things to do once they know which country they would like to visit.
+Make travel_brainstormer and attractions_planner sub-agents of the root_agent by adding the following line to the creation of the root_agent:
+
+sub_agents=[travel_brainstormer, attractions_planner]
+Copied!
+Save the file.
+
+Note that you don't add a corresponding parent parameter to the sub-agents. The hierarchical tree is defined only by specifying sub_agents when creating parent agents.
+
+In the Cloud Shell Terminal, run the following to use the ADK command line interface to chat with your agent:
+
+cd ~/adk_multiagent_systems
+adk run parent_and_subagents
+Copied!
+When you are presented the [user]: prompt, greet the agent with:
+
+hello
+Copied!
+Example output (yours may be a little different):
+
+user: hello
+[steering]: Hi there! Do you already have a country in mind for your trip, or would you like some help deciding where to go?
+Tell the agent:
+
+I could use some help deciding.
+Copied!
+Example output (yours may be a little different):
+
+user: I could use some help deciding.
+[travel_brainstormer]: Okay! To give you the best recommendations, I need to understand what you're looking for in a trip.
+...
+Notice from the name [travel_brainstormer] in brackets in the response that the root_agent (named [steering]) has transferred the conversation to the appropriate sub-agent based on that sub-agent's description alone.
+
+At the user: prompt, enter exit to end the conversation.
+
+You can also provide your agent more detailed instructions about when to transfer to a sub-agent as part of its instructions. In the agent.py file, add the following lines to the root_agent's instruction:
+
+If they need help deciding, send them to
+'travel_brainstormer'.
+If they know what country they'd like to visit,
+send them to the 'attractions_planner'.
+Copied!
+Save the file.
+
+In the Cloud Shell Terminal, run the following to start the command line interface again:
+
+adk run parent_and_subagents
+Copied!
+Greet the agent with:
+
+hello
+Copied!
+Reply to the agent's greeting with:
+
+I would like to go to Japan.
+Copied!
+Example output (yours may be a little different):
+
+user: I would like to go to Japan.
+[attractions_planner]: Okay, I can help you with that! Here are some popular attractions in Japan:
+
+*   **Tokyo:**
+    *   Senso-ji Temple
+    *   Shibuya Crossing
+    *   Tokyo Skytree
+*   **Kyoto:**
+    ...
+Notice that you have been transferred to the other sub-agent, attractions_planner.
+
+Reply with:
+
+Actually I don't know what country to visit.
+Copied!
+Example output (yours may be a little different):
+
+user: actually I don't know what country to visit
+[travel_brainstormer]: Okay! I can help you brainstorm some countries for travel...
+Notice you have been transferred to the travel_brainstormer agent, which is a peer agent to the attractions_planner. This is allowed by default. If you wanted to prevent transfers to peers, you could have set the disallow_transfer_to_peers parameter to True on the attractions_planner agent.
+
+At the user prompt, type exit to end the session.
+
+Step-by-step pattern: If you are interested in an agent that guides a user through a process step-by-step, one useful pattern can be to make the first step the root_agent with the second step agent its only sub-agent, and continue with each additional step being the only sub-agent of the previous step's agent.
+Click Check my progress to verify the objective.
+Explore transfers between parent, sub-agent, and peer agents
+
+Task 3. Use session state to store and retrieve specific information
+Each conversation in ADK is contained within a Session that all agents involved in the conversation can access. A session includes the conversation history, which agents read as part of the context used to generate a response. The session also includes a session state dictionary that you can use to take greater control over the most important pieces of information you would like to highlight and how they are accessed.
+
+This can be particularly helpful to pass information between agents or to maintain a simple data structure, like a list of tasks, over the course of a conversation with a user.
+
+To explore adding to and reading from state:
+
+Return to the file adk_multiagent_systems/parent_and_subagents/agent.py
+
+Paste the following function definition after the # Tools header:
+
+def save_attractions_to_state(
+    tool_context: ToolContext,
+    attractions: List[str]
+) -> dict[str, str]:
+    """Saves the list of attractions to state["attractions"].
+
+    Args:
+        attractions [str]: a list of strings to add to the list of attractions
+
+    Returns:
+        None
+    """
+    # Load existing attractions from state. If none exist, start an empty list
+    existing_attractions = tool_context.state.get("attractions", [])
+
+    # Update the 'attractions' key with a combo of old and new lists.
+    # When the tool is run, ADK will create an event and make
+    # corresponding updates in the session's state.
+    tool_context.state["attractions"] = existing_attractions + attractions
+
+    # A best practice for tools is to return a status message in a return dict
+    return {"status": "success"}
+Copied!
+In this code, notice:
+
+The session is passed to your tool function as ToolContext. All you need to do is assign a parameter to receive it, as you see here with the parameter named tool_context. You can then use tool_context to access session information like conversation history (through tool_context.events) and the session state dictionary (through tool_context.state). When the tool_context.state dictionary is modified by your tool function, those changes will be reflected in the session's state after the tool finishes its execution.
+The docstring provides a clear description and sections for argument and return values.
+The commented function code demonstrates how easy it is to make updates to the state dictionary.
+Add the tool to the attractions_planner agent by adding the tools parameter when the agent is created:
+
+tools=[save_attractions_to_state]
+Copied!
+Add the following bullet points to the attractions_planner agent's existing instruction:
+
+- When they reply, use your tool to save their selected attraction
+and then provide more possible attractions.
+- If they ask to view the list, provide a bulleted list of
+{ attractions? } and then suggest some more.
+Copied!
+Notice the section in curly braces: { attractions? }. This ADK feature, key templating, loads the value of the attractions key from the state dictionary. The question mark after the attractions key prevents this from erroring if the field is not yet present.
+
+You will now run the agent from the web interface, which provides a tab for you to see the changes being made to the session state. Launch the Agent Development Kit Web UI with the following command:
+
+adk web
+Copied!
+Output
+
+INFO:     Started server process [2434]
+INFO:     Waiting for application startup.
++-------------------------------------------------------+
+| ADK Web Server started                                |
+|                                                       |
+| For local testing, access at http://localhost:8000.   |
++-------------------------------------------------------+
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit) 
+To view the web interface in a new tab, click the http://127.0.0.1:8000 link in the Terminal output.
+
+A new browser tab will open with the ADK Dev UI.
+
+From the Select an agent dropdown on the left, select the parent_and_subagents agent from the dropdown.
+
+Start the conversation with: hello
+
+After the agent greets you, reply with:
+
+I'd like to go to Egypt.
+Copied!
+You should be transferred to the attractions_planner and be provided a list of attractions.
+
+Choose an attraction, for example:
+
+I'll go to the Sphinx
+Copied!
+You should receive an acknowledgement in the response, like: Okay, I've saved The Sphinx to your list. Here are some other attractions...
+
+Click the response tool box (marked with a check mark) to view the event created from the tool's response. Notice that it includes an actions field which includes state_delta describing the changes to the state.
+
+You should be prompted by the agent to select more attractions. Reply to the agent by naming one of the options it has presented.
+
+On the left-hand navigation menu, click the "X" to exit the focus on the event you inspected earlier.
+
+Now in the sidebar, you should see the list of events and a few tab options. Select the State tab. Here you can view the current state, including your attractions array with the two values you have requested.
+
+Session State preview in the Web UI
+
+Send this message to the agent:
+
+What is on my list?
+Copied!
+It should return your list formatted as a bulleted list according to its instruction.
+
+When you are finished experimenting with the agent, close the web browser tab and press CTRL + C in the Cloud Shell Terminal to stop the server.
+
+Later in this lab, you will demonstrate how to use state to communicate between agents.
+
+Click Check my progress to verify the objective.
+Use session state to store and retrieve specific information
+
+Instead of saving small pieces of information, if you would like to store your agent's entire text response in the state dictionary, you can set an output_key parameter when you define the agent, and its entire output will be stored in the state dictionary under that field name.
+Workflow Agents
+Parent to sub-agent transfers are ideal when you have multiple specialist sub-agents, and you want the user to interact with each of them.
+
+However, if you would like agents to act one-after-another without waiting for a turn from the user, you can use workflow agents. Some example scenarios when you might use workflow agents include when you would like your agents to:
+
+Plan and Execute: When you want to have one agent prepare a list of items, and then have other agents use that list to perform follow-up tasks, for example writing sections of a document
+Research and Write: When you want to have one agent call functions to collect contextual information from Google Search or other data sources, then another agent use that information to produce some output.
+Draft and Revise: When you want to have one agent prepare a draft of a document, and then have other agents check the work and iterate on it
+To accomplish these kinds of tasks, workflow agents have sub-agents and guarantee that each of their sub-agents acts. Agent Development Kit provides three built-in workflow agents and the opportunity to define your own:
+
+SequentialAgent
+LoopAgent
+ParallelAgent
+Throughout the rest of this lab, you will build a multi-agent system that uses multiple LLM agents, workflow agents, and tools to help control the flow of the agent.
+
+Specifically, you will build an agent that will develop a pitch document for a new hit movie: a biographical film based on the life of a historical character. Your sub-agents will handle the research, an iterative writing loop with a screenwriter and a critic, and finally some additional sub-agents will help brainstorm casting ideas and use historical box office data to make some predictions about box office results.
+
+In the end, your multi-agent system will look like this (you can click on the image to see it larger):
+
+Diagram of a film_concept_team multi-agent system
+
+But you will begin with a simpler version.
+
+Task 4. Begin building a multi-agent system with a SequentialAgent
+The SequentialAgent executes its sub-agents in a linear sequence. Each sub-agent in its sub_agents list is run, one after the other, in the order they are defined.
+
+This is ideal for workflows where tasks must be performed in a specific order, and the output of one task serves as the input for the next.
+
+In this task, you will run a SequentialAgent to build a first version of your movie pitch-development multi-agent system. The first draft of your agent will be structured like this:
+
+Film_concept_team multi-agent system step 1
+
+A root_agent named greeter to welcome the user and request a historical character as a movie subject
+
+A SequentialAgent called film_concept_team will include:
+
+A researcher to learn more about the requested historical figure from Wikipedia, using a LangChain tool covered in the lab Empower ADK agents with tools. An agent can choose to call its tool(s) multiple times in succession, so the researcher can take multiple turns in a row if it determines it needs to do more research.
+A screenwriter to turn the research into a plot outline.
+A file_writer to title the resulting movie and write the results of the sequence to a file.
+In the Cloud Shell Editor, navigate to the directory adk_multiagent_systems/workflow_agents.
+
+Click on the agent.py file in the workflow_agents directory.
+
+Read through this agent definition file. Because sub-agents must be defined before they can be assigned to a parent, to read the file in the order of the conversational flow, you can read the agents from the bottom of the file to the top.
+
+You also have a function tool append_to_state. This function allows agents with the tool the ability to add content to a dictionary value in state. It is particularly useful for agents that might call a tool multiple times or act in multiple passes of a LoopAgent, so that each time they act their output is stored.
+
+Try out the current version of the agent by launching the web interface from the Cloud Shell Terminal. You will use the --reload_agents argument to enable live reloading of agents based on agent changes:
+
+cd ~/adk_multiagent_systems
+adk web --reload_agents
+Copied!
+Note: If you did not shut down your previous adk web session, the default port of 8000 will be blocked, but you can launch the Dev UI with a new port by using adk web --port 8001, for example.
+To view the web interface in a new tab, click the http://127.0.0.1:8000 link in the Terminal output.
+
+A new browser tab will open with the ADK Dev UI.
+
+From the Select an agent dropdown on the left, select workflow_agents.
+
+Start the conversation with: hello. It may take a few moments for the agent to respond, but it should request you enter a historical figure to start your film plot generation.
+
+When prompted to enter a historical figure, you can enter one of your choice or use one of these examples:
+
+Zhang Zhongjing - a renowned Chinese physician from the 2nd Century CE.
+Ada Lovelace - an English mathematician and writer known for her work on early computers
+Marcus Aurelius - a Roman emperor known for his philosophical writings.
+The agent should now call its agents one after the other as it executes the workflow and writes the plot outline file to your ~/adk_multiagent_systems/movie_pitches directory. It should inform you when it has written the file to disk.
+
+If you don't see the agent reporting that it generated a file for you or want to try another character, you can click + New Session in the upper right and try again.
+
+View the agent's output in the Cloud Shell Editor. (You may need to use the Cloud Shell Editor's menu to enable View > Word Wrap to see the full text without lots of horizontal scrolling.)
+
+In the ADK Dev UI, click on one of the agent icons (agent_icon) representing a turn of conversation to bring up the event view.
+
+The event view provides a visual representation of the tree of agents and tools used in this session. You may need to scroll in the event panel to see the full plot.
+
+adk web graph
+
+In addition to the graph view, you can click on the Request tab of the event to see the information this agent received as part of its request, including the conversation history.
+You can also click on the Response tab of the event to see what the agent returned.
+Note: While this system can produce interesting results, it is not intended to imply that instructions can be so brief or adding examples can be skipped. The system's reliability would benefit greatly from the additional layer of adding more rigorous instructions and examples for each agent.
+Click Check my progress to verify the objective.
+Begin building a multi-agent system with a SequentialAgent
+
+Task 5. Add a LoopAgent for iterative work
+The LoopAgent executes its sub-agents in a defined sequence and then starts at the beginning of the sequence again without breaking for a user input. It repeats the loop until a number of iterations has been reached or a call to exit the loop has been made by one of its sub-agents (usually by calling a built-in exit_loop tool).
+
+This is beneficial for tasks that require continuous refinement, monitoring, or cyclical workflows. Examples include:
+
+Iterative Refinement: Continuously improve a document or plan through repeated agent cycles.
+Continuous Monitoring: Periodically check data sources or conditions using a sequence of agents.
+Debate or Negotiation: Simulate iterative discussions between agents to reach a better outcome.
+You will add a LoopAgent to your movie pitch agent to allow multiple rounds of research and iteration while crafting the story. In addition to refining the script, this allows a user to start with a less specific input: instead of suggesting a specific historical figure, they might only know they want a story about an ancient doctor, and a research-and-writing iteration loop will allow the agents to find a good candidate, then work on the story.
+
+Film_concept_team multi-agent system step 2
+
+Your revised agent will flow like this:
+
+The root_agent greeter will remain the same.
+The film_concept_team SequentialAgent will now consist of:
+A writers_room LoopAgent that will begin the sequence. It will consist of:
+The researcher will be the same as before.
+The screenwriter will be similar to before.
+A critic that will offer critical feedback on the current draft to motivate the next round of research and improvement through the loop.
+When the loop terminates, it will escalate control of the conversation back to the film_concept_team SequentialAgent, which will then pass control to the next agent in its sequence: the file_writer that will remain as before to give the movie a title and write the results of the sequence to a file.
+To make these changes:
+
+In the adk_multiagent_systems/workflow_agents/agent.py file, add this tool import so that you can provide an agent the ability to exit the loop when desired:
+
+from google.adk.tools import exit_loop
+Copied!
+To determine when to exit the loop, add this critic agent to decide when the plot outline is ready. Paste the following new agent into the agent.py file under the # Agents section header (without overwriting the existing agents). Note that it has the exit_loop tool as one of its tools and instructions on when to use it:
+
+critic = Agent(
+    name="critic",
+    model=model_name,
+    description="Reviews the outline so that it can be improved.",
+    instruction="""
+    INSTRUCTIONS:
+    Consider these questions about the PLOT_OUTLINE:
+    - Does it meet a satisfying three-act cinematic structure?
+    - Do the characters' struggles seem engaging?
+    - Does it feel grounded in a real time period in history?
+    - Does it sufficiently incorporate historical details from the RESEARCH?
+
+    If the PLOT_OUTLINE does a good job with these questions, exit the writing loop with your 'exit_loop' tool.
+    If significant improvements can be made, use the 'append_to_state' tool to add your feedback to the field 'CRITICAL_FEEDBACK'.
+    Explain your decision and briefly summarize the feedback you have provided.
+
+    PLOT_OUTLINE:
+    { PLOT_OUTLINE? }
+
+    RESEARCH:
+    { research? }
+    """,
+    before_model_callback=log_query_to_model,
+    after_model_callback=log_model_response,
+    tools=[append_to_state, exit_loop]
+)
+Copied!
+Create a new LoopAgent called writers_room that creates the iterative loop of the researcher, screenwriter, and critic. Each pass through the loop will end with a critical review of the work so far, which will prompt improvements for the next round. Paste the following above the existing film_concept_team SequentialAgent.
+
+writers_room = LoopAgent(
+    name="writers_room",
+    description="Iterates through research and writing to improve a movie plot outline.",
+    sub_agents=[
+        researcher,
+        screenwriter,
+        critic
+    ],
+    max_iterations=5,
+)
+Copied!
+Note that the LoopAgent creation includes a parameter for max_iterations. This defines how many times the loop will run before it ends. Even if you plan to interrupt the loop via another method, it is a good idea to include a cap on the total number of iterations.
+
+Update the film_concept_team SequentialAgent to replace the researcher and screenwriter with the writers_room LoopAgent you just created. The file_writer agent should remain at the end of the sequence. The film_concept_team should now look like this:
+
+film_concept_team = SequentialAgent(
+    name="film_concept_team",
+    description="Write a film plot outline and save it as a text file.",
+    sub_agents=[
+        writers_room,
+        file_writer
+    ],
+)
+Copied!
+Return to the ADK Dev UI tab and click the + New Session button in the upper right to start a new session.
+
+Begin a new conversation with: hello
+
+When prompted to choose a kind of historical character, choose one that interests you. Some ideas include:
+
+an industrial designer who made products for the masses
+a cartographer (a map maker)
+that guy who made crops yield more food
+Once you have chosen a type of character, the agent should work its way through iterations of the loop and finally give the film a title and write the outline to a file.
+
+Using the Cloud Shell Editor, review the file generated, which should be saved in the adk_multiagent_systems/movie_pitches directory. (Once again, you may need to use the Editor's menu to enable View > Word Wrap to see the full text without lots of horizontal scrolling.)
+
+Click Check my progress to verify the objective.
+Add a LoopAgent for iterative work
+
+Task 6. Use a "fan out and gather" pattern for report generation with a ParallelAgent
+The ParallelAgent enables concurrent execution of its sub-agents. Each sub-agent operates in its own branch, and by default, they do not share conversation history or state directly with each other during parallel execution.
+
+This is valuable for tasks that can be divided into independent sub-tasks that can be processed simultaneously. Using a ParallelAgent can significantly reduce the overall execution time for such tasks.
+
+In this lab, you will add some supplemental reports -- some research on potential box office performance and some initial ideas on casting -- to enhance the pitch for your new film.
+
+Film_concept_team multi-agent system step 3
+
+Your revised agent will flow like this:
+
+The greeter will the same.
+The film_concept_team SequentialAgent will now consist of:
+The writers_room LoopAgent, which will remain the same including:
+The researcher agent
+The screenwriter agent
+The critic agent
+Your new preproduction_team ParallelAgent will then act, consisting of:
+A box_office_researcher agent to use historical box office data to generate a report on potential box office performance for this film
+A casting_agent agent to generate some initial ideas on casting based on actors who have starred in similar films
+The file_writer that will remain as before to write the results of the sequence to a file.
+While much of this example demonstrates creative work that would be done by human teams, this workflow represents how a complex chain of tasks can be broken across several sub-agents to produce drafts of complex documents which human team members can then edit and improve upon.
+
+Paste the following new agents and ParallelAgent into your workflow_agents/agent.py file under the # Agents header:
+
+box_office_researcher = Agent(
+    name="box_office_researcher",
+    model=model_name,
+    description="Considers the box office potential of this film",
+    instruction="""
+    PLOT_OUTLINE:
+    { PLOT_OUTLINE? }
+
+    INSTRUCTIONS:
+    Write a report on the box office potential of a movie like that described in PLOT_OUTLINE based on the reported box office performance of other recent films.
+    """,
+    output_key="box_office_report"
+)
+
+casting_agent = Agent(
+    name="casting_agent",
+    model=model_name,
+    description="Generates casting ideas for this film",
+    instruction="""
+    PLOT_OUTLINE:
+    { PLOT_OUTLINE? }
+
+    INSTRUCTIONS:
+    Generate ideas for casting for the characters described in PLOT_OUTLINE
+    by suggesting actors who have received positive feedback from critics and/or
+    fans when they have played similar roles.
+    """,
+    output_key="casting_report"
+)
+
+preproduction_team = ParallelAgent(
+    name="preproduction_team",
+    sub_agents=[
+        box_office_researcher,
+        casting_agent
+    ]
+)
+Copied!
+Update the existing film_concept_team agent's sub_agents list to include the preproduction_team between the writers_room and file_writer:
+
+film_concept_team = SequentialAgent(
+    name="film_concept_team",
+    description="Write a film plot outline and save it as a text file.",
+    sub_agents=[
+        writers_room,
+        preproduction_team,
+        file_writer
+    ],
+)
+Copied!
+Update the file_writer's instruction to:
+
+INSTRUCTIONS:
+- Create a marketable, contemporary movie title suggestion for the movie described in the PLOT_OUTLINE. If a title has been suggested in PLOT_OUTLINE, you can use it, or replace it with a better one.
+- Use your 'write_file' tool to create a new txt file with the following arguments:
+    - for a filename, use the movie title
+    - Write to the 'movie_pitches' directory.
+    - For the 'content' to write, include:
+        - The PLOT_OUTLINE
+        - The BOX_OFFICE_REPORT
+        - The CASTING_REPORT
+
+PLOT_OUTLINE:
+{ PLOT_OUTLINE? }
+
+BOX_OFFICE_REPORT:
+{ box_office_report? }
+
+CASTING_REPORT:
+{ casting_report? }
+Copied!
+Save the file.
+
+In the ADK Dev UI, click + New Session in the upper right.
+
+Enter hello to start the conversation.
+
+When prompted, enter a new character idea that you are interested in. Some ideas include:
+
+that actress who invented the technology for wifi
+an exciting chef
+key players in the worlds fair exhibitions
+When the agent has completed its writing and report-generation, inspect the file it produced in the adk_multiagent_systems/movie_pitches directory. If a part of the process fails, click + New session in the upper right and try again.
+
+Custom workflow agents
+When the pre-defined workflow agents of SequentialAgent, LoopAgent, and ParallelAgent are insufficient for your needs, CustomAgent provides the flexibility to implement new workflow logic. You can define patterns for flow control, conditional execution, or state management between sub-agents. This is useful for complex workflows, stateful orchestrations, or integrating custom business logic into the framework's orchestration layer.
+
+Creation of a CustomAgent is out of the scope of this lab, but it is good to know that it exists if you need it!
+
+Congratulations!
+In this lab, you’ve learned to create multiple agents and relate them to one another with parent to sub-agent relationships, add to the session state and read it in agent instructions, and use workflow agents to pass the conversation between agents directly.
+
+Google Cloud training and certification
+...helps you make the most of Google Cloud technologies. Our classes include technical skills and best practices to help you get up to speed quickly and continue your learning journey. We offer fundamental to advanced level training, with on-demand, live, and virtual options to suit your busy schedule. Certifications help you validate and prove your skill and expertise in Google Cloud technologies.
+
+Manual Last Updated October 6, 2025
+
+Lab Last Tested October 6, 2025
+
+Copyright 2023 Google LLC All rights reserved. Google and the Google logo are trademarks of Google LLC. All other company and product names may be trademarks of the respective companies with which they are associated.
+
+
+
+
+
+
+
+Could not connect to the reCAPTCHA service. Please check your internet connection and reload to get a reCAPTCHA challenge.
+
+
+Skip to main content
+Build and deploy an ADK agent that uses an MCP server on Cloud Run
+access_time
+52 mins remaining
+
+English
+Introduction
+Why deploy to Cloud Run?
+Setup and Requirements
+Before you begin
+Create the project folder
+Create Agent Workflow
+Prepare the application for deployment
+Deploy the agent using the ADK CLI
+Test the deployed agent
+Clean up environment
+Congratulations
+Survey
+6. Create Agent Workflow
+Create init.py file
+Create the init.py file. This file tells Python that the zoo_guide_agent directory is a package.
+
+
+cloudshell edit __init__.py
+The above command opens up the code editor. Add the following code to __init__.py:
+
+
+from . import agent
+Create main agent.py file
+Create the main agent.py file. This command creates the Python file and pastes in the complete code for your multi-agent system.
+
+
+cloudshell edit agent.py
+Step 1: Imports and Initial Setup
+This first block brings in all the necessary libraries from the ADK and Google Cloud. It also sets up logging and loads the environment variables from your .env file, which is crucial for accessing your model and server URL.
+
+Add the following code to your agent.py file:
+
+
+import os
+import logging
+import google.cloud.logging
+from dotenv import load_dotenv
+
+from google.adk import Agent
+from google.adk.agents import SequentialAgent
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StreamableHTTPConnectionParams
+from google.adk.tools.tool_context import ToolContext
+from google.adk.tools.langchain_tool import LangchainTool
+
+from langchain_community.tools import WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper
+
+import google.auth
+import google.auth.transport.requests
+import google.oauth2.id_token
+
+# --- Setup Logging and Environment ---
+
+cloud_logging_client = google.cloud.logging.Client()
+cloud_logging_client.setup_logging()
+
+load_dotenv()
+
+model_name = os.getenv("MODEL")
+Step 2: Defining the Tools (The Agent's Capabilities)
+3eb9c6772576b906.jpeg
+
+An agent is only as good as the tools it can use. In this section, we define all the capabilities our agent will have, including a custom function to save data, an MCP Tool that connects to our secure MCP server along with a Wikipedia Tool.
+
+Add the following code to the bottom of agent.py:
+
+
+# Greet user and save their prompt
+
+def add_prompt_to_state(
+    tool_context: ToolContext, prompt: str
+) -> dict[str, str]:
+    """Saves the user's initial prompt to the state."""
+    tool_context.state["PROMPT"] = prompt
+    logging.info(f"[State updated] Added to PROMPT: {prompt}")
+    return {"status": "success"}
+
+
+# Configuring the MCP Tool to connect to the Zoo MCP server
+
+mcp_server_url = os.getenv("MCP_SERVER_URL")
+if not mcp_server_url:
+    raise ValueError("The environment variable MCP_SERVER_URL is not set.")
+
+def get_id_token():
+    """Get an ID token to authenticate with the MCP server."""
+    target_url = os.getenv("MCP_SERVER_URL")
+    audience = target_url.split('/mcp/')[0]
+    request = google.auth.transport.requests.Request()
+    id_token = google.oauth2.id_token.fetch_id_token(request, audience)
+    return id_token
+
+"""
+# Use this code if you are using the public MCP Server and comment out the code below defining mcp_tools
+mcp_tools = MCPToolset(
+    connection_params=StreamableHTTPConnectionParams(
+        url=mcp_server_url
+    )
+)
+"""
+
+mcp_tools = MCPToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=mcp_server_url,
+                headers={
+                    "Authorization": f"Bearer {get_id_token()}",
+                },
+            ),
+        )
+
+# Configuring the Wikipedia Tool
+wikipedia_tool = LangchainTool(
+    tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+)
+The Three Tools Explained
+
+add_prompt_to_state 📝
+This tool remembers what a zoo visitor asks. When a visitor asks, "Where are the lions?", this tool saves that specific question into the agent's memory so the other agents in the workflow know what to research.
+
+How: It's a Python function that writes the visitor's prompt into the shared tool_context.state dictionary. This tool context represents the agent's short-term memory for a single conversation. Data saved to the state by one agent can be read by the next agent in the workflow.
+
+MCPToolset 🦁
+This is used to connect the tour guide agent to the zoo MCP server created in Lab 1. This server has special tools for looking up specific information about our animals, like their name, age, and enclosure.
+
+How: It securely connects to the zoo's private server URL. It uses get_id_token to automatically get a secure "keycard" (a service account ID token) to prove its identity and gain access.
+
+LangchainTool 🌍
+This gives the tour guide agent general world knowledge. When a visitor asks a question that isn't in the zoo's database, like "What do lions eat in the wild?", this tool lets the agent look up the answer on Wikipedia.
+
+How: It acts as an adapter, allowing our agent to use the pre-built WikipediaQueryRun tool from the LangChain library.
+
+Resources:
+
+MCP Toolset
+Function Tools
+State
+Step 3: Defining the Specialist Agents
+b8a9504b21920969.jpeg
+Next we will define the researcher agent and response formatter agent. The researcher agent is the "brain" of our operation. This agent takes the user's prompt from the shared State, examines its powerful tools (the Zoo's MCP Server Tool and the Wikipedia Tool), and decides which ones to use to find the answer.
+
+The response formatter agent's role is presentation. It doesn't use any tools to find new information. Instead, it takes the raw data gathered by the Researcher agent (passed via the State) and uses the LLM's language skills to transform it into a friendly, conversational response.
+
+Add the following code to the bottom of agent.py:
+
+
+# 1. Researcher Agent
+comprehensive_researcher = Agent(
+    name="comprehensive_researcher",
+    model=model_name,
+    description="The primary researcher that can access both internal zoo data and external knowledge from Wikipedia.",
+    instruction="""
+    You are a helpful research assistant. Your goal is to fully answer the user's PROMPT.
+    You have access to two tools:
+    1. A tool for getting specific data about animals AT OUR ZOO (names, ages, locations).
+    2. A tool for searching Wikipedia for general knowledge (facts, lifespan, diet, habitat).
+
+    First, analyze the user's PROMPT.
+    - If the prompt can be answered by only one tool, use that tool.
+    - If the prompt is complex and requires information from both the zoo's database AND Wikipedia,
+      you MUST use both tools to gather all necessary information.
+    - Synthesize the results from the tool(s) you use into preliminary data outputs.
+
+    PROMPT:
+    {{ PROMPT }}
+    """,
+    tools=[
+        mcp_tools,
+        wikipedia_tool
+    ],
+    output_key="research_data" # A key to store the combined findings
+)
+
+# 2. Response Formatter Agent
+response_formatter = Agent(
+    name="response_formatter",
+    model=model_name,
+    description="Synthesizes all information into a friendly, readable response.",
+    instruction="""
+    You are the friendly voice of the Zoo Tour Guide. Your task is to take the
+    RESEARCH_DATA and present it to the user in a complete and helpful answer.
+
+    - First, present the specific information from the zoo (like names, ages, and where to find them).
+    - Then, add the interesting general facts from the research.
+    - If some information is missing, just present the information you have.
+    - Be conversational and engaging.
+
+    RESEARCH_DATA:
+    {{ research_data }}
+    """
+)
+Step 4: The Workflow Agent
+The workflow agent acts as the ‘back-office' manager for the zoo tour. It takes the research request and ensures the two agents we defined above perform their jobs in the correct order: first research, then formatting. This creates a predictable and reliable process for answering a visitor's question.
+
+How: It's a SequentialAgent, a special type of agent that doesn't think for itself. Its only job is to run a list of sub_agents (the researcher and formatter) in a fixed sequence, automatically passing the shared memory from one to the next.
+
+Add this block of code to the bottom of agent.py:
+
+
+tour_guide_workflow = SequentialAgent(
+    name="tour_guide_workflow",
+    description="The main workflow for handling a user's request about an animal.",
+    sub_agents=[
+        comprehensive_researcher, # Step 1: Gather all data
+        response_formatter,       # Step 2: Format the final response
+    ]
+)
+Final Step: Assemble the Main Workflow 1000b9d20f4e134b.jpeg
+This Agent is designated as the root_agent, which the ADK framework uses as the starting point for all new conversations. Its primary role is to orchestrate the overall process. It acts as the initial controller, managing the first turn of the conversation.
+
+Add this final block of code to the bottom of agent.py:
+
+
+root_agent = Agent(
+    name="greeter",
+    model=model_name,
+    description="The main entry point for the Zoo Tour Guide.",
+    instruction="""
+    - Let the user know you will help them learn about the animals we have in the zoo.
+    - When the user responds, use the 'add_prompt_to_state' tool to save their response.
+    After using the tool, transfer control to the 'tour_guide_workflow' agent.
+    """,
+    tools=[add_prompt_to_state],
+    sub_agents=[tour_guide_workflow]
+)
+Your agent.py file is now complete! By building it this way, you can see how each component—tools, worker agents, and manager agents—has a specific role in creating the final, intelligent system. Next up, deployment!
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Build and deploy an ADK agent that uses an MCP server on Cloud Run
+access_time
+32 mins remaining
+
+English
+Introduction
+Why deploy to Cloud Run?
+Setup and Requirements
+Before you begin
+Create the project folder
+Create Agent Workflow
+Prepare the application for deployment
+Deploy the agent using the ADK CLI
+Test the deployed agent
+Clean up environment
+Congratulations
+Survey
+7. Prepare the application for deployment
+With your local environment ready, the next step is to prepare your Google Cloud project for the deployment. This involves a final check of your agent's file structure to ensure it's compatible with the deployment command. More importantly, you configure a critical IAM permission that allows your deployed Cloud Run service to act on your behalf and call the Vertex AI models. Completing this step ensures the cloud environment is ready to run your agent successfully.
+
+Load the variables into your shell session by running the source command.
+
+
+source .env
+Grant the service account the Vertex AI User role, which gives it permission to make predictions and call Google's models.
+
+
+# Grant the "Vertex AI User" role to your service account
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/aiplatform.user"
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Build and deploy an ADK agent that uses an MCP server on Cloud Run
+access_time
+67 mins remaining
+
+English
+Introduction
+Why deploy to Cloud Run?
+Setup and Requirements
+Before you begin
+Create the project folder
+Create Agent Workflow
+Prepare the application for deployment
+Deploy the agent using the ADK CLI
+Test the deployed agent
+Clean up environment
+Congratulations
+Survey
+5. Create the project folder
+Create the project directory.
+This command creates a main folder for the lab for the agent's source code.
+
+
+cd && mkdir zoo_guide_agent && cd zoo_guide_agent
+Create the requirements.txt file. This file lists the Python libraries your agent needs. The following command creates the file and populates it.
+
+
+cloudshell edit requirements.txt
+
+google-adk==1.14.0
+langchain-community
+wikipedia
+Set variables for your current project, region, and user. This is a more robust way to run these commands.
+
+
+export PROJECT_ID=$(gcloud config get-value project)
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+export SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+Create and open a .env file to authenticate the agent in the zoo_guide_agent directory.
+
+
+cloudshell edit .env
+The cloudshell edit command will open the .env file in the editor above the terminal. Enter the following in the .env file and head back to the terminal.
+
+
+MODEL="gemini-2.5-flash"
+SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+Adding the MCP server URL. If you have completed lab 1, follow these steps to use the MCP server you created in lab 1:
+
+Note: Run the following three commands if you have completed lab 1, and would like to use the MCP server created in that lab. You do not need to run these two commands if you already are using the public MCP server link provided to you during a live event.
+
+Give the Cloud Run service identity permission to call the remote MCP server
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/run.invoker"
+Save the MCP server URL from Lab 1 to an environment variable.
+
+echo -e "\nMCP_SERVER_URL=https://zoo-mcp-server-${PROJECT_NUMBER}.europe-west1.run.app/mcp" >> .env
+If you are using a public MCP server link, run the following, and replace PROJECT_NUMBER with what is provided.
+
+
+echo -e "\nMCP_SERVER_URL=https://zoo-mcp-server-${PROJECT_NUMBER}.europe-west1.run.app/mcp" >> .env
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Getting Started with MCP, ADK and A2A
+
+Language
+Overview
+Before you begin
+Installation
+Create a local MCP Server
+Deploy your MCP Server to Cloud Run
+Create an Agent with Agent Development Kit (ADK)
+Agent2Agent (A2A) Protocol
+Exposing the Currency Agent A2A Server
+Congratulations
+4. Create a local MCP Server
+Before you get to orchestrating your currency agent, you will first create an MCP server for exposing your tool(s) that your agent will need.
+
+An MCP server let's you write lightweight programs to expose specific capabilities (like fetching currency exchange rates) as tools. An agent or even multiple agents can then access these tools using the standardized Model Context Protocol (MCP).
+
+The FastMCP Python package can be leveraged to create an MCP server that exposes a single tool called get_exchange_rate. The get_exchange_rate tool makes a call over the internet to the Frankfurter API to get the current exchange rate between two currencies.
+
+The code for the MCP server can be found in the mcp-server/server.py file:
+
+import logging
+import os
+
+import httpx
+from fastmcp import FastMCP
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
+
+mcp = FastMCP("Currency MCP Server 💵")
+
+@mcp.tool()
+def get_exchange_rate(
+    currency_from: str = 'USD',
+    currency_to: str = 'EUR',
+    currency_date: str = 'latest',
+):
+    """Use this to get current exchange rate.
+
+    Args:
+        currency_from: The currency to convert from (e.g., "USD").
+        currency_to: The currency to convert to (e.g., "EUR").
+        currency_date: The date for the exchange rate or "latest". Defaults to "latest".
+
+    Returns:
+        A dictionary containing the exchange rate data, or an error message if the request fails.
+    """
+    logger.info(f"--- 🛠️ Tool: get_exchange_rate called for converting {currency_from} to {currency_to} ---")
+    try:
+        response = httpx.get(
+            f'https://api.frankfurter.app/{currency_date}',
+            params={'from': currency_from, 'to': currency_to},
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        if 'rates' not in data:
+            return {'error': 'Invalid API response format.'}
+        logger.info(f'✅ API response: {data}')
+        return data
+    except httpx.HTTPError as e:
+        return {'error': f'API request failed: {e}'}
+    except ValueError:
+        return {'error': 'Invalid JSON response from API.'}
+
+if __name__ == "__main__":
+    logger.info(f"🚀 MCP server started on port {os.getenv('PORT', 8080)}")
+    # Could also use 'sse' transport, host="0.0.0.0" required for Cloud Run.
+    asyncio.run(
+        mcp.run_async(
+            transport="http",
+            host="0.0.0.0",
+            port=os.getenv("PORT", 8080),
+        )
+    )
+
+To start the MCP server locally, open a terminal and run the following command (server will start on http://localhost:8080):
+
+uv run mcp-server/server.py
+Test that the MCP server is functioning properly and that the get_exchange_rate tool is accessible using the Model Context Protocol.
+
+In a new terminal window (so that you don't stop the local MCP server) run the following:
+
+uv run mcp-server/test_server.py
+You should see the current exchange rate of 1 USD (US dollar) to EUR (Euro) outputted:
+
+--- 🛠️ Tool found: get_exchange_rate ---
+--- 🪛 Calling get_exchange_rate tool for USD to EUR ---
+--- ✅ Success: {
+  "amount": 1.0,
+  "base": "USD",
+  "date": "2025-05-26",
+  "rates": {
+    "EUR": 0.87866
+  }
+} ---
+Awesome! You successfully have a working MCP server with a tool that your agent will be able to access.
+
+Before moving on to the next station, stop the locally running MCP server by running Ctrl+C (or Command+C on Mac) in the terminal where you started it.
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Getting Started with MCP, ADK and A2A
+
+English
+Overview
+Before you begin
+Installation
+Create a local MCP Server
+Deploy your MCP Server to Cloud Run
+Create an Agent with Agent Development Kit (ADK)
+Agent2Agent (A2A) Protocol
+Exposing the Currency Agent A2A Server
+Congratulations
+5. Deploy your MCP Server to Cloud Run
+Now you are ready to deploy the MCP server as a remote MCP server to Cloud Run 🚀☁️
+
+Benefits of running an MCP server remotely
+Running an MCP server remotely on Cloud Run can provide several benefits:
+
+📈Scalability: Cloud Run is built to rapidly scale out to handle all incoming requests. Cloud Run will scale your MCP server automatically based on demand.
+👥Centralized server: You can share access to a centralized MCP server with team members through IAM privileges, allowing them to connect to it from their local machines instead of all running their own servers locally. If a change is made to the MCP server, all team members will benefit from it.
+🔐Security: Cloud Run provides an easy way to force authenticated requests. This allows only secure connections to your MCP server, preventing unauthorized access.
+IMPORTANT: The security aspect previously mentioned is critical. If you don't enforce authentication, anyone on the public internet can potentially access and call your MCP server.
+
+Change into the mcp-server directory:
+
+
+cd mcp-server
+Deploy the MCP server to Cloud Run:
+
+
+gcloud run deploy mcp-server --no-allow-unauthenticated --region=us-central1 --source .
+If your service has successfully deployed you will see a message like the following:
+
+
+Service [mcp-server] revision [mcp-server-12345-abc] has been deployed and is serving 100 percent of traffic.
+Authenticating MCP Clients
+Since you specified --no-allow-unauthenticated to require authentication, any MCP client connecting to the remote MCP server will need to authenticate.
+
+The official docs for Host MCP servers on Cloud Run provides more information on this topic depending on where you are running your MCP client.
+
+You will need to run the Cloud Run proxy to create an authenticated tunnel to the remote MCP server on your local machine.
+
+By default, the URL of Cloud Run services requires all requests to be authorized with the Cloud Run Invoker (roles/run.invoker) IAM role. This IAM policy binding ensures that a strong security mechanism is used to authenticate your local MCP client.
+
+You should make sure that you or any team members trying to access the remote MCP server have the roles/run.invoker IAM role bound to their IAM principal (Google Cloud account).
+
+NOTE: The following command may prompt you to download the Cloud Run proxy if it is not already installed. Follow the prompts to download and install it.
+
+gcloud run services proxy mcp-server --region=us-central1
+You should see the following output:
+
+Proxying to Cloud Run service [mcp-server] in project [<YOUR_PROJECT_ID>] region [us-central1]
+http://127.0.0.1:8080 proxies to https://mcp-server-abcdefgh-uc.a.run.app
+All traffic to http://127.0.0.1:8080 will now be authenticated and forwarded to the remote MCP server.
+
+Test the remote MCP server
+In a new terminal, head back to the root folder and re-run the mcp-server/test_server.py file to make sure the remote MCP server is working.
+
+NOTE: Make sure you leave the Cloud Run proxy running for the rest of the codelab.
+
+cd ..
+uv run mcp-server/test_server.py
+You should see a similar output as you did when running the server locally:
+
+--- 🛠️ Tool found: get_exchange_rate ---
+--- 🪛 Calling get_exchange_rate tool for USD to EUR ---
+--- ✅ Success: {
+  "amount": 1.0,
+  "base": "USD",
+  "date": "2025-05-26",
+  "rates": {
+    "EUR": 0.87866
+  }
+} ---
+You can query the logs of the deployed Cloud Run MCP server if you would like to verify that the remote server was indeed called:
+
+gcloud run services logs read mcp-server --region us-central1 --limit 5
+You should see the following outputted in the logs:
+
+2025-06-04 14:28:29,871 [INFO]: --- 🛠️ Tool: get_exchange_rate called for converting USD to EUR ---
+2025-06-04 14:28:30,610 [INFO]: HTTP Request: GET https://api.frankfurter.app/latest?from=USD&to=EUR "HTTP/1.1 200 OK"
+2025-06-04 14:28:30,611 [INFO]: ✅ API response: {'amount': 1.0, 'base': 'USD', 'date': '2025-06-03', 'rates': {'EUR': 0.87827}}
+Now that you have a remote MCP server, you can move on to creating an agent! 🤖
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Getting Started with MCP, ADK and A2A
+
+English
+Overview
+Before you begin
+Installation
+Create a local MCP Server
+Deploy your MCP Server to Cloud Run
+Create an Agent with Agent Development Kit (ADK)
+Agent2Agent (A2A) Protocol
+Exposing the Currency Agent A2A Server
+Congratulations
+6. Create an Agent with Agent Development Kit (ADK)
+You have a deployed MCP server, now it is time to create the currency agent using Agent Development Kit (ADK).
+
+Agent Development Kit recently released its v1.0.0 stable release. This milestone signifies that the Python ADK is now production-ready, offering a reliable and robust platform for developers to confidently build and deploy their agents in live environments.
+
+ADK makes creating agents extremely lightweight and allows them to easily connect to MCP servers with built-in support for MCP Tools. The currency agent will access the get_exchange_rate tool by using ADK's MCPToolset class.
+
+The code for the currency agent is located in currency_agent/agent.py:
+
+
+import logging
+import os
+
+from dotenv import load_dotenv
+from google.adk.agents import LlmAgent
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
+
+load_dotenv()
+
+SYSTEM_INSTRUCTION = (
+    "You are a specialized assistant for currency conversions. "
+    "Your sole purpose is to use the 'get_exchange_rate' tool to answer questions about currency exchange rates. "
+    "If the user asks about anything other than currency conversion or exchange rates, "
+    "politely state that you cannot help with that topic and can only assist with currency-related queries. "
+    "Do not attempt to answer unrelated questions or use tools for other purposes."
+)
+
+logger.info("--- 🔧 Loading MCP tools from MCP Server... ---")
+logger.info("--- 🤖 Creating ADK Currency Agent... ---")
+
+root_agent = LlmAgent(
+    model="gemini-2.5-flash",
+    name="currency_agent",
+    description="An agent that can help with currency conversions",
+    instruction=SYSTEM_INSTRUCTION,
+    tools=[
+        MCPToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=os.getenv("MCP_SERVER_URL", "http://localhost:8080/mcp")
+            )
+        )
+    ],
+)
+To quickly test out the currency agent you can take advantage of ADK's dev UI, accessed by running adk web:
+
+uv run adk web
+In a browser, head over to http://localhost:8000 to see and test the agent!
+
+Make sure that currency_agent is selected as the agent in the top left corner of the web UI.
+
+ADK Web UI
+
+Ask your agent in the chat area something like "What is 250 CAD to USD?". You should see the agent call our get_exchange_rate MCP tool before it gives a response.
+
+ADK Web Currency Agent
+
+The agent works! It can handle queries that revolve around currency conversions 💸.
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Getting Started with MCP, ADK and A2A
+
+English
+Overview
+Before you begin
+Installation
+Create a local MCP Server
+Deploy your MCP Server to Cloud Run
+Create an Agent with Agent Development Kit (ADK)
+Agent2Agent (A2A) Protocol
+Exposing the Currency Agent A2A Server
+Congratulations
+7. Agent2Agent (A2A) Protocol
+The Agent2Agent (A2A) Protocol is an open standard designed to enable seamless communication and collaboration between AI agents. This allows agents that are built using diverse frameworks and by different vendors, to communicate with one another in a common language, breaking down silos and fostering interoperability.
+
+A2A Protocol
+
+A2A allows agents to:
+
+Discover: Find other agents and learn their skills (AgentSkill) and capabilities (AgentCapabilities) using standardized Agent Cards.
+Communicate: Exchange messages and data securely.
+Collaborate: Delegate tasks and coordinate actions to achieve complex goals.
+The A2A protocol facilitates this communication through mechanisms like "Agent Cards" that act as digital business cards agents can use to advertise their capabilities and connection information.
+
+A2A Agent Card
+
+Now it is time to expose the currency agent using A2A so that it can be called by other agents and clients.
+
+A2A Python SDK
+The A2A Python SDK provides Pydantic models for each of the aforementioned resources; AgentSkill, AgentCapabilities and AgentCard. This provides an interface for expediting development and integration with the A2A protocol.
+
+An AgentSkill is how you will advertise to other agents that the currency agent has a tool for get_exchange_rate:
+
+
+# A2A Agent Skill definition
+skill = AgentSkill(
+    id='get_exchange_rate',
+    name='Currency Exchange Rates Tool',
+    description='Helps with exchange values between various currencies',
+    tags=['currency conversion', 'currency exchange'],
+    examples=['What is exchange rate between USD and GBP?'],
+)
+Then as part of the AgentCard it will list the agent's skills and capabilities alongside additional details like input and output modes that the agent can handle:
+
+
+# A2A Agent Card definition
+agent_card = AgentCard(
+    name='Currency Agent',
+    description='Helps with exchange rates for currencies',
+    url=f'http://{host}:{port}/',
+    version='1.0.0',
+    defaultInputModes=["text"],
+    defaultOutputModes=["text"],
+    capabilities=AgentCapabilities(streaming=True),
+    skills=[skill],
+)
+The time has come to put it all together with the currency agent and showcase the power of A2A!
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Getting Started with MCP, ADK and A2A
+
+English
+Overview
+Before you begin
+Installation
+Create a local MCP Server
+Deploy your MCP Server to Cloud Run
+Create an Agent with Agent Development Kit (ADK)
+Agent2Agent (A2A) Protocol
+Exposing the Currency Agent A2A Server
+Congratulations
+8. Exposing the Currency Agent A2A Server
+ADK simplifies the process of building and connecting agents using the A2A protocol for you. Making an an existing ADK agent accessible (exposing) as an A2A server is done with ADK's to_a2a(root_agent) function (See the ADK documentation for the full details).
+
+The to_a2a function converts an existing agent to work with A2A, and be able to expose it as a server through uvicorn. This means that you have tighter control over what you want to expose if you plan to productionize your agent. The to_a2a() function auto-generates an agent card based on your agent code using the A2A Python SDK under the hood.
+
+Taking a look inside the file currency_agent/agent.py you can see the use of to_a2a and how the currency agent is exposed as an A2A server with only two lines of code!
+
+
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+# ... see file for full code
+
+# Make the agent A2A-compatible
+a2a_app = to_a2a(root_agent, port=10000)
+To run the A2A server, in a new terminal run the following:
+
+
+uv run uvicorn currency_agent.agent:a2a_app --host localhost --port 10000
+If the server starts successfully, the output will look as follows indicating it is running on port 10000:
+
+
+[INFO]: --- 🔧 Loading MCP tools from MCP Server... ---
+[INFO]: --- 🤖 Creating ADK Currency Agent... ---
+INFO:     Started server process [45824]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:10000 (Press CTRL+C to quit)
+The currency agent is now successfully running as an A2A server, with the ability to be called by other agents or clients using the A2A protocol!
+
+Verify the Remote Agent is Running
+You can double-check that your agent is up and running by visiting the agent card URL for the currency agent that was auto-generated by the to_a2a() function.
+
+In your browser, head to [http://localhost:10000/.well-known/agent.json]
+
+You should see the following agent card:
+
+{
+  "capabilities": {
+
+  },
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "An agent that can help with currency conversions",
+  "name": "currency_agent",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0",
+  "skills": [
+    {
+      "description": "An agent that can help with currency conversions I am a specialized assistant for currency conversions. my sole purpose is to use the 'get_exchange_rate' tool to answer questions about currency exchange rates. If the user asks about anything other than currency conversion or exchange rates, politely state that I cannot help with that topic and can only assist with currency-related queries. Do not attempt to answer unrelated questions or use tools for other purposes.",
+      "id": "currency_agent",
+      "name": "model",
+      "tags": [
+        "llm"
+      ]
+    },
+    {
+      "description": "Use this to get current exchange rate.\n\nArgs:\n    currency_from: The currency to convert from (e.g., \"USD\").\n    currency_to: The currency to convert to (e.g., \"EUR\").\n    currency_date: The date for the exchange rate or \"latest\". Defaults to \"latest\".\n\nReturns:\n    A dictionary containing the exchange rate data, or an error message if the request fails.",
+      "id": "currency_agent-get_exchange_rate",
+      "name": "get_exchange_rate",
+      "tags": [
+        "llm",
+        "tools"
+      ]
+    }
+  ],
+  "supportsAuthenticatedExtendedCard": false,
+  "url": "http://localhost:10000",
+  "version": "0.0.1"
+}
+Test the A2A Server
+You can now test the server by sending it some requests using A2A!
+
+The A2A Python SDK provides an a2a.client.A2AClient class that simplifies this for you.
+
+Note: If you had a multi-agent architecture you would use a similar pattern to what you have done here with the A2AClient.
+
+The file currency_agent/test_client.py contains code that runs through several different test cases against the A2A server.
+
+# ... see file for full code
+
+# Example test using A2AClient
+async def run_single_turn_test(client: A2AClient) -> None:
+    """Runs a single-turn non-streaming test."""
+
+    send_message_payload = create_send_message_payload(text="how much is 100 USD in CAD?")
+    request = SendMessageRequest(
+        id=str(uuid4()), params=MessageSendParams(**send_message_payload)
+    )
+
+    print("--- ✉️  Single Turn Request ---")
+    # Send Message
+    response: SendMessageResponse = await client.send_message(request)
+    print_json_response(response, "📥 Single Turn Request Response")
+    if not isinstance(response.root, SendMessageSuccessResponse):
+        print("received non-success response. Aborting get task ")
+        return
+
+    if not isinstance(response.root.result, Task):
+        print("received non-task response. Aborting get task ")
+        return
+
+    task_id: str = response.root.result.id
+    print("--- ❔ Query Task ---")
+    # query the task
+    get_request = GetTaskRequest(id=str(uuid4()), params=TaskQueryParams(id=task_id))
+    get_response: GetTaskResponse = await client.get_task(get_request)
+    print_json_response(get_response, "📥 Query Task Response")
+
+# ----- Main Entrypoint (Create client --> Run tests) -----
+async def main() -> None:
+    """Main function to run the tests."""
+    print(f'--- 🔄 Connecting to agent at {AGENT_URL}... ---')
+    try:
+        async with httpx.AsyncClient() as httpx_client:
+            # Create a resolver to fetch the agent card
+            resolver = A2ACardResolver(
+                httpx_client=httpx_client,
+                base_url=AGENT_URL,
+            )
+            agent_card = await resolver.get_agent_card()
+            # Create a client to interact with the agent
+            client = A2AClient(
+                httpx_client=httpx_client,
+                agent_card=agent_card,
+            )
+            print('--- ✅ Connection successful. ---')
+
+            await run_single_turn_test(client)
+            await run_multi_turn_test(client)
+
+    except Exception as e:
+        traceback.print_exc()
+        print(f'--- ❌ An error occurred: {e} ---')
+        print('Ensure the agent server is running.')
+Run the tests using the following command:
+
+uv run currency_agent/test_client.py
+A successful test run will result in the following:
+
+--- 🔄 Connecting to agent at http://localhost:10000... ---
+--- ✅ Connection successful. ---
+--- ✉️ Single Turn Request ---
+--- 📥 Single Turn Request Response ---
+{"id":"3bc92d7b-d857-4e93-9ff0-b2fb865f6e35","jsonrpc":"2.0","result":{"artifacts":[{"artifactId":"35e89e14-b977-4397-a23b-92c84bc32379","parts":[{"kind":"text","text":"Based on the current exchange rate, 1 USD is equivalent to 1.3704 CAD. Therefore, 100 USD would be 137.04 CAD.\n"}]}],"contextId":"2d66f277-152c-46ef-881d-7fe32866e9f5","history":[{"contextId":"2d66f277-152c-46ef-881d-7fe32866e9f5","kind":"message","messageId":"59819269f7d04849b0bfca7d43ec073c","parts":[{"kind":"text","text":"how much is 100 USD in CAD?"}],"role":"user","taskId":"52ae2392-84f5-429a-a14b-8413d3d20d97"},{"contextId":"2d66f277-152c-46ef-881d-7fe32866e9f5","kind":"message","messageId":"286095c6-12c9-40cb-9596-a9676d570dbd","parts":[],"role":"agent","taskId":"52ae2392-84f5-429a-a14b-8413d3d20d97"}],"id":"52ae2392-84f5-429a-a14b-8413d3d20d97","kind":"task","status":{"state":"completed"}}}
+
+// ...
+
+--- 🚀 First turn completed, no further input required for this test case. ---
+It works! You have successfully tested that you can communicate with the currency agent over an A2A server! 🎉
+
+Check out the a2a-samples repository on GitHub to see more advanced use-cases!
+
+Looking to deploy your agent? Vertex AI Agent Engine provides a managed experience for deploying AI agents to production!
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Create multi agent system with ADK, deploy in Agent Engine and get started with A2A protocol
+
+English
+Objective of this lab
+Before you begin
+Overview: Benefits of Agent Development Kit
+Introduction to A2A
+Agent Architecture
+Task 1. Install ADK and set up your environment
+Task 2. Deploy to Agent Engine
+Task 3. Create an A2A agent
+Clean up
+4. Introduction to A2A
+The Agent2Agent (A2A) protocol is an open standard designed to enable seamless and secure communication and collaboration between autonomous AI agents from different frameworks, vendors, and domains.
+
+Universal Interoperability: A2A allows agents to work together regardless of their underlying technologies, fostering a truly multi-agent ecosystem. This means agents built by different companies on different platforms can communicate and coordinate.
+Capability Discovery: Agents can advertise their capabilities using "Agent Cards" (JSON documents), which describe their identity, supported A2A features, skills, and authentication requirements. This allows other agents to discover and select the most suitable agent for a given task.
+Secure by Default: Security is a core principle. A2A incorporates enterprise-grade authentication and authorization mechanisms, utilizing standards like HTTPS/TLS, JWT, OIDC, and API keys to ensure secure interactions and protect sensitive data.
+Modality Agnostic: The protocol supports various communication modalities, including text, audio, and video streaming, as well as interactive forms and embedded iframes. This flexibility allows agents to exchange information in the most appropriate format for the task and user.
+Structured Task Management: A2A defines clear protocols for task delegation, monitoring, and completion. It supports grouping related tasks and managing them across different agents using unique task IDs. Tasks can transition through defined lifecycles (e.g., submitted, working, completed).
+Opaque Execution: A significant feature is that agents don't need to reveal their internal reasoning processes, memory, or specific tools to other agents. They only expose their callable services, promoting modularity and privacy.
+Built on Existing Standards: A2A leverages established web technologies such as HTTP, Server-Sent Events (SSE) for real-time streaming, and JSON-RPC for structured data exchange, making it easier to integrate with existing IT infrastructure.
+Asynchronous Communication: The protocol is designed with asynchronous communication as a primary consideration, facilitating flexible task progression and enabling push notifications for updates even when a connection isn't persistently maintained.
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Create multi agent system with ADK, deploy in Agent Engine and get started with A2A protocol
+
+English
+Objective of this lab
+Before you begin
+Overview: Benefits of Agent Development Kit
+Introduction to A2A
+Agent Architecture
+Task 1. Install ADK and set up your environment
+Task 2. Deploy to Agent Engine
+Task 3. Create an A2A agent
+Clean up
+5. Agent Architecture
+In this lab, you will create a multi-agent application that generates an image according to your specification and evaluates the image before presenting it to you.
+
+The system is structured with a main agent called image_scoring that orchestrates the entire process. This main agent has a sub-agent called image_generation_scoring_agent which in turn has its own sub-agents for more specific tasks. This creates a hierarchical relationship where the main agent delegates tasks to its sub-agents. 6e21de5b4f92669c.png Figure 2: Overall Agent flow.
+
+List of All Agents
+
+image_scoring (Main Agent):
+Purpose: This is the root agent that manages the overall workflow. It repeatedly runs the image_generation_scoring_agent and the checker_agent in a loop until a termination condition is met.
+Sub-agents:
+image_generation_scoring_agent
+checker_agent_instance
+image_generation_scoring_agent (Sub-agent of image_scoring):
+Purpose: This agent is responsible for the core logic of generating and scoring images. It executes a sequence of three sub-agents to achieve this.
+Sub-agents:
+image_generation_prompt_agent
+image_generation_agent
+scoring_images_prompt
+checker_agent_instance (Sub-agent of image_scoring):
+Purpose: This agent checks if the image scoring process should continue or terminate. It uses the check_tool_condition tool to evaluate the termination condition.
+image_generation_prompt_agent (Sub-agent of image_generation_scoring_agent):
+Purpose: This agent is an expert in creating prompts for image generation. It takes an input text and generates a detailed prompt suitable for the image generation model.
+image_generation_agent (Sub-agent of image_generation_scoring_agent):
+Purpose: This agent is an expert in creating images using Imagen 3. It takes the prompt from the image_generation_prompt_agent and generates an image.
+scoring_images_prompt (Sub-agent of image_generation_scoring_agent):
+Purpose: This agent is an expert in evaluating and scoring images based on various criteria. It takes the generated image and assigns a score to it.
+Tools Used by the Agents
+
+check_tool_condition:
+Description: This tool checks if the loop termination condition is met or if the maximum number of iterations has been reached. If either of these is true, it stops the loop.
+Used by: checker_agent_instance
+generate_images:
+Description: This tool generates images using the Imagen 3 model. It can also save the generated images to a Google Cloud Storage bucket.
+Used by: image_generation_agent
+get_policy:
+Description: This tool fetches a policy from a JSON file. The policy is used by the image_generation_prompt_agent to create the image generation prompt and by the scoring_images_prompt to score the images.
+Used by: image_generation_prompt_agent, scoring_images_prompt
+get_image:
+Description: This tool loads the generated image artifact so that it can be scored.
+Used by: scoring_images_prompt
+set_score:
+Description: This tool sets the total score of the generated image in the session state.
+Used by: scoring_images_prompt
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Create multi agent system with ADK, deploy in Agent Engine and get started with A2A protocol
+
+English
+Objective of this lab
+Before you begin
+Overview: Benefits of Agent Development Kit
+Introduction to A2A
+Agent Architecture
+Task 1. Install ADK and set up your environment
+Task 2. Deploy to Agent Engine
+Task 3. Create an A2A agent
+Clean up
+6. Task 1. Install ADK and set up your environment
+In this Hands on we will use Cloud Shell to perform the tasks.
+
+Enable Vertex AI recommended APIs
+In the Google Cloud console, navigate to Vertex AI by searching for it at the top of the console.
+Click Enable all recommended APIs.
+Prepare a Cloud Shell Editor tab
+With your Google Cloud console window selected, open Cloud Shell by pressing the G key and then the S key on your keyboard. Alternatively, you can click the cloud shell button 231dc0e6754519c8.pngon the top right corner of the Google Cloud Console.
+Click Continue.
+When prompted to authorize Cloud Shell, click Authorize.
+In the upper right corner of the Cloud Shell pane, click the Open in new window button Open in new window button.
+Click the Open Editor pencil icon ( Open Editor pencil icon) at the top of the pane to view files.
+At the top of the left-hand navigation menu, click the Explorer icon Explorer icon to open your file explorer.
+Click the Open Folder button.
+Throughout the rest of this lab, you can work in this window as your IDE with the Cloud Shell Editor and Cloud Shell Terminal.
+Download and install the ADK and code samples for this lab
+Execute the following commands to clone the needed source from github and install necessary libraries.
+
+#create the project directory
+mkdir imagescoring
+cd imagescoring
+#clone the code in the local directory
+git clone https://github.com/haren-bh/multiagenthandson.git
+
+#Create the virtual environment
+python3 -m venv pythonenv
+source pythonenv/bin/activate
+
+#install google-adk and a2a sdk
+python3 -m pip install google-adk==1.8.0
+python3 -m pip install a2a-sdk==0.2.16
+We will use poetry to install additional requirements:
+
+cd multiagenthandson #go to the application directory
+pip install poetry poetry-plugin-export
+poetry install --with deployment
+If you do not have a cloud storage bucket, create a new one in Google Cloud Storage. You can also create the bucket using gsutil command.
+
+gsutil mb gs://YOUR-UNIQUE-BUCKETNAME
+In the editor go to View->Toggle hidden files. And in the image_scoring folder create a .env file with the following content. Add the required details such as your project name and cloud storage bucket.
+
+GOOGLE_GENAI_USE_VERTEXAI=1 #1 if VERTEXAI has to be used. Can be 0 if API_KEY is specified
+GOOGLE_CLOUD_PROJECT=YOUR CLOUD PROJECT NAME
+GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_CLOUD_STORAGE_BUCKET=YOUR BUCKET NAME  # Only required for deployment on Agent Engine
+GCS_BUCKET_NAME=YOUR BUCKET NAME #Bucket for storing generated images.
+SCORE_THRESHOLD=40 # Min threshold for image_score. Max Score is 50 , hence should be less than 50. 
+#If the computed score is higher then loop will terminate
+#MAX_ITERATIONS=5 #Max iterations for evaluating the image_score before terminating the loop.
+IMAGEN_MODEL="imagen-3.0-generate-002" 
+GENAI_MODEL="gemini-2.5-flash"
+#AGENT_ENGINE_ID=<AGENT_ENGINE_ID> #The Agent Engine ID obtained after deploying to the agent engine.
+Look at the agent structure in the source code, start at agent.py . This agent contains the root agent that will connect to the other agents.
+Go back to the top directory multiagenthandson in the terminal and execute the following command to run the agent locally
+
+# Run the following command to run agents locally
+export GCS_BUCKET_NAME=your gcs bucket name
+adk web
+7bb4bc5f8244c140.png Figure 1
+
+Ctrl+Click (CMD+Click for MacOS) on the http:// url displayed on the terminal to open the ADK's browser based GUI client. It should look like Figure 2
+
+Let's generate some images. Try the following prompts or your own prompts.
+A peaceful mountain landscape at sunset
+A cat riding a bicycle
+99e23472f80a81f2.png Figure 2
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Create multi agent system with ADK, deploy in Agent Engine and get started with A2A protocol
+
+English
+Objective of this lab
+Before you begin
+Overview: Benefits of Agent Development Kit
+Introduction to A2A
+Agent Architecture
+Task 1. Install ADK and set up your environment
+Task 2. Deploy to Agent Engine
+Task 3. Create an A2A agent
+Clean up
+7. Task 2. Deploy to Agent Engine
+Now we deploy the agent to the Agent Engine. Agent Engine is a fully managed service for deploying agents in GCP. Agent Engine is compatible with ADK so the agents built with ADK can be deployed in Agent Engine.
+
+Define some environment variables
+
+export GOOGLE_CLOUD_LOCATION='us-central1'
+export GOOGLE_CLOUD_PROJECT='your project id'
+Create the requirements.txt file using poetry. Poetry will use pyproject.toml to create requirements.txt file. After running the command check if requirements.txt file has been created.
+
+# Go to the parent folder containing pyproject.toml file
+# install poetry-plugin-export
+pip install poetry-plugin-export
+
+#Create requirements.txt file
+poetry export -f requirements.txt --output requirements.txt --without-hashes
+Create the package. We need to bundle our app into a .whl python package. We will use poetry to do that. Once you execute the command make sure a dist folder is created and it contains the .whl file.
+
+# Go to the parent folder containing pyproject.toml file
+#Create python package, to create whl file
+poetry build
+Now we will prepare the deploy script. The deploy script will deploy our image-scoring agent or agent engine service. Please change the content of deploy.py inside the image_scoring folder as below.
+
+# Change the content of the following. Look for #change this comment
+import vertexai
+from .agent import root_agent
+import os
+import glob # To easily find the wheel file
+
+PROJECT_ID = "YOUR PROJECT ID" #change this your project
+LOCATION = "us-central1" #change this
+STAGING_BUCKET = "gs://YOUR BUCKET " #change this to your bucket
+
+from vertexai import agent_engines
+
+vertexai.init(
+   project=PROJECT_ID,
+   location=LOCATION,
+   staging_bucket=STAGING_BUCKET,
+)
+
+remote_app = agent_engines.create(
+   agent_engine=root_agent,
+   requirements=open(os.path.join(os.getcwd(), "requirements.txt")).readlines()+["./dist/image_scoring-0.1.0-py3-none-any.whl"],#change this to your local location
+   extra_packages=[
+       "./dist/image_scoring-0.1.0-py3-none-any.whl", # change this to your location
+   ]
+)
+
+print(remote_app.resource_name)
+We can now run the deploy script.
+#run deploy script from the parent folder containing deploy.py
+python3 -m image_scoring.deploy
+After you deploy you should see something like below, 13109f2a5c5c5af9.png
+
+Figure 3
+
+Now let's test the deployed agent. In order to test the remotely deployed agent engine first copy the agent location from the deploy output in the terminal. It should look something like this, projects/85469421903/locations/us-central1/reasoningEngines/7369674597261639680 .
+Go to the folder testclient, open the file remote_test.py and edit the following lines.
+PROJECT_ID = "" #change this
+LOCATION = "" #change this
+STAGING_BUCKET = "" #change this
+
+#replace the id with your own.
+reasoning_engine_id="your agent engine id"
+
+#You can replace this with your own prompt
+image_prompt="A cat riding a bicycle"
+
+#execute remote_test.py
+python3 remote_test.py
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Create multi agent system with ADK, deploy in Agent Engine and get started with A2A protocol
+
+English
+Objective of this lab
+Before you begin
+Overview: Benefits of Agent Development Kit
+Introduction to A2A
+Agent Architecture
+Task 1. Install ADK and set up your environment
+Task 2. Deploy to Agent Engine
+Task 3. Create an A2A agent
+Clean up
+8. Task 3. Create an A2A agent
+In this step we are going to create a simple A2A agent based on the agent we created in the previous steps. Existing ADK agents can be published under A2A protocol. These are the key things you will learn in this step.
+
+Learn the basics of A2A protocol.
+Learn how ADK and A2A protocols work with each other.
+Learn how to interact with A2A protocol.
+In this hands on we will use the code in image_scoring_adk_a2a_server folder. Before you start the task please change your directory to this folder.
+
+Create A2A agent card
+A2A protocol requires an agent card that contains all the information about the agent such as agent capabilities, agent usage guide etc. Once an A2A agent is deployed the agent card is viewable using the ".well-known/agent-card.json" link. Clients can refer to this information to send the request to agents.
+
+In the remote_a2a/image_scoring folder confirm there is agents.json with the following content.
+
+
+{
+ "name": "image_scoring",
+ "description": "Agent that generates images based on user prompts and scores their adherence to the prompt.",
+ "url": "http://localhost:8001/a2a/image_scoring",
+ "version": "1.0.0",
+ "defaultInputModes": ["text/plain"],
+ "defaultOutputModes": ["image/png", "text/plain"],
+ "capabilities": {
+   "streaming": true,
+   "functions": true
+ },
+ "skills": [
+   {
+     "id": "generate_and_score_image",
+     "name": "Generate and Score Image",
+     "description": "Generates an image from a given text prompt and then evaluates how well the generated image adheres to the original prompt, providing a score.",
+     "tags": ["image generation", "image scoring", "evaluation", "AI art"],
+     "examples": [
+       "Generate an image of a futuristic city at sunset",
+       "Create an image of a cat playing a piano",
+       "Show me an image of a serene forest with a hidden waterfall"
+     ]
+   }
+ ]
+}
+Create A2A agent
+
+Within the root folder image_scoring_adk_a2a_server, confirm that there is an a2a_agent.py file, which is the entry point for a2a agent. It should have following content,
+
+
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
+root_agent = RemoteA2aAgent(
+   name="image_scoring",
+   description="Agent to give interesting facts.",
+   agent_card="http://localhost:8001/a2a/image_scoring/.well-known/agent.json",
+  
+   # Optional configurations
+   timeout=300.0,          # HTTP timeout (seconds)
+   httpx_client=None,      # Custom HTTP client
+)
+Run A2A agent
+
+Now we are ready to run the agent! To run the agent execute following command from inside the top folder image_scoring_adk_a2a_server
+
+
+#set some environmental variables
+export GOOGLE_CLOUD_PROJECT=datapipeline-372305
+export GOOGLE_CLOUD_LOCATION=us-central1
+export GCS_BUCKET_NAME=haren-genai-bucket
+
+#following command runs the ADK agent as a2a agent
+adk api_server --a2a --port 8001 remote_a2a
+Test A2A agent
+Once the agent is running we can now go and test the agent. First of all, let's go ahead and check the agent card.
+
+#Execute the following 
+curl http://localhost:8001/a2a/image_scoring/.well-known/agent.json
+Executing the above should show the agent card for our A2A agent, which is mainly the content of agent.json that we created in the previous step.
+
+Let's now send a request to the agent. We can use curl to send request to the agent,
+
+curl -X POST   http://localhost:8001/a2a/image_scoring   -H 'Content-Type: application/json'   -d '{
+    "id": "uuid-123",
+    "params": {
+      "message": {
+        "messageId": "msg-456",
+        "parts": [{"text": "Create an image of a cat"}],
+        "role": "user"
+      }
+    }
+  }'
+In the above request, you can change the prompt by changing the "Create an image of a cat" line. Once you run the command, you can check for the output image in the specified google cloud storage.
+
+Back
+Next
+bug_report Report a mistake
+Skip to main content
+Google's Agent Stack in Action: ADK, A2A, MCP on Google Cloud
+
+English
+What you will learn
+Architecture
+Before you begin
+Setup Graph Database
+Current state of InstaVibe
+Basic Agent,Event Planner with ADK
+Platform Interaction Agent - interact with MCP Server
+Platform Interaction Agent (using MCP)
+Workflow Agent and Multi-Agents in ADK
+Agent-to-Agent (A2A) Communication
+Orchestrator Agent (A2A Client)
+Agent Engine and Remote Call from InstaVibe
+Clean Up
+Google's Agent Stack in Action:ADK, A2A, MCP on Google Cloud
+About this codelab
+subjectLast updated Aug 14, 2025
+account_circleWritten by Christina Lin
+1. What you will learn
+Welcome! We're about to embark on a pretty cool journey today. Let's start by thinking about a popular social event platform InstaVibe. While it's successful, we know that for some users, the actual planning of group activities can feel like a chore. Imagine trying to figure out what all your friends are interested in, then sifting through endless options for events or venues, and finally coordinating everything. It's a lot! This is precisely where we can introduce AI, and more specifically, intelligent agents, to make a real difference.
+
+The idea is to build a system where these agents can handle the heavy lifting, like cleverly ‘listening' to understand user and friend preferences, and then proactively suggesting fantastic, tailored activities. Our aim is to transform social planning on InstaVibe into something seamless and delightful. To get started on building these smart assistants, we need to lay a strong groundwork with the right tools.
+
+Here's the concept you'll see:
+
+Title Page 
+
+Foundations with Google's ADK: Master the fundamentals of building your first intelligent agent using Google's Agent Development Kit (ADK). Understand the essential components, the agent lifecycle, and how to leverage the framework's built-in tools effectively.
+
+Extending Agent Capabilities with Model Context Protocol (MCP): Learn to equip your agents with custom tools and context, enabling them to perform specialized tasks and access specific information. Introduce the Model Context Protocol (MCP) concept. You'll learn how to set up an MCP server to provide this context.
+
+Designing Agent Interactions & Orchestration: Move beyond single agents to understand agent orchestration. Design interaction patterns ranging from simple sequential workflows to complex scenarios involving loops, conditional logic, and parallel processing. Introduce the concept of sub-agents within the ADK framework to manage modular tasks.
+
+Building Collaborative Multi-Agent Systems: Discover how to architect systems where multiple agents collaborate to achieve complex goals. Learn and implement the Agent-to-Agent (A2A) communication protocol, establishing a standardized way for distributed agents (potentially running on different machines or services) to interact reliably.
+
+Productionizing Agents on Google Cloud: Transition your agent applications from development environments to the cloud. Learn best practices for architecting and deploying scalable, robust multi-agent systems on Google Cloud Platform (GCP). Gain insights into leveraging GCP services like Cloud Run and explore the capabilities of the latest Google Agent Engine for hosting and managing your agents.
+
+Back
+Next
+bug_report Report a mistake

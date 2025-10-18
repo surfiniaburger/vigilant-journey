@@ -4,7 +4,7 @@
 uv pip install -e .
 
 uv run --active uvicorn main:app --reload
-
+npm --prefix mooncake test
 
 2.  **Set Environment Variables for Deployment:**
     In your Cloud Shell or local terminal (with `gcloud` CLI configured):

@@ -1,18 +1,3 @@
-# Copyright 2025 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
 import os
 import json
 import asyncio
@@ -24,6 +9,18 @@ from dotenv import load_dotenv
 
 import vertexai
 from sqlalchemy import create_engine
+
+# New imports for Firebase Admin
+import firebase_admin
+from firebase_admin import auth, credentials
+
+# New imports for OpenTelemetry Tracing
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.gcp.trace import GcpSpanExporter
+from opentelemetry.resourcedetector.gcp_resource_detector import GcpResourceDetector
+from opentelemetry.sdk.resources import Resource
 
 # New imports required for the database connection
 from google.adk.sessions import DatabaseSessionService
@@ -41,7 +38,7 @@ from google.genai import types
 from google.adk.memory import VertexAiMemoryBankService
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -72,6 +69,21 @@ def initialize_services():
             "GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION"
         )
     vertexai.init(project=project_id, location=location)
+
+    # --- Tracing Configuration ---
+    trace.set_tracer_provider(
+        TracerProvider(resource=Resource.create().merge(GcpResourceDetector().detect()))
+    )
+    tracer_provider = trace.get_tracer_provider()
+    tracer_provider.add_span_processor(BatchSpanProcessor(GcpSpanExporter()))
+
+    # Initialize Firebase Admin SDK
+    if not firebase_admin._apps:
+        firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "studio-l13dd")
+        firebase_admin.initialize_app(credentials.ApplicationDefault(), {
+            'projectId': firebase_project_id,
+        })
+        print(f"Firebase Admin SDK initialized for project '{firebase_project_id}'.")
 
     # --- Database Connection Setup ---
 
@@ -257,17 +269,26 @@ async def root():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
-@app.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str, token: str = Query(...)):
     """Client websocket endpoint"""
+
+    # Authenticate the user
+    try:
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token['uid']
+        print(f"Client authenticated: {user_id} (session: {session_id})")
+    except Exception as e:
+        print(f"Authentication failed: {e}")
+        await websocket.close(code=1008, reason="Authentication failed")
+        return
 
     # Wait for client connection
     await websocket.accept()
-    print(f"Client #{user_id} connected, audio mode: {is_audio}")
+    print(f"Client connected, audio mode: {is_audio}")
 
-    # Start agent session
-    user_id_str = str(user_id)
-    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true")
+    # Start agent session using the authenticated user's UID
+    live_events, live_request_queue = await start_agent_session(user_id, is_audio == "true")
 
     # Start tasks
     agent_to_client_task = asyncio.create_task(
@@ -279,10 +300,13 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
 
     # Wait until the websocket is disconnected or an error occurs
     tasks = [agent_to_client_task, client_to_agent_task]
-    await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
-
-    # Close LiveRequestQueue
-    live_request_queue.close()
-
-    # Disconnected
-    print(f"Client #{user_id} disconnected")
+    try:
+        await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+    except WebSocketDisconnect:
+        print(f"Client #{user_id} disconnected")
+    finally:
+        # Close LiveRequestQueue and cancel tasks
+        live_request_queue.close()
+        agent_to_client_task.cancel()
+        client_to_agent_task.cancel()
+        print(f"Cleaned up resources for client #{user_id}")

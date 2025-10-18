@@ -1,4 +1,5 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
+import 'whatwg-fetch'; // Add this line to polyfill fetch
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
