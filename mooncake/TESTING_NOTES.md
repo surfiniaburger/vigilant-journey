@@ -126,3 +126,12 @@ it('should render the idle state', async () => {
 ### 7. Avoiding Syntax Errors in Test Files
 
 A simple mistake of wrapping the entire test file content in triple quotes (`'''`) caused a syntax error and test failure. This is a reminder to be careful with string literals, especially when generating or modifying code programmatically. Always double-check the syntax of the generated code.
+
+
+---
+
+- The `Session` object from the ADK has been updated. It now uses an `id` field instead of `session_id` and no longer has a `metadata` field or allows for arbitrary extra fields.
+
+- When testing asynchronous methods that have been mocked, it is important to use `AsyncMock` to ensure that the mocks behave correctly in an asynchronous environment.
+
+- When a method is a no-op, tests should assert that the underlying methods are *not* called, rather than asserting that they *are* called.
