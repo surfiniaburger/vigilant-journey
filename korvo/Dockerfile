@@ -14,6 +14,12 @@ ENV PYTHONUNBUFFERED=1
 # Install dependencies
 RUN uv sync
 
+# Add the virtual environment to the PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Download and cache the model during the build process
+RUN python cache_model.py
+
 EXPOSE $PORT
 
 # Run the FastMCP server

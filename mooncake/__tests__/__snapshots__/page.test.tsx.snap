@@ -3,41 +3,31 @@
 exports[`Page renders homepage unchanged 1`] = `
 <div>
   <main
-    class="flex h-screen items-center justify-center"
+    class="flex h-screen w-screen flex-col items-center justify-center bg-background text-foreground"
   >
     <div
-      class="w-full max-w-lg h-[70vh] border rounded-lg shadow-lg"
+      class="flex flex-col items-center gap-6 text-center"
     >
-      <div
-        class="w-full h-full flex flex-col"
+      <h1
+        class="text-5xl font-bold tracking-tight md:text-6xl"
       >
-        <div
-          class="relative overflow-y-auto flex-1"
-          role="log"
+        Welcome to Alora
+      </h1>
+      <p
+        class="max-w-xl text-lg text-muted-foreground"
+      >
+        Your intelligent automotive co-pilot. Plan trips, diagnose issues, and explore your vehicle's features with the power of conversational AI.
+      </p>
+      <a
+        href="/map"
+      >
+        <button
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[>svg]:px-4 mt-4"
+          data-slot="button"
         >
-          <div
-            style="height: 100%; width: 100%;"
-          >
-            <div
-              class="p-4"
-            />
-          </div>
-        </div>
-        <div
-          class="p-4 bg-background border-t"
-        >
-          <button
-            aria-label="Voice Button"
-            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 gap-2 transition-all duration-200 relative"
-            data-slot="button"
-            type="button"
-          >
-            <div
-              class="flex shrink-0 items-center justify-center overflow-hidden transition-all duration-300 absolute inset-0 rounded-sm bg-muted/50 border-0"
-            />
-          </button>
-        </div>
-      </div>
+          Launch Co-Pilot
+        </button>
+      </a>
     </div>
   </main>
 </div>

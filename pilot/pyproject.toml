@@ -6,15 +6,31 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
+    "firebase-admin>=6.5.0",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-gcp-trace",
+    "opentelemetry-resourcedetector-gcp",
     "certifi>=2025.10.5",
     "google-adk>=1.16.0",
     "google-adk[eval]>=1.15.0",
     "cloud-sql-python-connector>=1.18.5",
     "pg8000>=1.31.5",
-    "sqlalchemy>=2.0.43",   
+    "sqlalchemy>=2.0.43",
+    "fastapi",
+    "uvicorn",
+    "python-dotenv",
+    "websockets",
+    "httpx"
 ]
 
-# Add this new section below
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
+    "httpx"
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["google_search_agent*"]

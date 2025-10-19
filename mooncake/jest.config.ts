@@ -1,4 +1,3 @@
-
 import type { Config } from 'jest'
 import nextJest from 'next/jest.js'
  
@@ -14,7 +13,12 @@ const config: Config = {
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)
+}
+ 
+// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+export default createJestConfig(config)
+: '<rootDir>/$1',
     'streamdown': '<rootDir>/__mocks__/streamdown.tsx',
     'react-markdown': '<rootDir>/__mocks__/react-markdown.tsx',
   },

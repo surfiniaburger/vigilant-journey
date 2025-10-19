@@ -33,7 +33,7 @@ function convertFloat32ToPCM(inputData: Float32Array): ArrayBuffer {
 
 export type AudioState = 'idle' | 'recording' | 'processing' | 'playing';
 
-export const useAudio = () => {
+export const useAudio = (idToken: string | null) => {
   const [audioState, setAudioState] = useState<AudioState>('idle');
   const [text, setText] = useState<string>('');
   const websocketRef = useRef<WebSocket | null>(null);
@@ -71,8 +71,13 @@ export const useAudio = () => {
       }
 
       // Setup WebSocket
+      if (!idToken) {
+        console.error("No ID token provided for authentication.");
+        setAudioState('idle');
+        return;
+      }
       const backendHostname = process.env.NEXT_PUBLIC_PILOT_HOSTNAME || window.location.hostname.replace('3000-', '8000-');
-      const wsUrl = `wss://${backendHostname}/ws/${Math.random().toString().substring(10)}?is_audio=true`;
+      const wsUrl = `wss://${backendHostname}/ws/${Math.random().toString().substring(10)}?is_audio=true&token=${idToken}`;
       websocketRef.current = new WebSocket(wsUrl);
 
       websocketRef.current.onopen = () => console.log("WebSocket connection opened.");
@@ -109,7 +114,7 @@ export const useAudio = () => {
       console.error('Error starting recording:', error);
       setAudioState('idle');
     }
-  }, []);
+  }, [idToken]);
 
   const sendBufferedAudio = () => {
     if (audioBufferRef.current.length === 0 || !websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {

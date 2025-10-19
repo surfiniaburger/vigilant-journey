@@ -4,13 +4,26 @@ Version: 0.1.0
 Summary: Add your description here
 Requires-Python: <3.13,>=3.11
 Description-Content-Type: text/markdown
+Requires-Dist: firebase-admin>=6.5.0
+Requires-Dist: opentelemetry-api
+Requires-Dist: opentelemetry-sdk
+Requires-Dist: opentelemetry-exporter-gcp-trace
+Requires-Dist: opentelemetry-resourcedetector-gcp
 Requires-Dist: certifi>=2025.10.5
 Requires-Dist: google-adk>=1.16.0
 Requires-Dist: google-adk[eval]>=1.15.0
 Requires-Dist: cloud-sql-python-connector>=1.18.5
 Requires-Dist: pg8000>=1.31.5
 Requires-Dist: sqlalchemy>=2.0.43
-Requires-Dist: google-cloud-sql
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: python-dotenv
+Requires-Dist: websockets
+Requires-Dist: httpx
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: pytest-mock; extra == "test"
+Requires-Dist: httpx; extra == "test"
 
 # Vigilant Journey - Streaming Agent Chat
 
