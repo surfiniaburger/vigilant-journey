@@ -46,7 +46,7 @@ describe('VoiceController', () => {
       expect(screen.getByText('State: idle')).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: /Voice/i });
     expect(button).toBeInTheDocument();
 
     // Simulate a user press
@@ -72,7 +72,7 @@ describe('VoiceController', () => {
       expect(screen.getByText('State: recording')).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: /Voice/i });
     expect(button).toBeInTheDocument();
 
     // Simulate a user press
@@ -113,7 +113,7 @@ describe('VoiceController', () => {
     render(<VoiceController />);
 
     await waitFor(() => {
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: /Voice/i });
         expect(button).toBeDisabled();
     });
   });
