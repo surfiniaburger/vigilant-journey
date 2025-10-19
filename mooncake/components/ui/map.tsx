@@ -44,24 +44,34 @@ const loadGoogleMapsScript = () => {
   return scriptLoadingPromise;
 };
 
-const Map = () => {
-  const mapRef = useRef<HTMLDivElement>(null);
+interface MapProps {
+  center: { lat: number; lng: number };
+}
+
+const Map = ({ center }: MapProps) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    const mapContainer = mapRef.current;
-    let map: HTMLElement;
+    const mapContainer = mapContainerRef.current;
+
     const initMap = async () => {
+      if (!mapContainer) return;
+
       try {
         await loadGoogleMapsScript();
         // @ts-expect-error - google.maps is loaded dynamically
         const { Map3DElement } = await google.maps.importLibrary('maps3d');
-        if (mapContainer) {
-          map = new Map3DElement({
-            center: { lat: 37.7704, lng: -122.3985, altitude: 500 },
-            tilt: 67.5,
-            mode: 'HYBRID',
-          });
-          mapContainer.appendChild(map);
+        
+        if (!mapInstanceRef.current) {
+            const map = new Map3DElement({
+                center: { ...center, altitude: 500 },
+                tilt: 67.5,
+                mode: 'HYBRID',
+            });
+            mapContainer.appendChild(map);
+            mapInstanceRef.current = map;
         }
       } catch (error) {
         console.error("Failed to load Google Maps script:", error);
@@ -71,13 +81,23 @@ const Map = () => {
     initMap();
 
     return () => {
-      if (mapContainer && map) {
-        mapContainer.removeChild(map);
+      if (mapContainer && mapInstanceRef.current) {
+        if (mapInstanceRef.current.parentNode === mapContainer) {
+            mapContainer.removeChild(mapInstanceRef.current);
+        }
+        mapInstanceRef.current = null;
       }
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // We want this to run only once on mount to initialize the map. The `center` is updated in a separate effect.
 
-  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+        mapInstanceRef.current.center = { ...center, altitude: 500 };
+    }
+  }, [center]);
+
+  return <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />;
 };
 
 export { Map };

@@ -78,3 +78,29 @@ This is a web-based chat application that features a conversational AI agent pow
 1.  Open your web browser and navigate to `http://127.0.0.1:8000`.
 2.  **Important:** Click the "Start Audio" button to initialize the audio components. You will be prompted for microphone access. This is required to hear the agent's responses, even if you are sending text-based messages.
 3.  You can start interacting with the agent by typing messages in the input box and clicking "Send", or by speaking into your microphone.
+
+## Deployment
+
+1.  **Set Environment Variables for Deployment:**
+    In your Cloud Shell or local terminal (with `gcloud` CLI configured):
+    ```bash
+    export SERVICE_NAME='galatic-streamhub' # Or your preferred service name
+    export LOCATION='us-central1'         # Or your preferred region
+    export PROJECT_ID='silver-455021' # Replace with your Project ID
+    ```
+
+2.  **Deploy to Cloud Run:**
+    ```bash
+    # Recommended: Deploy using the ADK CLI to automatically handle agent-specific setup.
+    # Arguments after the '--' are passed directly to the underlying 'gcloud run deploy' command.
+    adk deploy cloud_run \
+      --service_name $SERVICE_NAME \
+      --project $PROJECT_ID \
+      --region $LOCATION \
+      --trace_to_cloud \
+      pilot \
+      -- \
+      --memory 4G \
+      --allow-unauthenticated \
+      --service-account 140457946058-compute@developer.gserviceaccount.com
+    ```

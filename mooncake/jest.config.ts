@@ -10,15 +10,11 @@ const createJestConfig = nextJest({
 const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
+  setupFiles: ['<rootDir>/jest.env.js'],
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
-    '^@/(.*)
-}
- 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config)
-: '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/$1',
     'streamdown': '<rootDir>/__mocks__/streamdown.tsx',
     'react-markdown': '<rootDir>/__mocks__/react-markdown.tsx',
   },

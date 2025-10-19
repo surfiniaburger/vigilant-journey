@@ -8,6 +8,9 @@ client = TestClient(app)
 
 @pytest.mark.asyncio
 async def test_audio_stream(mocker):
+    # Mock the auth verification to bypass real Firebase initialization in tests
+    mocker.patch("main.auth.verify_id_token", return_value={"uid": "test-uid"})
+
     # This is an async generator
     async def mock_events():
         yield MagicMock(
@@ -28,7 +31,7 @@ async def test_audio_stream(mocker):
     live_request_queue_mock = MagicMock()
     mocker.patch("main.start_agent_session", new_callable=AsyncMock, return_value=(live_events_mock, live_request_queue_mock))
 
-    with client.websocket_connect("/ws/123?is_audio=true") as websocket:
+    with client.websocket_connect("/ws/123?is_audio=true&token=test-token") as websocket:
         mock_audio_data = "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
         websocket.send_json({

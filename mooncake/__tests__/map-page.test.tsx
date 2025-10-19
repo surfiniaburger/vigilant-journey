@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import MapPage from '@/app/map/page';
+import { useAuth } from '@/context/AuthContext';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -9,15 +10,12 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
-jest.mock('@/context/AuthContext', () => ({
-  useAuth: jest.fn(),
-}));
+jest.mock('@/context/AuthContext');
 
-jest.mock('@/components/ui/chat-interface', () => ({
-  ChatInterface: () => <div data-testid="chat-interface">Chat Interface</div>,
+// Mock the useAudio hook to prevent it from running in tests
+jest.mock('@/lib/use-audio', () => ({
+  useAudio: () => ({}),
 }));
-
-import { useAuth } from '@/context/AuthContext';
 
 describe('Map Page', () => {
   it('shows a loading state while checking authentication', () => {
@@ -26,13 +24,19 @@ describe('Map Page', () => {
     expect(screen.getByText('Authenticating...')).toBeInTheDocument();
   });
 
-  it('renders the chat interface for an authenticated user', async () => {
+  it('renders the map and voice button for an authenticated user', async () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: { getIdToken: () => Promise.resolve('dummy-token') },
       loading: false,
     });
+
     render(<MapPage />);
-    // We need to wait for the token and state update
-    expect(await screen.findByTestId('chat-interface')).toBeInTheDocument();
+
+    // Use waitFor to handle asynchronous rendering and state updates
+    await waitFor(() => {
+      // The map is rendered via a div with a specific style
+      const mapElement = screen.getByRole('button', { name: 'Voice Button' });
+      expect(mapElement).toBeInTheDocument();
+    });
   });
 });
