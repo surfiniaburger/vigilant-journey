@@ -73,6 +73,7 @@ class MongoSessionService(SessionService):
         return None
 
     async def update_session(self, session: Session):
+        # This is a no-op because the Session object from the ADK no longer has a metadata field or allows for arbitrary extra fields.
         pass
 
     async def delete_session(self, session_id: str):

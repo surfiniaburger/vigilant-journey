@@ -1,13 +1,8 @@
 import os
-import sys
 import json
 import asyncio
 import base64
 import warnings
-
-# Add the current directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -84,7 +79,7 @@ def initialize_services():
             "context_spec": {
                 "memory_bank_config": {
                     "generation_config": {
-                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-2.5-flash"
+                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
                     }
                 }
             }
