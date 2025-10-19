@@ -23,6 +23,10 @@ dependencies = [
     "websockets",
     "httpx",
     "pytest>=8.4.2",
+    "pymongo",
+    "pytest-asyncio",
+    "google-cloud-secret-manager",
+    "google-cloud-logging"
 ]
 
 [project.optional-dependencies]
@@ -34,5 +38,5 @@ test = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["google_search_agent*"]
+include = ["google_search_agent*", "database*"]
 exclude = ["static"]

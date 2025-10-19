@@ -1,24 +1,24 @@
 import os
+import sys
 import json
 import asyncio
 import base64
 import warnings
 
+# Add the current directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 from pathlib import Path
 from dotenv import load_dotenv
 
 import vertexai
-from sqlalchemy import create_engine
 
 # New imports for Firebase Admin
 import firebase_admin
 from firebase_admin import auth, credentials
 
-
-
 # New imports required for the database connection
-from google.adk.sessions import DatabaseSessionService
-from google.cloud.sql.connector import Connector
+from database.mongo_db import get_mongo_session_service
 from google.genai.types import (
     Part,
     Content,
@@ -75,39 +75,7 @@ def initialize_services():
         print(f"Firebase Admin SDK initialized for project '{firebase_project_id}'.")
 
     # --- Database Connection Setup ---
-
-    # 1. Get database credentials from environment variables
-    db_user = os.environ.get("DB_USER")
-    db_pass = os.environ.get("DB_PASS")
-    db_name = os.environ.get("DB_NAME")
-    instance_connection_name = os.environ.get("INSTANCE_CONNECTION_NAME")
-
-    if not all([db_user, db_pass, db_name, instance_connection_name]):
-        raise ValueError(
-            "Missing one or more required database environment variables: "
-            "DB_USER, DB_PASS, DB_NAME, INSTANCE_CONNECTION_NAME"
-        )
-
-    # 2. Initialize the Cloud SQL Connector
-    connector = Connector()
-
-    # 3. Define a function to get the database connection
-    def getconn():
-        conn = connector.connect(
-            instance_connection_name,
-            "pg8000",
-            user=db_user,
-            password=db_pass,
-            db=db_name,
-            ip_type=os.environ.get("DB_IP_TYPE", "public")
-        )
-        return conn
-
-    # 4. Initialize the DatabaseSessionService
-    session_service = DatabaseSessionService(
-        db_url="postgresql+pg8000://",
-        creator=getconn
-    )
+    session_service = get_mongo_session_service()
 
     agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
     if not agent_engine_id:

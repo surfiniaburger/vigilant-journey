@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
-from main import app, start_agent_session
+from main import app, start_agent_session, initialize_services
 
 client = TestClient(app)
 
@@ -47,35 +47,34 @@ async def test_start_agent_session_with_memory(mock_initialize_services, mocker)
     mock_runner.run_live.assert_called_once()
 
 @patch("main.vertexai.init")
-@patch("main.Connector", new_callable=MagicMock)
-@patch("main.DatabaseSessionService", new_callable=MagicMock)
-def test_initialize_services_with_database(
-    mock_db_session_service, mock_connector, mock_vertexai_init, monkeypatch
+@patch("main.get_mongo_session_service")
+@patch("main.firebase_admin.initialize_app")
+@patch("main.VertexAiMemoryBankService")
+@patch("main.Runner")
+def test_initialize_services(
+    mock_runner,
+    mock_memory_service,
+    mock_firebase_app,
+    mock_get_mongo_session,
+    mock_vertexai_init,
+    monkeypatch,
 ):
-    """Test that initialize_services initializes the database correctly."""
-    # Set environment variables for the database connection
-    monkeypatch.setenv("DB_USER", "test_user")
-    monkeypatch.setenv("DB_PASS", "test_pass")
-    monkeypatch.setenv("DB_NAME", "test_db")
-    monkeypatch.setenv("INSTANCE_CONNECTION_NAME", "test_instance")
+    """Test that initialize_services initializes all services correctly."""
+    # Set environment variables
     monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test_project")
     monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "test_location")
-
+    monkeypatch.setenv("AGENT_ENGINE_ID", "test_engine_id")
     # Call the function
-    from main import initialize_services
-    initialize_services()
+    runner = initialize_services()
 
-    # Assert that the DatabaseSessionService was initialized with the correct arguments
-    call_args = mock_db_session_service.call_args
-    assert call_args[1]["db_url"] == "postgresql+pg8000://"
-    # Verify the creator function's behavior
-    creator_func = call_args[1]["creator"]
-    creator_func()
-    mock_connector.return_value.connect.assert_called_once_with(
-        "test_instance",
-        "pg8000",
-        user="test_user",
-        password="test_pass",
-        db="test_db",
-        ip_type="public",
+    # Assert that the services were initialized
+    mock_vertexai_init.assert_called_once_with(project="test_project", location="test_location")
+    mock_firebase_app.assert_called_once()
+    mock_get_mongo_session.assert_called_once()
+    mock_memory_service.assert_called_once_with(
+        project="test_project",
+        location="test_location",
+        agent_engine_id="test_engine_id",
     )
+    mock_runner.assert_called_once()
+    assert runner == mock_runner.return_value

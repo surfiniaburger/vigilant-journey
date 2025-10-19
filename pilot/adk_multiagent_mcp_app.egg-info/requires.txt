@@ -14,6 +14,11 @@ uvicorn
 python-dotenv
 websockets
 httpx
+pytest>=8.4.2
+pymongo
+pytest-asyncio
+google-cloud-secret-manager
+google-cloud-logging
 
 [test]
 pytest
