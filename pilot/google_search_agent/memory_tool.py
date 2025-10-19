@@ -61,14 +61,6 @@ def recall_memory(tool_context: ToolContext, query: str) -> dict:
         logger.error(error_message)
         return {"status": "error", "message": error_message}
 
-save_memory_tool = FunctionTool(
-    func=save_memory,
-    name="SaveMemory",
-    description="Saves a specific fact or user preference to long-term memory for future conversations. Use this to remember things the user explicitly states are important or that seem like a core preference (e.g., 'I prefer coastal roads')."
-)
+save_memory_tool = FunctionTool(func=save_memory)
 
-recall_memory_tool = FunctionTool(
-    func=recall_memory,
-    name="RecallMemory",
-    description="Searches long-term memory to recall past facts, preferences, or conversation summaries. Always use this before performing a general web search to see if you already know the answer."
-)
+recall_memory_tool = FunctionTool(func=recall_memory)

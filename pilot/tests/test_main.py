@@ -12,13 +12,16 @@ def test_read_main():
 
 @pytest.mark.asyncio
 async def test_websocket_endpoint(mocker):
+    # Mock the auth verification to bypass real Firebase initialization in tests
+    mocker.patch("main.auth.verify_id_token", return_value={"uid": "test-uid"})
+
     live_events_mock = MagicMock()
     live_request_queue_mock = MagicMock()
     mocker.patch("main.start_agent_session", return_value=(live_events_mock, live_request_queue_mock))
     mocker.patch("main.agent_to_client_messaging")
     mocker.patch("main.client_to_agent_messaging")
 
-    with client.websocket_connect("/ws/123?is_audio=false") as websocket:
+    with client.websocket_connect("/ws/123?is_audio=false&token=test-token") as websocket:
         # If the connection is successful, the with block will execute without raising an exception.
         pass
 

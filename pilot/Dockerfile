@@ -32,15 +32,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set the application directory
 WORKDIR /app
 
-# Copy the rest of the application source code
-COPY . /app
+# Copy dependency definition files first for better caching
+COPY pyproject.toml uv.lock requirements.txt* ./
+
+# Create virtual environment and install dependencies
+RUN uv venv && \
+    uv sync --frozen
 
 # Add the virtual environment's bin directory to the system's PATH
-# This allows running installed Python packages directly (like uvicorn)
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Install Python dependencies using the locked requirements file for reproducibility
-RUN uv sync --frozen
+# Copy the rest of the application source code
+COPY . .
 
 # Command to run the Uvicorn server.
 # It will listen on all network interfaces on port 8080, which is standard for Cloud Run.

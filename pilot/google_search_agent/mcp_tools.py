@@ -3,7 +3,7 @@ import logging
 import google.auth
 import google.auth.transport.requests
 import google.oauth2.id_token
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StreamableHTTPConnectionParams
+from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,11 +29,19 @@ def get_id_token_for_mcp() -> str:
 
 # Create the MCPToolset, which will act as a tool for our agent.
 # It connects to the remote server and authenticates using the ID token.
-mcp_tools = MCPToolset(
+mcp_tools = McpToolset(
     connection_params=StreamableHTTPConnectionParams(
-        url=mcp_server_url,
-        headers={
-            "Authorization": f"Bearer {get_id_token_for_mcp()}",
-        },
-    ),
+        url=mcp_server_url
+    )
 )
+
+"""
+mcp_tools = McpToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=mcp_server_url,
+                headers={
+                    "Authorization": f"Bearer {get_id_token_for_mcp()}",
+                },
+            ),
+        )
+"""

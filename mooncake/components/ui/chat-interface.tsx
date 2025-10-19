@@ -28,7 +28,7 @@ export const ChatInterface = ({ idToken }: { idToken: string }) => {
   const isJsonString = (str: string) => {
     try {
       JSON.parse(str);
-    } catch (e) {
+    } catch {
       return false;
     }
     return true;
@@ -45,7 +45,7 @@ export const ChatInterface = ({ idToken }: { idToken: string }) => {
             setMessages(prev => [...prev, { id: Date.now().toString(), from: 'assistant', text: `Roger that! Moving the map.` }]);
             return;
           }
-        } catch (e) {}
+        } catch {}
       }
 
       setMessages(prevMessages => {

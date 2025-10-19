@@ -47,7 +47,7 @@ export default function MapPage() {
     if (!str.trim().startsWith('{')) return false;
     try {
       JSON.parse(str);
-    } catch (e) {
+    } catch {
       return false;
     }
     return true;
@@ -64,7 +64,7 @@ export default function MapPage() {
             setAgentResponse(`Panning map to new location.`);
             return;
           }
-        } catch (e) { /* Not a valid command, fall through */ }
+        } catch { /* Not a valid command, fall through */ }
       }
       setAgentResponse(text);
     }

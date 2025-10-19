@@ -21,7 +21,8 @@ dependencies = [
     "uvicorn",
     "python-dotenv",
     "websockets",
-    "httpx"
+    "httpx",
+    "pytest>=8.4.2",
 ]
 
 [project.optional-dependencies]

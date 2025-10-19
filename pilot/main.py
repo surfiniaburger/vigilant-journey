@@ -14,13 +14,7 @@ from sqlalchemy import create_engine
 import firebase_admin
 from firebase_admin import auth, credentials
 
-# New imports for OpenTelemetry Tracing
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.gcp.trace import GcpSpanExporter
-from opentelemetry.resourcedetector.gcp_resource_detector import GcpResourceDetector
-from opentelemetry.sdk.resources import Resource
+
 
 # New imports required for the database connection
 from google.adk.sessions import DatabaseSessionService
@@ -70,12 +64,7 @@ def initialize_services():
         )
     vertexai.init(project=project_id, location=location)
 
-    # --- Tracing Configuration ---
-    trace.set_tracer_provider(
-        TracerProvider(resource=Resource.create().merge(GcpResourceDetector().detect()))
-    )
-    tracer_provider = trace.get_tracer_provider()
-    tracer_provider.add_span_processor(BatchSpanProcessor(GcpSpanExporter()))
+    
 
     # Initialize Firebase Admin SDK
     if not firebase_admin._apps:

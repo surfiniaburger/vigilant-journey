@@ -22,7 +22,7 @@ from .mcp_tools import mcp_tools
 # This agent uses the prompt from the state and decides which tool to use.
 researcher_agent = Agent(
     name="ResearcherAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
+    model="gemini-flash-latest",
     description="Researches user queries using memory, car manual expertise, and web search.",
     instruction="""You are a helpful research assistant for the Alora car co-pilot.
     Your goal is to fully answer the user's PROMPT, which is saved in the session state.
@@ -50,7 +50,7 @@ researcher_agent = Agent(
 # This agent runs at the end to save a summary of the conversation.
 session_summarizer_agent = Agent(
     name="SessionSummarizerAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
+    model="gemini-flash-latest",
     description="Summarizes the conversation and saves it to memory.",
     instruction="""Review the entire conversation history. Create a concise, one-sentence summary of the key outcomes, decisions, or facts learned. 
     Then, call the `SaveMemory` tool to save this summary under the topic 'conversation_summary'.

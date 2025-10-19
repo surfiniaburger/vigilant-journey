@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 interface ProtectedLinkProps {
   href: string;
@@ -15,18 +15,22 @@ export const ProtectedLink = ({ href, children }: ProtectedLinkProps) => {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const handleSignIn = async () => {
+  const handleSignInAndRedirect = async () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // The onAuthStateChanged listener in AuthContext will handle the user state update
-      // and the redirect will happen in the effect below.
+      // After a successful sign-in, onAuthStateChanged will update the user context.
+      // We can then navigate to the protected route.
+      router.push(href);
     } catch (error) {
-      console.error("Error signing in with Google", error);
+      // Don't log "popup-closed-by-user" as an error in the console
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Error signing in with Google", error);
+      }
     }
   };
 
-  const handleClick = async (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (loading) {
       return; // Do nothing while auth state is loading
@@ -34,18 +38,9 @@ export const ProtectedLink = ({ href, children }: ProtectedLinkProps) => {
     if (user) {
       router.push(href);
     } else {
-      await handleSignIn();
-      // After sign-in, the user state will update, and the effect will trigger navigation
+      handleSignInAndRedirect();
     }
   };
-
-  useEffect(() => {
-    // This effect handles redirection after a successful login
-    if (!loading && user) {
-        // If the user is logged in and we intended to navigate, do so.
-        // This is a simplified logic. A more robust solution might use a temporary state.
-    }
-  }, [user, loading, href, router]);
 
   return (
     <a href={href} onClick={handleClick}>

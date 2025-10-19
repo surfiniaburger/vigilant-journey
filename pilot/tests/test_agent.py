@@ -13,28 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
+from google_search_agent.agent import root_agent, main_workflow_agent
 from google.adk.tools import google_search
-from google_search_agent.agent import root_agent
+from google_search_agent.prompt_tool import add_prompt_to_state
 
 
 def test_agent_name():
-    assert root_agent.name == "google_search_agent"
+    assert root_agent.name == "OrchestratorAgent"
 
 
 def test_agent_model():
-    assert root_agent.model in [
-        "gemini-live-2.5-flash-preview-native-audio-09-2025",
-        "gemini-2.0-flash-live-001",
-    ]
+    assert root_agent.model == "gemini-live-2.5-flash-preview-native-audio"
 
 
 def test_agent_description():
-    assert root_agent.description == "Agent to answer questions using Google Search."
+    assert (
+        root_agent.description
+        == "The central AI co-pilot for the vehicle. Greets the user and kicks off the main workflow."
+    )
 
 
 def test_agent_instruction():
-    assert root_agent.instruction == "Answer the question using the Google Search tool."
+    expected_instruction = """You are Alora, the master AI co-pilot for a vehicle.
+    - Greet the user warmly and ask how you can help.
+    - When the user responds, use the 'add_prompt_to_state' tool to save their full request.
+    - After saving the prompt, you MUST transfer control to the 'MainWorkflowAgent' agent to handle the request.
+    """
+    assert root_agent.instruction == expected_instruction
 
 
 def test_agent_tools():
-    assert google_search in root_agent.tools
+    assert add_prompt_to_state in root_agent.tools
+
+
+def test_agent_sub_agents():
+    assert main_workflow_agent in root_agent.sub_agents
