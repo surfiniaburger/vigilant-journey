@@ -11,6 +11,16 @@ interface ProtectedLinkProps {
   children: React.ReactNode;
 }
 
+// Type guard to check if the error is a Firebase Auth error
+function isFirebaseAuthError(error: unknown): error is { code: string } {
+    return (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error
+    );
+}
+
+
 export const ProtectedLink = ({ href, children }: ProtectedLinkProps) => {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -19,14 +29,13 @@ export const ProtectedLink = ({ href, children }: ProtectedLinkProps) => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // After a successful sign-in, onAuthStateChanged will update the user context.
-      // We can then navigate to the protected route.
       router.push(href);
     } catch (error) {
-      // Don't log "popup-closed-by-user" as an error in the console
-      if (error.code !== 'auth/popup-closed-by-user') {
-        console.error("Error signing in with Google", error);
+      if (isFirebaseAuthError(error) && error.code === 'auth/popup-closed-by-user') {
+        // User closed the popup. This is not an error we need to log.
+        return;
       }
+      console.error("Error signing in with Google", error);
     }
   };
 

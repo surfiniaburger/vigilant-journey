@@ -1,10 +1,21 @@
 'use client';
 
+import { useAuth } from '@/context/AuthContext';
 import { useAudio } from '@/lib/use-audio';
+import { useEffect, useState } from 'react';
 import { VoiceButton } from './voice-button';
 
 export const VoiceController = () => {
-  const { audioState, text, startRecording, stopRecording } = useAudio();
+  const { user } = useAuth();
+  const [idToken, setIdToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      user.getIdToken().then(setIdToken);
+    }
+  }, [user]);
+
+  const { audioState, text, startRecording, stopRecording } = useAudio(idToken);
 
   const handleToggleRecording = () => {
     if (audioState === 'recording') {
@@ -21,6 +32,7 @@ export const VoiceController = () => {
         onPress={handleToggleRecording}
         label="Voice"
         trailing="Click to record"
+        disabled={!user}
       />
       <p>State: {audioState}</p>
       <div style={{ marginTop: '20px', border: '1px solid #ccc', padding: '10px', minHeight: '100px' }}>
