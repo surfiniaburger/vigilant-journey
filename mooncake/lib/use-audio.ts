@@ -90,7 +90,6 @@ export const useAudio = (idToken: string | null) => {
         wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true&token=${idToken}`;
       }
       
-      console.log(`Connecting to WebSocket at: ${wsUrl}`);
       websocketRef.current = new WebSocket(wsUrl);
 
       websocketRef.current.onopen = () => console.log("WebSocket connection opened.");
