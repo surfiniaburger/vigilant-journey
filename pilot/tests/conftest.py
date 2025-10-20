@@ -1,4 +1,7 @@
 import sys
-import os
+from unittest.mock import MagicMock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Mock motor module to avoid ImportError in the test environment
+# This will be executed by pytest before it collects tests.
+sys.modules['motor'] = MagicMock()
+sys.modules['motor.motor_asyncio'] = MagicMock()

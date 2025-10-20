@@ -14,3 +14,4 @@ firebase-admin
 opentelemetry-exporter-gcp-trace
 opentelemetry-sdk
 opentelemetry-api
+motor

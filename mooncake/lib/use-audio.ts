@@ -76,8 +76,20 @@ export const useAudio = (idToken: string | null) => {
         setAudioState('idle');
         return;
       }
-      const backendHostname = process.env.NEXT_PUBLIC_PILOT_HOSTNAME || window.location.hostname.replace('3000-', '8000-');
-      const wsUrl = `wss://${backendHostname}/ws/${Math.random().toString().substring(10)}?is_audio=true&token=${idToken}`;
+      
+      let wsUrl: string;
+      const sessionId = Math.random().toString().substring(10);
+      const isLocal = window.location.hostname === 'localhost';
+
+      if (isLocal) {
+        // Use non-secure WebSocket for local development
+        wsUrl = `ws://localhost:8000/ws/${sessionId}?is_audio=true&token=${idToken}`;
+      } else {
+        // Use existing logic for deployed environments
+        const backendHostname = process.env.NEXT_PUBLIC_PILOT_HOSTNAME || window.location.hostname.replace('3000-', '8000-');
+        wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true&token=${idToken}`;
+      }
+      
       websocketRef.current = new WebSocket(wsUrl);
 
       websocketRef.current.onopen = () => console.log("WebSocket connection opened.");
