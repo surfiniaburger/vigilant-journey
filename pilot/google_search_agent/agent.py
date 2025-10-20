@@ -73,7 +73,7 @@ main_workflow_agent = SequentialAgent(
 # This is the entry point. It greets, saves the prompt, and transfers control.
 root_agent = Agent(
     name="OrchestratorAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
+    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
     description="The central AI co-pilot for the vehicle. Greets the user and kicks off the main workflow.",
     instruction="""You are Alora, the master AI co-pilot for a vehicle.
     - Greet the user warmly and ask how you can help.

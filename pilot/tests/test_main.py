@@ -1,7 +1,13 @@
+
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
 from main import app, start_agent_session, initialize_services
+import sys
+
+# Mock motor module to avoid ImportError in the test environment
+sys.modules['motor'] = MagicMock()
+sys.modules['motor.motor_asyncio'] = MagicMock()
 
 client = TestClient(app)
 
@@ -46,12 +52,13 @@ async def test_start_agent_session_with_memory(mock_initialize_services, mocker)
     # Assert that run_live was called
     mock_runner.run_live.assert_called_once()
 
+@pytest.mark.asyncio
 @patch("main.vertexai.init")
-@patch("main.get_mongo_session_service")
+@patch("main.get_mongo_session_service", new_callable=AsyncMock)
 @patch("main.firebase_admin.initialize_app")
 @patch("main.VertexAiMemoryBankService")
 @patch("main.Runner")
-def test_initialize_services(
+async def test_initialize_services(
     mock_runner,
     mock_memory_service,
     mock_firebase_app,
@@ -65,12 +72,12 @@ def test_initialize_services(
     monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "test_location")
     monkeypatch.setenv("AGENT_ENGINE_ID", "test_engine_id")
     # Call the function
-    runner = initialize_services()
+    runner = await initialize_services()
 
     # Assert that the services were initialized
     mock_vertexai_init.assert_called_once_with(project="test_project", location="test_location")
     mock_firebase_app.assert_called_once()
-    mock_get_mongo_session.assert_called_once()
+    mock_get_mongo_session.assert_awaited_once()
     mock_memory_service.assert_called_once_with(
         project="test_project",
         location="test_location",

@@ -1,10 +1,11 @@
 
 import os
 import logging
+import asyncio
 import google.cloud.logging
 from google.cloud.logging.handlers import CloudLoggingHandler
 from google.cloud import secretmanager
-from pymongo.mongo_client import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 from google.adk.sessions.base_session_service import BaseSessionService as SessionService
 from google.adk.sessions.session import Session
@@ -91,7 +92,7 @@ class MongoSessionService(SessionService):
             ) for session_data in sessions_list
         ]
 
-def connect_to_mongodb():
+async def connect_to_mongodb():
     """
     Connect to MongoDB using URI from Secret Manager
     """
@@ -102,8 +103,8 @@ def connect_to_mongodb():
         logger.info("Starting MongoDB connection process")
         uri = get_secret(project_id, secret_id, logger=logger)
         logger.info("Retrieved MongoDB URI from Secret Manager")
-        client = MongoClient(uri, server_api=ServerApi('1'))
-        client.admin.command('ping')
+        client = AsyncIOMotorClient(uri, server_api=ServerApi('1'))
+        await client.admin.command('ismaster')
         logger.info("Successfully connected to MongoDB!")
         print("Successfully connected to MongoDB!")
         return client, logger, cloud_handler, gcp_log_client
@@ -112,14 +113,14 @@ def connect_to_mongodb():
         logger.error(error_message, exc_info=True)
         raise
 
-def get_mongo_session_service():
+async def get_mongo_session_service():
     """Initializes and returns a MongoSessionService."""
-    mongo_client, _, _, _ = connect_to_mongodb()
+    mongo_client, _, _, _ = await connect_to_mongodb()
     return MongoSessionService(client=mongo_client)
 
-if __name__ == "__main__":
+async def main():
     try:
-        mongo_client, main_logger, main_cloud_handler, main_gcp_logging_client = connect_to_mongodb()
+        mongo_client, main_logger, main_cloud_handler, main_gcp_logging_client = await connect_to_mongodb()
         if main_logger:
             main_logger.info("MongoDB connection process completed in __main__.")
     except Exception as e:
@@ -131,3 +132,6 @@ if __name__ == "__main__":
         if 'main_gcp_logging_client' in locals() and main_gcp_logging_client:
             main_gcp_logging_client.close()
         print("Script finished.")
+
+if __name__ == "__main__":
+    asyncio.run(main())

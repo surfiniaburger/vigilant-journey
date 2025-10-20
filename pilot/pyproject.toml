@@ -26,7 +26,8 @@ dependencies = [
     "pymongo",
     "pytest-asyncio",
     "google-cloud-secret-manager",
-    "google-cloud-logging"
+    "google-cloud-logging",
+    "motor",
 ]
 
 [project.optional-dependencies]

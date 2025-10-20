@@ -48,7 +48,7 @@ APP_NAME = "Alora"
 # Make sure to import vertexai
 import vertexai
 
-def initialize_services():
+async def initialize_services():
     """Initializes the services needed for the agent."""
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
@@ -59,8 +59,6 @@ def initialize_services():
         )
     vertexai.init(project=project_id, location=location)
 
-    
-
     # Initialize Firebase Admin SDK
     if not firebase_admin._apps:
         firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "studio-l13dd")
@@ -70,7 +68,7 @@ def initialize_services():
         print(f"Firebase Admin SDK initialized for project '{firebase_project_id}'.")
 
     # --- Database Connection Setup ---
-    session_service = get_mongo_session_service()
+    session_service = await get_mongo_session_service()
 
     agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
     if not agent_engine_id:
@@ -206,7 +204,7 @@ async def lifespan(app: FastAPI):
     """Initializes the agent runner when the app starts."""
     global runner
     if os.environ.get("APP_ENV") != "test":
-        runner = initialize_services()
+        runner = await initialize_services()
     yield
 
 app = FastAPI(lifespan=lifespan)
