@@ -24,7 +24,7 @@ def test_agent_name():
 
 
 def test_agent_model():
-    assert root_agent.model == "gemini-live-2.5-flash-preview-native-audio"
+    assert root_agent.model == "gemini-live-2.5-flash-preview-native-audio-09-2025"
 
 
 def test_agent_description():

@@ -3,12 +3,6 @@ import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from database.mongo_db import MongoSessionService, get_mongo_session_service
 from google.adk.sessions.session import Session
-import sys
-
-# Mock motor module to avoid ImportError in the test environment
-sys.modules['motor'] = MagicMock()
-sys.modules['motor.motor_asyncio'] = MagicMock()
-
 
 @pytest.fixture
 def mock_motor_client():
@@ -97,7 +91,7 @@ async def test_list_sessions(mock_motor_client):
     
     mock_cursor = AsyncMock()
     mock_cursor.to_list.return_value = mock_sessions_data
-    collection_mock.find.return_value = mock_cursor
+    collection_mock.find = MagicMock(return_value=mock_cursor)
 
     sessions = await session_service.list_sessions("test_app")
 

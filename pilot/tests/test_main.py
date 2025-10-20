@@ -3,11 +3,6 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
 from main import app, start_agent_session, initialize_services
-import sys
-
-# Mock motor module to avoid ImportError in the test environment
-sys.modules['motor'] = MagicMock()
-sys.modules['motor.motor_asyncio'] = MagicMock()
 
 client = TestClient(app)
 

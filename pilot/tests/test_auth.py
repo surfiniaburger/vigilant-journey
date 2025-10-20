@@ -3,11 +3,6 @@ from fastapi.testclient import TestClient
 from fastapi import WebSocketDisconnect
 from unittest.mock import patch, MagicMock, AsyncMock
 from main import app
-import sys
-
-# Mock motor module to avoid ImportError in the test environment
-sys.modules['motor'] = MagicMock()
-sys.modules['motor.motor_asyncio'] = MagicMock()
 
 client = TestClient(app)
 
