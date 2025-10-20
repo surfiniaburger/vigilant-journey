@@ -104,7 +104,7 @@ async def connect_to_mongodb():
         uri = get_secret(project_id, secret_id, logger=logger)
         logger.info("Retrieved MongoDB URI from Secret Manager")
         client = AsyncIOMotorClient(uri, server_api=ServerApi('1'))
-        await client.admin.command('ismaster')
+        await client.admin.command('ping')
         logger.info("Successfully connected to MongoDB!")
         print("Successfully connected to MongoDB!")
         return client, logger, cloud_handler, gcp_log_client
