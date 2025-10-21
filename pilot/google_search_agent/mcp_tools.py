@@ -29,13 +29,7 @@ def get_id_token_for_mcp() -> str:
 
 # Create the MCPToolset, which will act as a tool for our agent.
 # It connects to the remote server and authenticates using the ID token.
-mcp_tools = McpToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url=mcp_server_url
-    )
-)
 
-"""
 mcp_tools = McpToolset(
             connection_params=StreamableHTTPConnectionParams(
                 url=mcp_server_url,
@@ -44,4 +38,3 @@ mcp_tools = McpToolset(
                 },
             ),
         )
-"""

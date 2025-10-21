@@ -13,73 +13,86 @@
 # limitations under the License.
 
 from google.adk.agents import Agent, SequentialAgent
-from google.adk.tools import google_search
-from .prompt_tool import add_prompt_to_state
+from google.adk.tools import google_search, preload_memory_tool
 from .memory_tool import save_memory_tool, recall_memory_tool
 from .mcp_tools import mcp_tools
+#from .memory_callback import auto_save_session_to_memory_callback
+from callbacks import (
+    before_agent_callback,
+    after_agent_callback,
+    before_model_callback,
+    after_model_callback,
+    before_tool_callback,
+    after_tool_callback,
+)
 
-# Step 3: The Researcher Agent
-# This agent uses the prompt from the state and decides which tool to use.
+# The Researcher Agent: Specializes in using tools to find information.
 researcher_agent = Agent(
     name="ResearcherAgent",
-    model="gemini-flash-latest",
-    description="Researches user queries using memory, car manual expertise, and web search.",
-    instruction="""You are a helpful research assistant for the Alora car co-pilot.
-    Your goal is to fully answer the user's PROMPT, which is saved in the session state.
-
-    You have access to several tools, in order of priority:
-    1. `RecallMemory`: To check for past information about the user.
-    2. `ask_amg_manual` (via MCP): An expert tool that consults the car's official operator's manual.
-    3. `SaveMemory`: To save important new user preferences.
-    4. `google_search`: For general public information NOT related to the car's specific functions.
-
-    **Your process is strict:**
-    1.  First, ALWAYS use `RecallMemory` to check for user preferences or past context.
-    2.  If the user's PROMPT is about the car's features, warnings, or how to operate something, you MUST use the `ask_amg_manual` tool.
-    3.  Only use `google_search` if the question is general knowledge and cannot be answered by the car manual.
-    4.  If the user states a new preference, use `SaveMemory` to remember it.
-
-    Synthesize the results from the tools you use into a final, helpful answer.
-
-    USER_PROMPT: {{ USER_PROMPT }}
+    model="gemini-live-2.5-flash-preview-native-audio",
+    description="Researches user queries using memory and web search.",
+    instruction="""
+    You are a helpful research assistant for the Alora car co-pilot.
+    Your goal is to fully answer the user's request from the conversation history.
+    Use your tools (`recall_memory`, `google_search`, `mcp_tools`) to find the information, then synthesize the results into a final, helpful answer.
     """,
-    tools=[recall_memory_tool, save_memory_tool, mcp_tools, google_search],
+    
+    tools=[recall_memory_tool, google_search, mcp_tools],
+    before_agent_callback=before_agent_callback,
+    after_agent_callback=after_agent_callback,
+    before_model_callback=before_model_callback,
+    after_model_callback=after_model_callback,
+    before_tool_callback=before_tool_callback,
+    after_tool_callback=after_tool_callback,
 )
 
-# Step 4: The Session Summarizer Agent
-# This agent runs at the end to save a summary of the conversation.
+# The Summarizer Agent: Specializes in saving a summary of the conversation.
 session_summarizer_agent = Agent(
     name="SessionSummarizerAgent",
-    model="gemini-flash-latest",
+    model="gemini-live-2.5-flash-preview-native-audio",
     description="Summarizes the conversation and saves it to memory.",
-    instruction="""Review the entire conversation history. Create a concise, one-sentence summary of the key outcomes, decisions, or facts learned. 
-    Then, call the `SaveMemory` tool to save this summary under the topic 'conversation_summary'.
-    Finally, output a friendly closing message to the user, like 'Is there anything else?'""",
+    instruction="""Review the conversation history. Create a concise, one-sentence summary of the key outcomes. Call the `save_memory_tool` to save this summary under the topic 'conversation_summary'.
+    Finally, output a friendly closing message to the user, like 'Is there anything else I can help you with?'""",
     tools=[save_memory_tool],
+    before_agent_callback=before_agent_callback,
+    after_agent_callback=after_agent_callback,
+    before_model_callback=before_model_callback,
+    after_model_callback=after_model_callback,
+    before_tool_callback=before_tool_callback,
+    after_tool_callback=after_tool_callback,
 )
 
-# Step 2: The Main Workflow Agent
-# This agent orchestrates the main logic.
+# The Main Workflow Agent: Defines the sequence of research and summarization.
 main_workflow_agent = SequentialAgent(
     name="MainWorkflowAgent",
-    description="The main workflow for handling a user's request.",
+    description="Handles the main workflow: researching a user's request and then summarizing the session.",
     sub_agents=[
         researcher_agent, 
         session_summarizer_agent
-    ]
+    ],
+    before_agent_callback=before_agent_callback,
+    after_agent_callback=after_agent_callback,
 )
 
-# Step 1: The Greeter Agent (Root Agent)
-# This is the entry point. It greets, saves the prompt, and transfers control.
+# The Orchestrator (Root Agent): Manages the entire interaction and the stream.
 root_agent = Agent(
     name="OrchestratorAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    description="The central AI co-pilot for the vehicle. Greets the user and kicks off the main workflow.",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    description="The central AI co-pilot for the vehicle. Greets the user and orchestrates the main workflow.",
     instruction="""You are Alora, the master AI co-pilot for a vehicle.
-    - Greet the user warmly and ask how you can help.
-    - When the user responds, use the 'add_prompt_to_state' tool to save their full request.
-    - After saving the prompt, you MUST transfer control to the 'MainWorkflowAgent' agent to handle the request.
+    
+    **You are Alora, the master AI co-pilot.
+    
+    1. First, greet the user warmly and ask how you can help.
+    2. Once the user provides their request, your ONLY job is to call your sub-agent, `MainWorkflowAgent`, to handle the request.
+    3. You will stream all events from the `MainWorkflowAgent` back to the user. Do NOT generate any other text or try to answer the question yourself.
     """,
-    tools=[add_prompt_to_state],
-    sub_agents=[main_workflow_agent]
+    tools=[preload_memory_tool.PreloadMemoryTool()], # ADDED THE TOOL BACK
+    sub_agents=[main_workflow_agent],
+    before_agent_callback=before_agent_callback,
+    after_agent_callback=after_agent_callback, # USE THE NEW CALLBACK
+    before_model_callback=before_model_callback,
+    after_model_callback=after_model_callback,
+    before_tool_callback=before_tool_callback,
+    after_tool_callback=after_tool_callback,
 )

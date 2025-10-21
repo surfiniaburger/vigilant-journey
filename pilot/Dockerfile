@@ -45,6 +45,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy the rest of the application source code
 COPY . .
 
-# Command to run the Uvicorn server.
-# It will listen on all network interfaces on port 8080, which is standard for Cloud Run.
-CMD ["/app/.venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Command to run the Gunicorn server with Uvicorn workers.
+# This is a robust way to run an ASGI app in production.
+CMD ["/app/.venv/bin/gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]

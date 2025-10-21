@@ -104,3 +104,4 @@ This is a web-based chat application that features a conversational AI agent pow
       --allow-unauthenticated \
       --service-account 140457946058-compute@developer.gserviceaccount.com
     ```
+gcloud run services add-iam-policy-binding mcp-server --member='serviceAccount:140457946058-compute@developer.gserviceaccount.com' --role='roles/run.invoker' --region=us-central1
