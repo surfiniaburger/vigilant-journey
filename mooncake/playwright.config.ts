@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const authFile = 'e2e/.auth/user.json';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -17,17 +19,49 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
   },
   projects: [
+    // Setup project
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'Desktop Chrome',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Use prepared auth state.
+        storageState: authFile,
+      },
+      dependencies: ['setup'],
+    },
+    // {
+    //   name: 'Desktop Firefox',
+    //   use: {
+    //     ...devices['Desktop Firefox'],
+    //     storageState: authFile,
+    //   },
+      // dependencies: ['setup'],
+    // },
+    // {
+    //   name: 'Desktop Safari',
+    //   use: {
+    //     ...devices['Desktop Safari'],
+    //     storageState: authFile,
+    //   },
+      // dependencies: ['setup'],
+    // },
+    // Test against mobile viewports.
+    {
+      name: 'Mobile Chrome',
+      use: {
+        ...devices['Pixel 5'],
+        storageState: authFile,
+      },
+      dependencies: ['setup'],
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'Mobile Safari',
+      use: {
+        ...devices['iPhone 12'],
+        storageState: authFile,
+      },
+      dependencies: ['setup'],
     },
   ],
 });
