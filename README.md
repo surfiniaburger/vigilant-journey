@@ -23,3 +23,6 @@ npm --prefix mooncake test
       --memory 4G \
       --allow-unauthenticated
 ```
+GOOGLE_APPLICATION_CREDENTIALS="./pilot-local-dev-sa-key.json" uv run uvicorn main:app --reload
+
+GOOGLE_APPLICATION_CREDENTIALS="./pilot-local-dev-sa-key.json" uv run pytest   

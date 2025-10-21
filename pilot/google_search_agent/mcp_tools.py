@@ -35,7 +35,7 @@ mcp_tools = McpToolset(
     )
 )
 
-"""
+
 mcp_tools = McpToolset(
             connection_params=StreamableHTTPConnectionParams(
                 url=mcp_server_url,
@@ -44,4 +44,3 @@ mcp_tools = McpToolset(
                 },
             ),
         )
-"""

@@ -77,7 +77,7 @@ async def initialize_services():
             "context_spec": {
                 "memory_bank_config": {
                     "generation_config": {
-                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-1.5-flash"
+                        "model": f"projects/{project_id}/locations/{location}/publishers/google/models/gemini-2.5-flash"
                     }
                 }
             }

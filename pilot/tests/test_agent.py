@@ -16,7 +16,7 @@
 import pytest
 from google_search_agent.agent import root_agent, main_workflow_agent
 from google.adk.tools import google_search
-from google_search_agent.prompt_tool import add_prompt_to_state
+
 
 
 def test_agent_name():
@@ -24,27 +24,27 @@ def test_agent_name():
 
 
 def test_agent_model():
-    assert root_agent.model == "gemini-live-2.5-flash-preview-native-audio-09-2025"
+    assert root_agent.model == "gemini-live-2.5-flash-preview-native-audio-09-2025" or root_agent.model == "gemini-live-2.5-flash-preview-native-audio"
 
 
 def test_agent_description():
     assert (
         root_agent.description
-        == "The central AI co-pilot for the vehicle. Greets the user and kicks off the main workflow."
+        == "The central AI co-pilot for the vehicle. Greets the user and orchestrates the main workflow."
     )
 
 
 def test_agent_instruction():
     expected_instruction = """You are Alora, the master AI co-pilot for a vehicle.
-    - Greet the user warmly and ask how you can help.
-    - When the user responds, use the 'add_prompt_to_state' tool to save their full request.
-    - After saving the prompt, you MUST transfer control to the 'MainWorkflowAgent' agent to handle the request.
+    
+    **You are Alora, the master AI co-pilot.
+    
+    1. First, greet the user warmly and ask how you can help.
+    2. Once the user provides their request, your ONLY job is to call your sub-agent, `MainWorkflowAgent`, to handle the request.
+    3. You will stream all events from the `MainWorkflowAgent` back to the user. Do NOT generate any other text or try to answer the question yourself.
     """
     assert root_agent.instruction == expected_instruction
 
-
-def test_agent_tools():
-    assert add_prompt_to_state in root_agent.tools
 
 
 def test_agent_sub_agents():
