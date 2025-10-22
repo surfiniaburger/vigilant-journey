@@ -1,9 +1,12 @@
 import os
 import json
+from dotenv import load_dotenv
 from google.adk.agents import Agent, LlmAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.adk.tools.mcp_tool import MCPToolset, StdioConnectionParams
 from mcp import StdioServerParameters
+
+load_dotenv()
 
 # Get the Google Maps API key from an environment variable
 google_maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
