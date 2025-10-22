@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from google.adk.agents import Agent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.tools import google_search, preload_memory_tool
 
@@ -27,6 +28,8 @@ from callbacks import (
     after_tool_callback,
 )
 
+logger = logging.getLogger(__name__)
+
 # Confidence threshold for the k-NN validator
 CONFIDENCE_THRESHOLD = 0.7
 
@@ -34,8 +37,9 @@ CONFIDENCE_THRESHOLD = 0.7
 
 researcher_agent = Agent(
     name="ResearcherAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="You are a research assistant. Answer the user's request using your tools and store the result in the 'draft_answer' session state key.",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction="""Logger: Starting ResearcherAgent.
+    You are a research assistant. Answer the user's request using your tools and store the result in the 'draft_answer' session state key.""",
     tools=[recall_memory_tool, google_search, mcp_tools],
     output_key="draft_answer",
 )
@@ -44,15 +48,17 @@ researcher_agent = Agent(
 
 safety_and_compliance_agent = Agent(
     name="SafetyAndComplianceAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="Review the text in 'draft_answer'. If it is safe and complete, respond with 'APPROVED'. Otherwise, provide a critique and store it in the 'critique' session state key.",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction="""Logger: Starting SafetyAndComplianceAgent (LLM Critic).
+    Review the text in 'draft_answer'. If it is safe and complete, respond with 'APPROVED'. Otherwise, provide a critique and store it in the 'critique' session state key.""",
     output_key="critique",
 )
 
 knn_validator_agent = Agent(
     name="KnnValidatorAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="You must use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Store the score in the 'confidence' session state key.",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction="""Logger: Starting KnnValidatorAgent (Statistical Critic).
+    You must use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Store the score in the 'confidence' session state key.""",
     tools=[knn_validation_tool],
     output_key="confidence",
 )
@@ -66,8 +72,10 @@ parallel_validator = ParallelAgent(
 
 decision_agent = Agent(
     name="DecisionAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction=f"""Examine the session state. If 'critique' is 'APPROVED' and 'confidence' is greater than or equal to {CONFIDENCE_THRESHOLD}, set 'validation_passed' to True. Otherwise, set it to False.""",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction=f"""Logger: Starting DecisionAgent.
+    Examine the session state. The critique is: {{critique}}, The confidence is: {{confidence}}.
+    If 'critique' is 'APPROVED' and 'confidence' is greater than or equal to {CONFIDENCE_THRESHOLD}, set 'validation_passed' to True. Otherwise, set it to False.""",
     output_key="validation_passed",
 )
 
@@ -75,8 +83,9 @@ decision_agent = Agent(
 
 reviser_agent = Agent(
     name="ReviserAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="""Your task is conditional. First, check the 'validation_passed' key in the session state.
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction="""Logger: Starting ReviserAgent.
+    Your task is conditional. First, check the 'validation_passed' key in the session state.
     If 'validation_passed' is False, you MUST revise the 'draft_answer' based on the 'critique' to create an improved version. Overwrite the 'draft_answer' with this new version.
     If 'validation_passed' is True, you MUST do nothing and output an empty string to signify your inaction.""",
     output_key="draft_answer",
@@ -101,8 +110,10 @@ main_workflow_agent = SequentialAgent(
 
 session_summarizer_agent = Agent(
     name="SessionSummarizerAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="If 'validation_passed' is True, take the final answer from 'draft_answer', save a summary to memory, and present the final answer. If False, inform the user that a high-confidence answer could not be found.",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    instruction="""Logger: Starting SessionSummarizerAgent.
+    If 'validation_passed' is True, take the final answer from 'draft_answer', save a summary to memory, and present the final answer.
+    If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.""",
     tools=[save_memory_tool],
 )
 
