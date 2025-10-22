@@ -1,107 +1,36 @@
-# Vigilant Journey - Streaming Agent Chat
+# Pilot: The Alora Backend & Voice Agent
 
-This is a web-based chat application that features a conversational AI agent powered by Google's Vertex AI and the Agent Development Kit (ADK). The application supports real-time, bidirectional streaming of both text and audio messages over WebSockets.
+Pilot is the core of the Alora AI Co-Pilot. It's a multi-agent system built with the Google Agent Development Kit (ADK) that handles the conversation with the user, processes their requests, and communicates with other services to get information.
 
-## Features
+## Architecture
 
-*   **Real-time Communication:** Interact with the AI agent in real-time with low latency.
-*   **Text and Audio Input:** Send messages in both text and audio formats.
-*   **Audio-Only Responses:** The agent responds with audio only.
-*   **Google Search Integration:** The agent can use Google Search to answer questions about recent events or to look up information.
-*   **Long-term Memory:** The agent uses Vertex AI Memory Bank to remember information from previous conversations.
-*   **Web-based Interface:** A simple and intuitive web interface for interacting with the agent.
+The backend is designed as a hierarchical structure of agents, each with a specific role:
 
-## Technologies Used
-
-### Backend
-
-*   **Python:** The backend is written in Python.
-*   **uv:** For Python packaging and dependency management.
-*   **FastAPI:** A modern, fast (high-performance) web framework for building APIs.
-*   **Google Cloud Vertex AI:** The AI agent is built on Google's Vertex AI platform.
-*   **Google Agent Development Kit (ADK):** The ADK is used to build and run the conversational agent.
-*   **WebSockets:** For real-time, bidirectional communication between the client and server.
-
-### Frontend
-
-*   **HTML, CSS, JavaScript:** The frontend is built with standard web technologies.
-*   **Web Audio API:** Used for capturing and playing back audio in the browser.
+*   **`OrchestratorAgent` (Root Agent):** The main entry point for all user interactions. It greets the user and delegates the actual work to the `MainWorkflowAgent`.
+*   **`MainWorkflowAgent` (Sequential Agent):** Defines the core logic of the application. It executes a sequence of sub-agents in a specific order: first the `ResearcherAgent`, then the `SessionSummarizerAgent`.
+*   **`ResearcherAgent`:** This is the workhorse of the system. It uses a variety of tools to answer the user's query. It can recall information from memory, perform a Google search, and connect to an MCP server to get specific information.
+*   **`SessionSummarizerAgent`:** After the `ResearcherAgent` has done its job, this agent creates a concise summary of the conversation and saves it to memory for future reference.
 
 ## Getting Started
 
 ### Prerequisites
 
-*   Python 3.9+
-*   Node.js and npm
-*   [uv](https://github.com/astral-sh/uv) - An extremely fast Python package installer and resolver.
+*   Python and uv
+*   Google Cloud SDK
+*   MongoDB
 
-### Backend Setup
+### Installation
 
-1.  **Install Python dependencies:**
-
+1.  **Install dependencies:**
     ```bash
     uv pip install -e .
     ```
 
-2.  **Set up environment variables:**
+2.  **Set Environment Variables:**
+    Create a `.env` file and add the necessary environment variables (e.g., `GOOGLE_CLOUD_PROJECT`, `MONGO_DB_CONNECTION_STRING`).
 
-    Create a `.env` file in the `pilot` directory and add the following:
+### Running Locally
 
-    ```
-    GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
-    GOOGLE_CLOUD_LOCATION="your-gcp-location"
-    AGENT_ENGINE_ID="your-agent-engine-id" # Optional, will be created if not provided
-    ```
-
-3.  **Run the backend server:**
-
-    ```bash
-    uvicorn main:app --reload
-    ```
-
-### Frontend Setup
-
-1.  **Install Node.js dependencies:**
-
-    ```bash
-    npm install
-    ```
-
-2.  **Run tests (optional):**
-
-    ```bash
-    npm test
-    ```
-
-## Usage
-
-1.  Open your web browser and navigate to `http://127.0.0.1:8000`.
-2.  **Important:** Click the "Start Audio" button to initialize the audio components. You will be prompted for microphone access. This is required to hear the agent's responses, even if you are sending text-based messages.
-3.  You can start interacting with the agent by typing messages in the input box and clicking "Send", or by speaking into your microphone.
-
-## Deployment
-
-1.  **Set Environment Variables for Deployment:**
-    In your Cloud Shell or local terminal (with `gcloud` CLI configured):
-    ```bash
-    export SERVICE_NAME='galatic-streamhub' # Or your preferred service name
-    export LOCATION='us-central1'         # Or your preferred region
-    export PROJECT_ID='silver-455021' # Replace with your Project ID
-    ```
-
-2.  **Deploy to Cloud Run:**
-    ```bash
-    # Recommended: Deploy using the ADK CLI to automatically handle agent-specific setup.
-    # Arguments after the '--' are passed directly to the underlying 'gcloud run deploy' command.
-    adk deploy cloud_run \
-      --service_name $SERVICE_NAME \
-      --project $PROJECT_ID \
-      --region $LOCATION \
-      --trace_to_cloud \
-      pilot \
-      -- \
-      --memory 4G \
-      --allow-unauthenticated \
-      --service-account 140457946058-compute@developer.gserviceaccount.com
-    ```
-gcloud run services add-iam-policy-binding mcp-server --member='serviceAccount:140457946058-compute@developer.gserviceaccount.com' --role='roles/run.invoker' --region=us-central1
+```bash
+GOOGLE_APPLICATION_CREDENTIALS="./local-dev-sa-key.json" uv run uvicorn main:app --reload
+```
