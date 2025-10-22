@@ -34,8 +34,8 @@ The application is composed of three main services:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-repo/alora.git
-    cd alora
+    git clone https://github.com/your-repo/vigilant-journey.git
+    cd vigilant-journey
     ```
 
 2.  **Install frontend dependencies:**
