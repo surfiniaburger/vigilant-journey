@@ -15,6 +15,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const analytics = isSupported().then(yes => yes ? getAnalytics(app) : null);
+const analytics = isSupported().then(supported => supported ? getAnalytics(app) : null);
 
 export { app, auth, analytics };
