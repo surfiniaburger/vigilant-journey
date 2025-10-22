@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.adk.agents import Agent, LoopAgent
+from google.adk.agents import Agent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.tools import google_search, preload_memory_tool
 
 from .memory_tool import save_memory_tool, recall_memory_tool
 from .mcp_tools import mcp_tools
 from .knn_validator import knn_validation_tool
-from .orchestrator import MasterWorkflowAgent
 from callbacks import (
     before_agent_callback,
     after_agent_callback,
@@ -36,40 +35,65 @@ CONFIDENCE_THRESHOLD = 0.7
 researcher_agent = Agent(
     name="ResearcherAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and store it in the 'draft_answer' session state key.",
+    instruction="You are a research assistant. Answer the user's request using your tools and store the result in the 'draft_answer' session state key.",
     tools=[recall_memory_tool, google_search, mcp_tools],
     output_key="draft_answer",
 )
 
+# --- Dual-Critic Validation Agents (to be run in parallel) ---
+
 safety_and_compliance_agent = Agent(
     name="SafetyAndComplianceAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, respond with 'APPROVED'. Otherwise, provide a critique and store it in the 'critique' session state key.",
+    instruction="Review the text in 'draft_answer'. If it is safe and complete, respond with 'APPROVED'. Otherwise, provide a critique and store it in the 'critique' session state key.",
     output_key="critique",
 )
 
-dual_critic_validator_agent = Agent(
-    name="DualCriticValidatorAgent",
+knn_validator_agent = Agent(
+    name="KnnValidatorAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="You are the final validation authority. First, call the SafetyAndComplianceAgent to perform a qualitative review of the 'draft_answer'. Then, call the knn_validation_tool to get a quantitative confidence score. Consolidate the results. If the qualitative review is 'APPROVED' and the confidence score is above the threshold, set 'validation_passed' to True in the session state. Otherwise, set it to False and store the critique.",
-    tools=[safety_and_compliance_agent, knn_validation_tool],
+    instruction="You must use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Store the score in the 'confidence' session state key.",
+    tools=[knn_validation_tool],
+    output_key="confidence",
 )
+
+parallel_validator = ParallelAgent(
+    name="ParallelValidator",
+    sub_agents=[safety_and_compliance_agent, knn_validator_agent],
+)
+
+# --- Decision Agent (runs after parallel validation) ---
+
+decision_agent = Agent(
+    name="DecisionAgent",
+    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
+    instruction=f"""Examine the session state. If 'critique' is 'APPROVED' and 'confidence' is greater than or equal to {CONFIDENCE_THRESHOLD}, set 'validation_passed' to True. Otherwise, set it to False.""",
+    output_key="validation_passed",
+)
+
+# --- Reviser Agent (runs if validation fails) ---
 
 reviser_agent = Agent(
     name="ReviserAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="Revise the text in 'draft_answer' based on the feedback in 'critique' to create an improved version. Overwrite the 'draft_answer' with the new version.",
+    instruction="Revise the 'draft_answer' based on the 'critique' to create an improved version. Overwrite the 'draft_answer' with this new version.",
     output_key="draft_answer",
 )
-
 
 # --- The Refinement Loop ---
 
 critique_and_refine_loop = LoopAgent(
     name="CritiqueAndRefineLoop",
-    sub_agents=[researcher_agent, dual_critic_validator_agent, reviser_agent],
+    sub_agents=[parallel_validator, decision_agent, reviser_agent],
     max_iterations=2,
-    condition=f"session.state.get('validation_passed') != True"
+    condition="session.state.get('validation_passed') != True",
+)
+
+# --- The Main Workflow ---
+
+main_workflow_agent = SequentialAgent(
+    name="MainWorkflowAgent",
+    sub_agents=[researcher_agent, critique_and_refine_loop],
 )
 
 # --- Final Output Agent ---
@@ -77,34 +101,15 @@ critique_and_refine_loop = LoopAgent(
 session_summarizer_agent = Agent(
     name="SessionSummarizerAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="Review the conversation. If 'validation_passed' is True, take the final answer from 'draft_answer', save a one-sentence summary to memory using save_memory_tool, and present the final answer to the user. If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.",
+    instruction="If 'validation_passed' is True, take the final answer from 'draft_answer', save a summary to memory, and present the final answer. If False, inform the user that a high-confidence answer could not be found.",
     tools=[save_memory_tool],
-)
-
-# --- The Main Orchestrator ---
-
-main_workflow_agent = MasterWorkflowAgent(
-    name="MainWorkflowAgent",
-    researcher_agent=critique_and_refine_loop, # The loop is now the main research step
-    critique_and_refine_loop=critique_and_refine_loop, # Pass it again to satisfy the Pydantic model
-    summarizer_agent=session_summarizer_agent,
 )
 
 # --- The Root Agent ---
 
-root_agent = Agent(
+root_agent = SequentialAgent(
     name="OrchestratorAgent",
-    model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    description="The central AI co-pilot for the vehicle.",
-    instruction="Greet the user, then call the MainWorkflowAgent to handle their request. Stream all events back to the user.",
-    tools=[preload_memory_tool.PreloadMemoryTool()],
-    sub_agents=[main_workflow_agent],
-    **dict(
-        before_agent_callback=before_agent_callback,
-        after_agent_callback=after_agent_callback,
-        before_model_callback=before_model_callback,
-        after_model_callback=after_model_callback,
-        before_tool_callback=before_tool_callback,
-        after_tool_callback=after_tool_callback,
-    )
+    sub_agents=[main_workflow_agent, session_summarizer_agent],
+    before_agent_callback=before_agent_callback,
+    after_agent_callback=after_agent_callback,
 )

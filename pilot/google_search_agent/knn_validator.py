@@ -37,7 +37,6 @@ vectorizer = TfidfVectorizer()
 corpus_vectors = vectorizer.fit_transform(corpus_texts)
 
 # Create and train the k-NN Classifier
-# n_neighbors is set to 1 because we want to find the single most similar known-good text
 knn = KNeighborsClassifier(n_neighbors=1)
 knn.fit(corpus_vectors, corpus_labels)
 
@@ -62,14 +61,10 @@ def validate_with_knn(text_to_validate: str) -> dict:
         text_vector = vectorizer.transform([text_to_validate])
 
         # Use the k-NN model to find the nearest neighbor and its distance
-        # The distance is the confidence score. A smaller distance means higher confidence.
         distances, indices = knn.kneighbors(text_vector, n_neighbors=1)
 
-        # The distance is a value between 0 and sqrt(2) for cosine similarity with TF-IDF.
-        # We convert it to a confidence score from 0.0 to 1.0 where 1.0 is a perfect match.
-        confidence = 1 - (distances[0][0] / 1.414) # Normalize distance to a confidence score
-        
-        # Clamp the confidence to be within [0, 1]
+        # Normalize distance to a confidence score
+        confidence = 1 - (distances[0][0] / 1.414)
         confidence = max(0.0, min(1.0, confidence))
 
         nearest_doc_id = corpus_labels[indices[0][0]]
@@ -83,7 +78,7 @@ def validate_with_knn(text_to_validate: str) -> dict:
 
 
 # --- ADK FunctionTool --- 
+# The description is now correctly taken from the function's docstring.
 knn_validation_tool = FunctionTool(
-    func=validate_with_knn,
-    description="Calculates a confidence score for a given text by comparing it to a corpus of verified technical jargon."
+    func=validate_with_knn
 )
