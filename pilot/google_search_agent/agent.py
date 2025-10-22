@@ -76,7 +76,9 @@ decision_agent = Agent(
 reviser_agent = Agent(
     name="ReviserAgent",
     model="gemini-live-2.5-flash-preview-native-audio-09-2025",
-    instruction="Revise the 'draft_answer' based on the 'critique' to create an improved version. Overwrite the 'draft_answer' with this new version.",
+    instruction="""Your task is conditional. First, check the 'validation_passed' key in the session state.
+    If 'validation_passed' is False, you MUST revise the 'draft_answer' based on the 'critique' to create an improved version. Overwrite the 'draft_answer' with this new version.
+    If 'validation_passed' is True, you MUST do nothing and output an empty string to signify your inaction.""",
     output_key="draft_answer",
 )
 
@@ -86,7 +88,6 @@ critique_and_refine_loop = LoopAgent(
     name="CritiqueAndRefineLoop",
     sub_agents=[parallel_validator, decision_agent, reviser_agent],
     max_iterations=2,
-    condition="session.state.get('validation_passed') != True",
 )
 
 # --- The Main Workflow ---
