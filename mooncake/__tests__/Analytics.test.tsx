@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import Analytics from '@/components/Analytics';
 import { usePathname } from 'next/navigation';
 import { logEvent } from 'firebase/analytics';
@@ -21,16 +21,19 @@ jest.mock('@/lib/firebase', () => ({
 }));
 
 describe('Analytics component', () => {
+  beforeEach(() => {
+    (logEvent as jest.Mock).mockClear();
+  });
+
   it('should log a page_view event on initial render', async () => {
     (usePathname as jest.Mock).mockReturnValue('/initial-path');
 
     render(<Analytics />);
 
-    // Wait for the async useEffect to complete
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(logEvent).toHaveBeenCalledWith(expect.any(Object), 'page_view', {
-      page_path: '/initial-path',
+    await waitFor(() => {
+      expect(logEvent).toHaveBeenCalledWith(expect.any(Object), 'page_view', {
+        page_path: '/initial-path',
+      });
     });
   });
 
@@ -38,18 +41,22 @@ describe('Analytics component', () => {
     (usePathname as jest.Mock).mockReturnValue('/initial-path');
     const { rerender } = render(<Analytics />);
 
-    // Wait for the initial render's async useEffect to complete
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await waitFor(() => {
+      expect(logEvent).toHaveBeenCalledWith(expect.any(Object), 'page_view', {
+        page_path: '/initial-path',
+      });
+    });
 
     // Change the path
     (usePathname as jest.Mock).mockReturnValue('/new-path');
     rerender(<Analytics />);
 
-    // Wait for the re-render's async useEffect to complete
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(logEvent).toHaveBeenCalledWith(expect.any(Object), 'page_view', {
-      page_path: '/new-path',
+    await waitFor(() => {
+      expect(logEvent).toHaveBeenCalledWith(expect.any(Object), 'page_view', {
+        page_path: '/new-path',
+      });
     });
+
+    expect(logEvent).toHaveBeenCalledTimes(2);
   });
 });
