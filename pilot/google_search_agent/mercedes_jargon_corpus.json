@@ -1,0 +1,18 @@
+[
+    {
+        "id": "race_start_001",
+        "text": "To activate RACE START, ensure the engine is warm and you are on a closed circuit. Press the brake firmly with your left foot. Pull both paddle shifters towards you. Confirm RACE START in the instrument cluster. Release the brake to launch. Using this function on public roads is prohibited and may result in transmission damage if performed incorrectly."
+    },
+    {
+        "id": "spoiler_manual_001",
+        "text": "To manually extend or retract the rear spoiler, press the corresponding button on the center console. An indicator light will confirm the action. The spoiler also extends and retracts automatically based on vehicle speed for optimal aerodynamics. Manual operation is for low-speed situations or cleaning."
+    },
+    {
+        "id": "drive_mode_select_001",
+        "text": "Select a drive mode using the rotary controller on the center console. Available modes are Comfort, Sport, Sport+, and Individual. Each mode adjusts engine response, transmission shifting, suspension stiffness, and exhaust sound. For track use, RACE mode is also available."
+    },
+    {
+        "id": "launch_control_warning_001",
+        "text": "WARNING: Frequent use of RACE START will cause accelerated wear on powertrain components, including the transmission and clutch. The system should only be used when components are at optimal operating temperature. Deactivate traction control (ESP) only in controlled environments by experienced drivers."
+    }
+]
