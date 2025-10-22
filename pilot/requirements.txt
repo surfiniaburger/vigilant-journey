@@ -37,3 +37,4 @@ opentelemetry-sdk
 opentelemetry-api
 motor
 gunicorn
+a2a-sdk

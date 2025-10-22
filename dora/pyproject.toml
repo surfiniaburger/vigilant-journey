@@ -1,0 +1,11 @@
+[project]
+name = "dora"
+version = "0.1.0"
+description = "Orchestration agent for map and place queries."
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk",
+    "a2a-sdk",
+    "mcp",
+    "uv",
+]

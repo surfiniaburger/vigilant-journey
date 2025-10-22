@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from google.adk.agents import Agent, SequentialAgent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.tools import google_search, preload_memory_tool
 from .memory_tool import save_memory_tool, recall_memory_tool
 from .mcp_tools import mcp_tools
@@ -74,23 +75,31 @@ main_workflow_agent = SequentialAgent(
     after_agent_callback=after_agent_callback,
 )
 
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
+dora_agent = RemoteA2aAgent(
+    name="dora_agent",
+    description="Agent that can answer questions about maps and places.",
+    agent_card="http://localhost:8001/a2a/dora_agent/.well-known/agent.json",
+)
+
 # The Orchestrator (Root Agent): Manages the entire interaction and the stream.
 root_agent = Agent(
     name="OrchestratorAgent",
     model="gemini-live-2.5-flash-preview-native-audio",
     description="The central AI co-pilot for the vehicle. Greets the user and orchestrates the main workflow.",
     instruction="""You are Alora, the master AI co-pilot for a vehicle.
-    
-    **You are Alora, the master AI co-pilot.
-    
-    1. First, greet the user warmly and ask how you can help.
-    2. Once the user provides their request, your ONLY job is to call your sub-agent, `MainWorkflowAgent`, to handle the request.
-    3. You will stream all events from the `MainWorkflowAgent` back to the user. Do NOT generate any other text or try to answer the question yourself.
+
+    1.  First, greet the user warmly and ask how you can help.
+    2.  Check the session state for the 'user_prompt'.
+    3.  If the prompt contains keywords like 'find', 'where is', or 'show me on the map', your ONLY job is to call your sub-agent, `dora_agent`, to handle the request.
+    4.  Otherwise, your ONLY job is to call your sub-agent, `MainWorkflowAgent`, to handle the request.
+    5.  You will stream all events from the called sub-agent back to the user. Do NOT generate any other text or try to answer the question yourself.
     """,
-    tools=[preload_memory_tool.PreloadMemoryTool()], # ADDED THE TOOL BACK
-    sub_agents=[main_workflow_agent],
+    tools=[preload_memory_tool.PreloadMemoryTool()],
+    sub_agents=[main_workflow_agent, dora_agent],
     before_agent_callback=before_agent_callback,
-    after_agent_callback=after_agent_callback, # USE THE NEW CALLBACK
+    after_agent_callback=after_agent_callback,
     before_model_callback=before_model_callback,
     after_model_callback=after_model_callback,
     before_tool_callback=before_tool_callback,

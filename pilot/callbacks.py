@@ -35,7 +35,18 @@ async def after_agent_callback(callback_context: CallbackContext) -> None:
 # --- The rest of your logging callbacks remain the same ---
 
 async def before_agent_callback(callback_context: CallbackContext) -> None:
+    """
+    This callback runs before every agent turn. It captures the user's prompt
+    and saves it to the session state.
+    """
     logger.info(f"==> BEFORE AGENT: {callback_context.agent_name}")
+
+    # Capture user prompt and save to state
+    if callback_context.user_content and callback_context.user_content.parts:
+        user_prompt = callback_context.user_content.parts[0].text
+        if user_prompt:
+            callback_context.state["user_prompt"] = user_prompt
+            logger.info(f"Saved user prompt to state: '{user_prompt}'")
 
 async def before_model_callback(callback_context: CallbackContext, llm_request: LlmRequest) -> None:
     logger.info(f"--> BEFORE MODEL call for {callback_context.agent_name}")
