@@ -32,5 +32,5 @@ The backend is designed as a hierarchical structure of agents, each with a speci
 ### Running Locally
 
 ```bash
-GOOGLE_APPLICATION_CREDENTIALS="./local-dev-sa-key.json" uv run uvicorn main:app --reload
+GOOGLE_APPLICATION_CREDENTIALS="./pilot-local-dev-sa-key.json" uv run uvicorn main:app --reload
 ```

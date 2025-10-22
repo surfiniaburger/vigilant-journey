@@ -72,3 +72,8 @@ The application is composed of three main services:
     ```bash
     npm run dev --prefix mooncake
     ```
+
+
+
+
+uv run uvicorn dora.agent:a2a_app --host 0.0.0.0 --port 8001

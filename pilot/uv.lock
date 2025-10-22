@@ -7,6 +7,22 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "a2a-sdk"
+version = "0.3.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core" },
+    { name = "httpx" },
+    { name = "httpx-sse" },
+    { name = "protobuf" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/de/5a/3634ce054a8985c0d2ca0cb2ed1c8c8fdcd67456ddb6496895483c17fee0/a2a_sdk-0.3.10.tar.gz", hash = "sha256:f2df01935fb589c6ebaf8581aede4fe059a30a72cd38e775035337c78f8b2cca", size = 225974, upload-time = "2025-10-21T20:40:38.423Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/9b/82df9530ed77d30831c49ffffc827222961422d444c0d684101e945ee214/a2a_sdk-0.3.10-py3-none-any.whl", hash = "sha256:b216ccc5ccfd00dcfa42f0f2dc709bc7ba057550717a34b0b1b34a99a76749cf", size = 140291, upload-time = "2025-10-21T20:40:36.929Z" },
+]
+
+[[package]]
 name = "absl-py"
 version = "2.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -29,6 +45,7 @@ name = "adk-multiagent-mcp-app"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "a2a-sdk" },
     { name = "certifi" },
     { name = "cloud-sql-python-connector" },
     { name = "fastapi" },
@@ -63,6 +80,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "a2a-sdk" },
     { name = "certifi", specifier = ">=2025.10.5" },
     { name = "cloud-sql-python-connector", specifier = ">=1.18.5" },
     { name = "fastapi" },
