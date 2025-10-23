@@ -1,127 +1,195 @@
-# Copyright 2025 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import logging
-from google.adk.agents import Agent, LoopAgent, ParallelAgent, SequentialAgent
-from google.adk.tools import google_search, preload_memory_tool
+from typing import AsyncGenerator
 
-from .memory_tool import save_memory_tool, recall_memory_tool
-from .mcp_tools import mcp_tools
-from .knn_validator import knn_validation_tool
-from callbacks import (
-    before_agent_callback,
-    after_agent_callback,
-    before_model_callback,
-    after_model_callback,
-    before_tool_callback,
-    after_tool_callback,
+from google.adk.agents import (
+    Agent,
+    BaseAgent,  # Import BaseAgent to create our custom agent
+    LoopAgent,
+    ParallelAgent,
+    SequentialAgent,
 )
 
+
+from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events import Event
+from google.adk.tools import agent_tool, google_search, preload_memory_tool
+from google.genai.types import Content, Part
+from pydantic import BaseModel, Field
+
+# Local Imports
+from callbacks import (
+    after_agent_callback,
+    after_model_callback,
+    after_tool_callback,
+    before_agent_callback,
+    before_model_callback,
+    before_tool_callback,
+)
+from .knn_validator import knn_validation_tool
+from .mcp_tools import mcp_tools
+from .memory_tool import create_memory_tools
+#from main import get_memory_service
+
+# --- Configure Logging ---
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
-# Confidence threshold for the k-NN validator
-CONFIDENCE_THRESHOLD = 0.7
 
-# --- Agent Definitions ---
+# --- Constants ---
+CONFIDENCE_THRESHOLD = 0.25
+LIVE_MODEL = "gemini-live-2.5-flash-preview-native-audio"
+INTERNAL_MODEL = "gemini-2.5-pro"
 
-researcher_agent = Agent(
-    name="ResearcherAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction="""Logger: Starting ResearcherAgent.
-    You are a research assistant. Answer the user's request using your tools and store the result in the 'draft_answer' session state key.""",
-    tools=[recall_memory_tool, google_search, mcp_tools],
-    output_key="draft_answer",
-)
 
-# --- Dual-Critic Validation Agents (to be run in parallel) ---
 
-safety_and_compliance_agent = Agent(
-    name="SafetyAndComplianceAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction="""Logger: Starting SafetyAndComplianceAgent (LLM Critic).
-    Review the text in 'draft_answer'. If it is safe and complete, respond with 'APPROVED'. Otherwise, provide a critique and store it in the 'critique' session state key.""",
-    output_key="critique",
-)
+# --- Input Schema ---
+class WorkflowInput(BaseModel):
+    user_query: str = Field(
+        description="The user's original question that needs to be answered."
+    )
 
-knn_validator_agent = Agent(
-    name="KnnValidatorAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction="""Logger: Starting KnnValidatorAgent (Statistical Critic).
-    You must use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Store the score in the 'confidence' session state key.""",
-    tools=[knn_validation_tool],
-    output_key="confidence",
-)
 
-parallel_validator = ParallelAgent(
-    name="ParallelValidator",
-    sub_agents=[safety_and_compliance_agent, knn_validator_agent],
-)
+# --- NEW: Deterministic Decision Agent (Replaces LLM Agent) ---
+class DeterministicDecisionAgent(BaseAgent):
+    """A custom, code-driven agent that makes a decision based on session state."""
 
-# --- Decision Agent (runs after parallel validation) ---
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        logger.info("Executing deterministic decision logic.")
+        state = ctx.session.state
 
-decision_agent = Agent(
-    name="DecisionAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction=f"""Logger: Starting DecisionAgent.
-    Examine the session state. The critique is: {{critique}}, The confidence is: {{confidence}}.
-    If 'critique' is 'APPROVED' and 'confidence' is greater than or equal to {CONFIDENCE_THRESHOLD}, set 'validation_passed' to True. Otherwise, set it to False.""",
-    output_key="validation_passed",
-)
+        critique = state.get("critique")
+        # Ensure confidence is a float, defaulting to 0.0 if not present
+        try:
+            confidence = float(state.get("confidence", 0.0))
+        except (ValueError, TypeError):
+            confidence = 0.0
+        
+        validation_result = False
+        if critique == "APPROVED" and confidence >= CONFIDENCE_THRESHOLD:
+            validation_result = True
 
-# --- Reviser Agent (runs if validation fails) ---
+        # Directly update the session state
+        state["validation_passed"] = validation_result
+        logger.info(f"Decision made: validation_passed = {validation_result}")
 
-reviser_agent = Agent(
-    name="ReviserAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction="""Logger: Starting ReviserAgent.
-    Your task is conditional. First, check the 'validation_passed' key in the session state.
-    If 'validation_passed' is False, you MUST revise the 'draft_answer' based on the 'critique' to create an improved version. Overwrite the 'draft_answer' with this new version.
-    If 'validation_passed' is True, you MUST do nothing and output an empty string to signify your inaction.""",
-    output_key="draft_answer",
-)
+        # Yield a content event so the framework can populate the output_key
+        yield Event(
+            author=self.name,
+            content=Content(parts=[Part(text=str(validation_result))]),
+        )
 
-# --- The Refinement Loop ---
+# --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
+def create_root_agent(memory_service):
+    """
+    Creates and wires together all agents and tools, using the provided memory service.
+    This factory pattern is used to break the circular dependency between main.py and agent.py,
+    allowing for isolated testing.
+    """
+    # Initialize tools that depend on the memory service
+    save_memory_tool, recall_memory_tool = create_memory_tools(memory_service)
 
-critique_and_refine_loop = LoopAgent(
-    name="CritiqueAndRefineLoop",
-    sub_agents=[parallel_validator, decision_agent, reviser_agent],
-    max_iterations=2,
-)
+    # All agent definitions now live inside this factory function
+    individual_agent_callbacks = dict(
+        before_agent_callback=before_agent_callback,
+        after_agent_callback=after_agent_callback,
+        before_model_callback=before_model_callback,
+        after_model_callback=after_model_callback,
+        before_tool_callback=before_tool_callback,
+        after_tool_callback=after_tool_callback,
+    )
 
-# --- The Main Workflow ---
+    researcher_agent = Agent(
+        name="ResearcherAgent",
+        model="gemini-2.5-pro",
+        instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
+        tools=[recall_memory_tool, google_search, mcp_tools],
+        output_key="draft_answer",
+        **individual_agent_callbacks,
+    )
 
-main_workflow_agent = SequentialAgent(
-    name="MainWorkflowAgent",
-    sub_agents=[researcher_agent, critique_and_refine_loop],
-)
+    safety_and_compliance_agent = Agent(
+        name="SafetyAndComplianceAgent",
+        model="gemini-2.5-pro",
+        instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
+        output_key="critique",
+        **individual_agent_callbacks,
+    )
 
-# --- Final Output Agent ---
+    knn_validator_agent = Agent(
+        name="KnnValidatorAgent",
+        model="gemini-2.5-pro",
+        instruction="Use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Output only the final confidence score as a number.",
+        tools=[knn_validation_tool],
+        output_key="confidence",
+        **individual_agent_callbacks,
+    )
 
-session_summarizer_agent = Agent(
-    name="SessionSummarizerAgent",
-    model="gemini-live-2.5-flash-preview-native-audio",
-    instruction="""Logger: Starting SessionSummarizerAgent.
-    If 'validation_passed' is True, take the final answer from 'draft_answer', save a summary to memory, and present the final answer.
-    If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.""",
-    tools=[save_memory_tool],
-)
+    parallel_validator = ParallelAgent(
+        name="ParallelValidator",
+        sub_agents=[safety_and_compliance_agent, knn_validator_agent],
+    )
 
-# --- The Root Agent ---
+    reviser_agent = Agent(
+        name="ReviserAgent",
+        model=INTERNAL_MODEL,
+        instruction="Revise the text in 'draft_answer' based on the feedback in 'critique' to create an improved version. Overwrite the 'draft_answer' with the new version.",
+        output_key="draft_answer",
+        **individual_agent_callbacks,
+    )
 
-root_agent = SequentialAgent(
-    name="OrchestratorAgent",
-    sub_agents=[main_workflow_agent, session_summarizer_agent],
-    before_agent_callback=before_agent_callback,
-    after_agent_callback=after_agent_callback,
-)
+    decision_agent = DeterministicDecisionAgent(name="DecisionAgent")
+
+    critique_and_refine_loop = LoopAgent(
+        name="CritiqueAndRefineLoop",
+        sub_agents=[parallel_validator, decision_agent, reviser_agent],
+        max_iterations=2,
+    )
+
+    session_summarizer_agent = Agent(
+        name="SessionSummarizerAgent",
+        model="gemini-2.5-flash",
+        instruction="Review the conversation. If 'validation_passed' is True, take the final answer from 'draft_answer', save a one-sentence summary to memory using save_memory_tool, and present the final answer to the user. If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.",
+        tools=[save_memory_tool],
+        output_key="final_answer",
+        **individual_agent_callbacks,
+    )
+
+    main_workflow_agent = SequentialAgent(
+        name="MainWorkflowAgent",
+        sub_agents=[
+            researcher_agent,
+            critique_and_refine_loop,
+            session_summarizer_agent,
+        ],
+        before_agent_callback=before_agent_callback,
+        after_agent_callback=after_agent_callback,
+    )
+
+    main_workflow_tool = agent_tool.AgentTool(
+        agent=main_workflow_agent,
+
+    )
+
+    # Finally, create and return the root agent
+    root_agent = Agent(
+        name="OrchestratorAgent",
+        model=LIVE_MODEL,
+        description="The central AI co-pilot for the vehicle, Alora.",
+        instruction=(
+        "You are Alora, the friendly and helpful AI co-pilot for the vehicle. "
+        "Greet the user. When the user asks a question, you MUST use the "
+        "'MainWorkflowAgent' tool to find the answer. Once the tool returns the "
+        "final answer, present that answer back to the user in a clear and "
+        "conversational way. Your role is to be the final interface to the user, "
+        "using your internal workflow tool to fulfill their request."
+        ),
+        tools=[preload_memory_tool.PreloadMemoryTool(), main_workflow_tool],
+        **individual_agent_callbacks,
+    )
+    
+    return root_agent

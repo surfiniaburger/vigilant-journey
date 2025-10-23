@@ -1,18 +1,34 @@
 [
     {
-        "id": "race_start_001",
-        "text": "To activate RACE START, ensure the engine is warm and you are on a closed circuit. Press the brake firmly with your left foot. Pull both paddle shifters towards you. Confirm RACE START in the instrument cluster. Release the brake to launch. Using this function on public roads is prohibited and may result in transmission damage if performed incorrectly."
+        "id": "race_start_manual_001",
+        "text": "RACE START enables optimal vehicle acceleration from a standstill. Requirements are: the driver's door is closed, the engine is at normal operating temperature, the front wheel is in a straight-ahead position, and the vehicle is on level ground. One of the drive programs Sport, Sport+, or RACE must be selected. To activate, rapidly depress the accelerator pedal fully. A 'Release brake to start' message will appear. Take your foot off the brake to pull away at maximum acceleration. Using RACE START multiple times in short succession may cause it to become temporarily unavailable."
     },
     {
-        "id": "spoiler_manual_001",
-        "text": "To manually extend or retract the rear spoiler, press the corresponding button on the center console. An indicator light will confirm the action. The spoiler also extends and retracts automatically based on vehicle speed for optimal aerodynamics. Manual operation is for low-speed situations or cleaning."
+        "id": "dynamic_select_manual_001",
+        "text": "The DYNAMIC SELECT switch is used to change between the following drive programs: Slippery, Individual, Comfort, Sport, Sport Plus, and RACE. The RACE program is for use on dedicated race circuits, not public roads. Depending on the selected program, vehicle characteristics such as engine and transmission management, Active Distance Assist DISTRONIC, AMG Dynamics, suspension, steering, and the position of the exhaust gas flaps will change."
     },
     {
-        "id": "drive_mode_select_001",
-        "text": "Select a drive mode using the rotary controller on the center console. Available modes are Comfort, Sport, Sport+, and Individual. Each mode adjusts engine response, transmission shifting, suspension stiffness, and exhaust sound. For track use, RACE mode is also available."
+        "id": "performance_exhaust_manual_001",
+        "text": "The AMG Performance exhaust system allows you to select the sound characteristics by changing the position of the exhaust gas flaps. The settings are 'Closed exhaust gas flaps' for a comfort, balanced characteristic, and 'Open exhaust gas flaps' for a sporty, powerful characteristic. This can be operated via a display button on the center console."
     },
     {
-        "id": "launch_control_warning_001",
-        "text": "WARNING: Frequent use of RACE START will cause accelerated wear on powertrain components, including the transmission and clutch. The system should only be used when components are at optimal operating temperature. Deactivate traction control (ESP) only in controlled environments by experienced drivers."
+        "id": "active_aero_profile_manual_001",
+        "text": "The active aerodynamics profile is a component located on the underbody of the front section. Together with the fixed rear wing, it optimizes the vehicle's aerodynamics. Depending on the drive program and driving speed, the profile will automatically extend or retract to move into the ideal position. Manual intervention is not intended for driving situations. It can be manually extended for cleaning purposes when the vehicle is in park and the ignition is on."
+    },
+    {
+        "id": "safety_airbag_child_seat_001",
+        "text": "WARNING: Risk of injury or fatal injuries if the front passenger airbag is enabled. If the front passenger airbag is enabled, a child on the front passenger seat may be struck by the front passenger airbag during an accident. NEVER use a rearward facing child restraint system on a seat protected by an ENABLED FRONT AIRBAG in front of it; this can result in DEATH or SERIOUS INJURY to the child. The PASSENGER AIR BAG OFF indicator lamp must be lit."
+    },
+    {
+        "id": "suspension_adaptive_sport_001",
+        "text": "The AMG adaptive sport suspension system is an electronically controlled damping system for improved driving comfort and safety. The damping is adjusted individually to each wheel based on driving style, road condition, and the selected suspension setting. You can select from three settings: COMFORT for a comfortable style, SPORT for a firmer setting on winding roads, and SPORT PLUS for a very firm suspension setting."
+    },
+    {
+        "id": "eco_start_stop_manual_001",
+        "text": "The ECO start/stop function switches the engine off automatically when the vehicle is brought to a standstill in transmission position D or N to save fuel. The engine is restarted automatically if you release the brake pedal, shift from transmission position P, or depress the accelerator pedal. The function can be deactivated via a display button."
+    },
+    {
+        "id": "braking_notes_race_track_001",
+        "text": "The brake system is designed for heavy loads, which may lead to noise when braking. The loads and temperatures which occur when driving on a racetrack inherently lead to increased wear of the brake system. Check the condition of brakepads, brake discs, and brake fluid before each use on a racetrack. Repeated hard braking within the ABS control range causes higher temperatures than controlled braking."
     }
 ]

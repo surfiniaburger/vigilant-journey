@@ -31,10 +31,18 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from google_search_agent.agent import root_agent
+#from google_search_agent.agent import root_agent
 
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
+# Your ADK agent code follows...
+# from google.adk.agents import LlmAgent
+# ...
 #
 # ADK Streaming
 #
@@ -44,12 +52,21 @@ load_dotenv()
 
 APP_NAME = "Alora"
 
+# --- NEW: Define a global placeholder for the memory service ---
+_memory_service = None
 
-# Make sure to import vertexai
-import vertexai
+# --- NEW: Create a getter function to export the service ---
+def get_memory_service():
+    """Returns the initialized instance of the memory service."""
+    if _memory_service is None:
+        raise RuntimeError("Memory service has not been initialized. Ensure initialize_services() is called first.")
+    return _memory_service
+
+
 
 async def initialize_services():
     """Initializes the services needed for the agent."""
+    global _memory_service # NEW: Declare that we are modifying the global variable
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
     if not all([project_id, location]):
@@ -87,17 +104,21 @@ async def initialize_services():
         print(f"Created new agent engine: {agent_engine_id}")
         print("Set AGENT_ENGINE_ID in your .env file to reuse it.")
 
-    memory_service = VertexAiMemoryBankService(
+    _memory_service = VertexAiMemoryBankService(
         project=project_id,
         location=location,
         agent_engine_id=agent_engine_id,
     )
 
+    # --- LATE IMPORT ---
+    # We import root_agent here, after _memory_service has been initialized.
+    # This ensures that when agent.py is loaded, it can successfully call get_memory_service().
+    from google_search_agent.agent import create_root_agent
     runner = Runner(
         app_name=APP_NAME,
-        agent=root_agent,
+        agent=create_root_agent,
         session_service=session_service,
-        memory_service=memory_service,
+        memory_service=_memory_service,
     )
     return runner
 
