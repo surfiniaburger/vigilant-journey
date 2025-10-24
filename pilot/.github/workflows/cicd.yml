@@ -1,0 +1,79 @@
+name: Pilot CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install npm dependencies
+        run: npm install
+        working-directory: ./pilot
+
+      - name: Run JavaScript tests
+        run: npm test
+        working-directory: ./pilot
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          pip install uv
+          uv sync --frozen
+        working-directory: ./pilot
+
+      - name: Run Python tests
+        run: pytest
+        working-directory: ./pilot
+
+  build_and_push:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build Docker image
+        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest .
+        working-directory: ./pilot
+
+      - name: Push Docker image
+        run: docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy pilot \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated

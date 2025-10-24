@@ -1,0 +1,20 @@
+[debug] [2025-10-24T18:39:10.000Z] ----------------------------------------------------------------------
+[debug] [2025-10-24T18:39:10.006Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/i78h9v2gl6qg2w9646hi06syn3hbv4kj-firebase-tools-14.19.1/lib/node_modules/firebase-tools/lib/bin/firebase.js login:ci
+[debug] [2025-10-24T18:39:10.007Z] CLI Version:   14.19.1
+[debug] [2025-10-24T18:39:10.007Z] Platform:      linux
+[debug] [2025-10-24T18:39:10.008Z] Node Version:  v20.19.1
+[debug] [2025-10-24T18:39:10.008Z] Time:          Fri Oct 24 2025 18:39:10 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-10-24T18:39:10.008Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-24T18:39:10.014Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-10-24T18:39:11.040Z] No OAuth tokens found
+[debug] [2025-10-24T18:39:11.041Z] No OAuth tokens found
+[error] Failed to fetch Firebase Project from current Studio Workspace: Unable to refresh auth: not yet authenticated.
+[warn] ⚠  Authenticating with a `login:ci` token is deprecated and will be removed in a future major version of `firebase-tools`. Instead, use a service account key with `GOOGLE_APPLICATION_CREDENTIALS`: https://cloud.google.com/docs/authentication/getting-started 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=1052736671&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2025-10-24T18:39:11.302Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-10-24T18:39:11.302Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
