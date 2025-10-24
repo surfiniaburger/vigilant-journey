@@ -1,21 +1,25 @@
 
 import { test as setup, expect } from '@playwright/test';
+import { mockFirebaseAuthentication } from './mock-auth';
 
 const authFile = 'e2e/.auth/user.json';
 
 setup('authenticate', async ({ page }) => {
-  // This setup cannot be completed in the current environment as it requires a real user login.
-  // In a real-world scenario, you would navigate to the login page,
-  // fill in the credentials, and handle the authentication flow.
-  // For example:
-  // await page.goto('/login');
-  // await page.getByLabel('Username').fill('user@example.com');
-  // await page.getByLabel('Password').fill('password');
-  // await page.getByRole('button', { name: 'Sign in' }).click();
-  // await expect(page).toHaveURL('/dashboard');
+  // Mock Firebase authentication
+  await mockFirebaseAuthentication(page);
 
-  // After successful authentication, save the authentication state to a file.
-  // await page.context().storageState({ path: authFile });
+  // Go to the home page
+  await page.goto('/');
 
-  console.log('Authentication setup skipped. In a real environment, this step would perform a login.');
+  // Click the button to trigger the sign-in process
+  await page.getByRole('button', { name: 'Launch Co-Pilot' }).click();
+
+  // Wait for the redirect to the map page
+  await page.waitForURL('/map');
+
+  // Assert that we are on the map page
+  await expect(page).toHaveURL('/map');
+
+  // Save the authentication state
+  await page.context().storageState({ path: authFile });
 });

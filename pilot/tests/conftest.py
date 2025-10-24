@@ -12,7 +12,7 @@ sys.modules['motor.motor_asyncio'] = MagicMock()
 
 
 # --- Step 2: Create a fixture that patches the memory service dependency ---
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def mock_memory_service_getter(monkeypatch):
     """
     This fixture runs once per test session and automatically applies its patch.
@@ -38,7 +38,7 @@ from google_search_agent.agent import create_root_agent
 
 
 # --- Step 4: Define fixtures that provide the agent instances to the tests ---
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def root_agent(mock_memory_service_getter):
     """
     Creates a single `root_agent` instance for the entire test session.
@@ -50,7 +50,7 @@ def root_agent(mock_memory_service_getter):
     return create_root_agent(mock_memory_service_getter)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def main_workflow_agent(root_agent):
     """
     Extracts the `main_workflow_agent` from the `root_agent` fixture.

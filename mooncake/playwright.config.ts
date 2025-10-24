@@ -4,6 +4,7 @@ const authFile = 'e2e/.auth/user.json';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/__tests__/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
