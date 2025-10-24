@@ -1,1 +1,3 @@
-require('dotenv').config({ path: './.env.local' });
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: './.env.local' });

@@ -4,7 +4,7 @@
   "description": "Frontend for the pilot application",
   "main": "static/js/app.js",
   "scripts": {
-    "test": ".venv/bin/python -m pytest"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
