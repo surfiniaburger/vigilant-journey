@@ -12,15 +12,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install npm dependencies
-        run: npm install
+        run: npm ci
         working-directory: ./pilot
 
       - name: Run JavaScript tests
@@ -28,7 +28,7 @@ jobs:
         working-directory: ./pilot
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -49,31 +49,30 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker
         run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - name: Build Docker image
-        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest .
+        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} .
         working-directory: ./pilot
 
       - name: Push Docker image
-        run: docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest
+        run: docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy pilot \
-            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:latest \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
-            --platform managed \
-            --allow-unauthenticated
+            --platform managed

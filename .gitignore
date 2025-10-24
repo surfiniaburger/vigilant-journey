@@ -21,3 +21,5 @@ mooncake/test-results/
 mooncake/playwright-report/
 playright.md
 google_maps.md
+firebase-debug.log
+firebase-debug.*.log
