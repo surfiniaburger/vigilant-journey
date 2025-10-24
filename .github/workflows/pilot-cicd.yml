@@ -35,7 +35,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install uv
-          uv pip install -r requirements.txt
+          uv pip install .
         working-directory: ./pilot
 
   build_and_push:
