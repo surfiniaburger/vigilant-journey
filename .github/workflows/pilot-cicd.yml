@@ -23,10 +23,6 @@ jobs:
         run: npm ci
         working-directory: ./pilot
 
-      - name: Run tests
-        run: npm test
-        working-directory: ./pilot
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -36,6 +32,10 @@ jobs:
         run: |
           pip install uv
           uv pip install .
+        working-directory: ./pilot
+
+      - name: Run tests
+        run: npm test
         working-directory: ./pilot
 
   build_and_push:
