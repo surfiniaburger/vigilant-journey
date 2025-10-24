@@ -37,7 +37,7 @@ jobs:
         working-directory: ./pilot
 
       - name: Run tests
-        run: npm test
+        run: ./.venv/bin/python -m pytest
         working-directory: ./pilot
 
   build_and_push:
