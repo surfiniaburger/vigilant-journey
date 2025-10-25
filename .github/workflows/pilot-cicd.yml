@@ -13,6 +13,7 @@ jobs:
       id-token: write
     env:
       MCP_SERVER_URL: https://alora-mcp-server-140457946058.us-central1.run.app/mcp
+      SKIP_MCP_AUTH: true
 
     steps:
       - name: Checkout code
@@ -97,3 +98,5 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
             --platform managed
+
+
