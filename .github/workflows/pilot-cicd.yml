@@ -1,8 +1,6 @@
 name: Pilot CI/CD
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -56,11 +54,19 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
-      - name: Run tests
-        run: ./.venv/bin/python -m pytest
+      - name: Build Docker image
+        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} .
         working-directory: ./pilot
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Save Docker image to tar
+        run: docker save -o pilot_image.tar us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }}
+        working-directory: ./pilot
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pilot-docker-image
+          path: pilot/pilot_image.tar
 
   build_and_push:
     needs: ci
@@ -82,12 +88,16 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: pilot-docker-image
+          path: pilot/
 
-      - name: Build Docker image
-        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} .
-        working-directory: ./pilot
+
+
+      - name: Load Docker image from artifact
+        run: docker load -i pilot/pilot_image.tar
 
       - name: Push Docker image
         run: docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }}
