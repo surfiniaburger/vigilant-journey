@@ -22,6 +22,7 @@ Mooncake is the Next.js web application that provides the user interface for the
     ```bash
     npm install
     ```
+    
 
 2.  **Set Environment Variables:**
     Create a `.env.local` file and add your Firebase project configuration.

@@ -8,8 +8,7 @@ client = TestClient(mcp.app)
 def test_ask_amg_manual_success():
     """Tests the happy path where the RAG pipeline succeeds."""
     # Mock the internal functions to avoid real AI/DB calls
-    with patch('server.search_manual') as mock_search,
-         patch('server.generate_answer') as mock_generate:
+    with patch('server.search_manual') as mock_search, patch('server.generate_answer') as mock_generate:
         
         # Define what our mocks should return
         mock_search.return_value = "This is the context from the manual."
