@@ -22,7 +22,7 @@ export const mockUser: User = {
   getIdTokenResult: async () => ({
     token: 'mock-id-token',
     // Add other properties as needed
-  }) as IdTokenResult),
+  }) as IdTokenResult,
   reload: async () => {},
   toJSON: () => ({}),
 } as User;
