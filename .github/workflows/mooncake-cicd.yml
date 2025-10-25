@@ -25,9 +25,6 @@ jobs:
         run: npm run lint
         working-directory: ./mooncake
 
-      - name: Debug Firebase API Key
-        run: echo "Firebase API Key: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
-
 
 
 
