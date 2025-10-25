@@ -63,7 +63,7 @@ jobs:
         working-directory: ./pilot
 
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pilot-docker-image
           path: pilot/pilot_image.tar
@@ -89,7 +89,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Download Docker image artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: pilot-docker-image
           path: pilot/
