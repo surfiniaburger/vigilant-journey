@@ -19,12 +19,8 @@ PROJECT_PLAN.md
 pilot-local-dev-sa-key.json
 mooncake/test-results/
 mooncake/playwright-report/
-<<<<<<< Updated upstream
 playright.md
 google_maps.md
 firebase-debug.log
 firebase-debug.*.log
-=======
----playright.md
-google_maps.md
->>>>>>> Stashed changes
+setup_workload_identity.sh
