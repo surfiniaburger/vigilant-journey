@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    env:
+      MCP_SERVER_URL: https://alora-mcp-server-140457946058.us-central1.run.app/mcp
 
     steps:
       - name: Checkout code
@@ -22,6 +24,12 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Debug Google Cloud Authentication
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}"
+          echo "Attempting to print ID token..."
+          gcloud auth print-identity-token --audiences=https://alora-mcp-server-140457946058.us-central1.run.app || true
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
