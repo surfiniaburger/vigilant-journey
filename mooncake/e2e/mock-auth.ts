@@ -1,6 +1,6 @@
 
 import { Page } from '@playwright/test';
-import { User } from 'firebase/auth';
+import { Auth, User, IdTokenResult } from 'firebase/auth';
 
 // A mock Firebase user object
 export const mockUser: User = {
@@ -22,7 +22,7 @@ export const mockUser: User = {
   getIdTokenResult: async () => ({
     token: 'mock-id-token',
     // Add other properties as needed
-  } as any),
+  }) as IdTokenResult),
   reload: async () => {},
   toJSON: () => ({}),
 } as User;
@@ -85,18 +85,21 @@ export async function mockFirebaseAuthentication(page: Page) {
     };
 
     // This function will be called by the Firebase SDK
-    const mockOnAuthStateChanged = (auth: any, callback: (user: any) => void) => {
+    const mockOnAuthStateChanged = (auth: Auth, callback: (user: User | null) => void) => {
       callback(mockUser);
       return () => {}; // Return an unsubscribe function
     };
 
     // When the app tries to get the auth object, we give it one with a mocked onAuthStateChanged
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).mockGetAuth = (realGetAuth: any) => {
-        return (...args: any[]) => {
-            const auth = realGetAuth(...args);
-            auth.onAuthStateChanged = (callback: (user: any) => void) => mockOnAuthStateChanged(auth, callback);
-            return auth;
-        };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (...args: any[]) => {
+        const auth = realGetAuth(...args);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        auth.onAuthStateChanged = (callback: (user: any) => void) => mockOnAuthStateChanged(auth, callback);
+        return auth;
+      };
     };
   });
 
