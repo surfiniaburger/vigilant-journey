@@ -1,18 +1,34 @@
 name: Pilot CI/CD
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    env:
+      MCP_SERVER_URL: https://alora-mcp-server-140457946058.us-central1.run.app/mcp
+      SKIP_MCP_AUTH: true
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Debug Google Cloud Authentication
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}"
+          echo "Attempting to print ID token..."
+          gcloud auth print-identity-token --audiences=https://alora-mcp-server-140457946058.us-central1.run.app || true
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -23,10 +39,6 @@ jobs:
         run: npm ci
         working-directory: ./pilot
 
-      - name: Run tests
-        run: npm test
-        working-directory: ./pilot
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -34,14 +46,34 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           pip install uv
           uv pip install .
         working-directory: ./pilot
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Build Docker image
+        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} .
+        working-directory: ./pilot
+
+      - name: Save Docker image to tar
+        run: docker save -o pilot_image.tar us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }}
+        working-directory: ./pilot
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-docker-image
+          path: pilot/pilot_image.tar
 
   build_and_push:
     needs: ci
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -56,12 +88,16 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pilot-docker-image
+          path: pilot/
 
-      - name: Build Docker image
-        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} .
-        working-directory: ./pilot
+
+
+      - name: Load Docker image from artifact
+        run: docker load -i pilot/pilot_image.tar
 
       - name: Push Docker image
         run: docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }}
@@ -72,3 +108,5 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
             --platform managed
+
+

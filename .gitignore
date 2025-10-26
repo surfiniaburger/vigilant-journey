@@ -19,12 +19,8 @@ PROJECT_PLAN.md
 pilot-local-dev-sa-key.json
 mooncake/test-results/
 mooncake/playwright-report/
-
 playright.md
 google_maps.md
 firebase-debug.log
 firebase-debug.*.log
-
-
-google_maps.md
-
+setup_workload_identity.sh
