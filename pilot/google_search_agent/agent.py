@@ -26,7 +26,6 @@ from callbacks import (
     before_tool_callback,
 )
 from .knn_validator import knn_validation_tool
-from .mcp_tools import mcp_tools
 from .memory_tool import create_memory_tools
 #from main import get_memory_service
 
@@ -84,7 +83,7 @@ class DeterministicDecisionAgent(BaseAgent):
         )
 
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
-def create_root_agent(memory_service):
+def create_root_agent(memory_service, use_mcp_tools: bool = True):
     """
     Creates and wires together all agents and tools, using the provided memory service.
     This factory pattern is used to break the circular dependency between main.py and agent.py,
@@ -103,11 +102,16 @@ def create_root_agent(memory_service):
         after_tool_callback=after_tool_callback,
     )
 
+    researcher_tools = [recall_memory_tool, google_search]
+    if use_mcp_tools:
+        from .mcp_tools import mcp_tools
+        researcher_tools.append(mcp_tools)
+
     researcher_agent = Agent(
         name="ResearcherAgent",
         model="gemini-2.5-pro",
         instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
-        tools=[recall_memory_tool, google_search, mcp_tools],
+        tools=researcher_tools,
         output_key="draft_answer",
         **individual_agent_callbacks,
     )

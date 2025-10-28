@@ -1,0 +1,17 @@
+{
+  "eval_set_id": "evalsetea545e",
+  "name": "evalsetea545e",
+  "eval_cases": [
+    {
+      "eval_id": "case001",
+      "user_query": "What are the key features of the new Mercedes-Benz Vision One-Eleven?",
+      "reference_answer": "The Mercedes-Benz Vision One-Eleven is a concept car that pays homage to the C 111 experimental vehicle from the 1970s. Key features include a futuristic, streamlined design, an all-electric powertrain, and an augmented reality interior that blends the physical and digital worlds."
+    },
+    {
+      "eval_id": "case002",
+      "user_query": "How does the MBUX Hyperscreen work?",
+      "reference_answer": "The MBUX Hyperscreen is a large, curved screen unit that stretches almost the entire width of the car's interior. It uses AI and software to learn the driver's habits and proactively displays the right functions at the right time, creating a zero-layer interface."
+    }
+  ],
+  "creation_timestamp": 1760149352.1142118
+}
