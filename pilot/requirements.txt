@@ -37,3 +37,6 @@ opentelemetry-sdk
 opentelemetry-api
 motor
 gunicorn
+scikit-learn
+google-generativeai
+sentence-transformers
