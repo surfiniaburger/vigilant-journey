@@ -1,81 +1,113 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { useAudio } from '@/lib/use-audio';
-import { Map } from '@/components/ui/map';
-import { VoiceButton } from '@/components/ui/voice-button';
-import { Response } from '@/components/ui/response';
+import { useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { useIdToken } from "@/hooks/use-id-token"
+import { useAudio } from "@/lib/use-audio"
+import { Map } from "@/components/ui/map"
+import { VoiceButton } from "@/components/ui/voice-button"
+import { Response } from "@/components/ui/response"
 
 interface MapCommand {
-  action: 'set_map_center';
-  lat: number;
-  lng: number;
+  action: "set_map_center"
+  lat: number
+  lng: number
 }
 
 export default function MapPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const [idToken, setIdToken] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
 
-  // Get the token once the user is available
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    } else if (user) {
-      user.getIdToken().then(setIdToken);
+    if (!authLoading && !user) {
+      router.push("/")
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router])
 
-  // Initialize the audio hook only when we have a token
-  const { audioState, text, startRecording, stopRecording } = useAudio(idToken);
+  const {
+    idToken,
+    loading: tokenLoading,
+    error: tokenError,
+  } = useIdToken({
+    user,
+    enabled: !!user,
+  })
 
-  const [mapCenter, setMapCenter] = useState({ lat: 37.7704, lng: -122.3985 });
-  const [agentResponse, setAgentResponse] = useState('');
+  // Initialize audio hook only when we have a token
+  const { audioState, text, startRecording, stopRecording } = useAudio(idToken)
 
-  const handleToggleRecording = () => {
-    if (audioState === 'recording') {
-      stopRecording();
+  const [mapCenter, setMapCenter] = useState({ lat: 37.7704, lng: -122.3985 })
+  const [agentResponse, setAgentResponse] = useState("")
+
+  const handleToggleRecording = useCallback(() => {
+    if (audioState === "recording") {
+      stopRecording()
     } else {
-      setAgentResponse('');
-      startRecording();
+      setAgentResponse("")
+      startRecording()
     }
-  };
+  }, [audioState, startRecording, stopRecording])
 
-  const isJsonString = (str: string) => {
-    if (!str.trim().startsWith('{')) return false;
+  // or use useCallback if it needs access to component state
+  const isJsonString = useCallback((str: string): boolean => {
+    if (!str?.trim().startsWith("{")) return false
     try {
-      JSON.parse(str);
+      JSON.parse(str)
+      return true
     } catch {
-      return false;
+      return false
     }
-    return true;
-  };
+  }, [])
 
-  // Effect to process agent responses
   useEffect(() => {
-    if (text) {
-      if (isJsonString(text)) {
-        try {
-          const command: MapCommand = JSON.parse(text);
-          if (command.action === 'set_map_center') {
-            setMapCenter({ lat: command.lat, lng: command.lng });
-            setAgentResponse(`Panning map to new location.`);
-            return;
-          }
-        } catch { /* Not a valid command, fall through */ }
-      }
-      setAgentResponse(text);
-    }
-  }, [text]);
+    if (!text) return
 
-  // Loading state while checking auth
-  if (loading || !user || !idToken) {
-    return <div className="w-full h-screen flex items-center justify-center bg-background">Authenticating...</div>;
+    if (isJsonString(text)) {
+      try {
+        const command: MapCommand = JSON.parse(text)
+        if (command.action === "set_map_center") {
+          setMapCenter({ lat: command.lat, lng: command.lng })
+          setAgentResponse("Panning map to new location.")
+          return
+        }
+      } catch (err) {
+        console.error("[v0] Failed to parse command:", err)
+        // Fall through to treat as regular response
+      }
+    } else if (text.trim().startsWith("{")) {
+      try {
+        JSON.parse(text)
+      } catch (err) {
+        console.error("[v0] Failed to parse command:", err)
+      }
+    }
+    setAgentResponse(text)
+  }, [text, isJsonString])
+
+  if (tokenError) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <div className="text-destructive text-lg font-semibold">Authentication Error</div>
+        <p className="text-muted-foreground text-sm max-w-md text-center">{tokenError.message}</p>
+        <button onClick={() => router.push("/")} className="text-sm text-primary hover:underline">
+          Return to Home
+        </button>
+      </div>
+    )
   }
 
-  // The correct UI
+  if (authLoading || tokenLoading || !user || !idToken) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-muted border-t-foreground" />
+          <p className="text-muted-foreground text-sm">Authenticating...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-screen relative">
       <Map center={mapCenter} />
@@ -88,12 +120,12 @@ export default function MapPage() {
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
         <VoiceButton
-          state={audioState === 'recording' ? 'recording' : 'idle'}
+          state={audioState === "recording" ? "recording" : "idle"}
           onPress={handleToggleRecording}
           size="icon"
           className="w-16 h-16"
         />
       </div>
     </div>
-  );
+  )
 }

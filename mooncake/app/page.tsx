@@ -1,37 +1,48 @@
-'use client';
+"use client"
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from "@/components/ui/button";
-import { ProtectedLink } from "@/components/ui/ProtectedLink";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { Button } from "@/components/ui/button"
+import { ProtectedLink } from "@/components/ui/ProtectedLink"
 
 export default function Home() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // If loading is finished and the user is authenticated, redirect to the map page.
-    if (!loading && user) {
-      router.push('/map');
-    }
-  }, [user, loading, router]);
+    setMounted(true)
+  }, [])
 
-  // While checking auth state, you can show a loader or nothing.
-  if (loading || user) {
-    return null; // or a loading spinner
+  useEffect(() => {
+    if (!mounted || loading) return
+
+    if (user) {
+      router.push("/map")
+    }
+  }, [user, loading, router, mounted])
+
+  if (!mounted || loading) {
+    return (
+      <main className="flex h-screen w-screen flex-col items-center justify-center bg-background text-foreground">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-muted border-t-foreground" />
+      </main>
+    )
   }
 
-  // If not loading and no user, show the landing page.
+  // Only show landing if user is not authenticated
+  if (user) {
+    return null
+  }
+
   return (
     <main className="flex h-screen w-screen flex-col items-center justify-center bg-background text-foreground">
       <div className="flex flex-col items-center gap-6 text-center">
-        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
-          Welcome to Alora
-        </h1>
+        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">Welcome to Alora</h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Your intelligent automotive co-pilot. Plan trips, diagnose issues, and
-          explore your vehicle&apos;s features with the power of conversational AI.
+          Your intelligent automotive co-pilot. Plan trips, diagnose issues, and explore your vehicle&apos;s features
+          with the power of conversational AI.
         </p>
         <ProtectedLink href="/map">
           <Button size="lg" className="mt-4">
@@ -40,5 +51,5 @@ export default function Home() {
         </ProtectedLink>
       </div>
     </main>
-  );
+  )
 }
