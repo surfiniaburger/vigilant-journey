@@ -24,3 +24,5 @@ google_maps.md
 firebase-debug.log
 firebase-debug.*.log
 setup_workload_identity.sh
+server.md
+test_dora_agent.md
