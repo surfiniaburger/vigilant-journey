@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { User } from "firebase/auth"
 
 interface UseIdTokenOptions {
-  user: any // Replace with your actual User type
+  user: User | null
   enabled?: boolean
 }
 
