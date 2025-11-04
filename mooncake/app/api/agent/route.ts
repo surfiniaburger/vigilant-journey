@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AGENT_SERVER_URL = 'https://8001-firebase-vigilant-journey-1761944789989.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev';
+const AGENT_SERVER_URL = process.env.NEXT_PUBLIC_AGENT_SERVER_URL;
 
 export async function POST(req: NextRequest) {
   console.log('Agent API route hit');

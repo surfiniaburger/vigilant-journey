@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef, createElement } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { useIdToken } from "@/hooks/use-id-token"
-import { Map } from "@/components/ui/map"
 import { Response } from "@/components/ui/response"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,12 +14,14 @@ interface MapCommand {
   lng: number
 }
 
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
 export default function DoraPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  // const mapRef = useRef<any>(null)
-  const placeSearchRef = useRef<HTMLElement | null>(null)
-  const placeDetailsRef = useRef<HTMLElement | null>(null)
+  const [apiLoaded, setApiLoaded] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const placeSearchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,14 +38,13 @@ export default function DoraPage() {
     enabled: !!user,
   })
 
-  const [mapCenter, setMapCenter] = useState({ lat: 37.7704, lng: -122.3985 })
+  const [mapCenter, setMapCenter] = useState({ lat: 21.27655, lng: -157.82663 })
   const [agentResponse, setAgentResponse] = useState("")
   const [inputValue, setInputValue] = useState("")
   const [text, setText] = useState("")
-  const [selectedPlace, setSelectedPlace] = useState<{ place?: unknown } | null>(null)
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+    if (!inputValue.trim() || !idToken) return
     console.log("Sending message:", inputValue)
 
     const requestBody = {
@@ -63,6 +63,7 @@ export default function DoraPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify(requestBody),
       })
@@ -118,25 +119,98 @@ export default function DoraPage() {
   }, [text, isJsonString])
 
   useEffect(() => {
-    const placeSearchElement = placeSearchRef.current
-    const handlePlaceSelect = (event: Event & { place?: unknown }) => {
-      setSelectedPlace(event as { place?: unknown })
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not defined.");
+      return;
     }
-    if (placeSearchElement) {
-      placeSearchElement.addEventListener("gmp-select", handlePlaceSelect)
-    }
-    return () => {
-      if (placeSearchElement) {
-        placeSearchElement.removeEventListener("gmp-select", handlePlaceSelect)
-      }
-    }
-  }, [])
+
+    const loadMapsApi = () => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&v=beta&libraries=places,maps,marker,maps3d`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setApiLoaded(true);
+      document.head.appendChild(script);
+    };
+
+    loadMapsApi();
+  }, []);
 
   useEffect(() => {
-    if (placeDetailsRef.current && selectedPlace) {
-      ;(placeDetailsRef.current as unknown as { place: unknown }).place = (selectedPlace as { place?: unknown }).place
+    if (apiLoaded && mapContainerRef.current && placeSearchContainerRef.current) {
+      const initMap = async () => {
+        const map3d = document.createElement('gmp-map-3d');
+        map3d.setAttribute('center', `${mapCenter.lat},${mapCenter.lng}`);
+        map3d.setAttribute('mode', 'satellite');
+        map3d.setAttribute('range', '1500');
+        map3d.setAttribute('tilt', '73');
+        map3d.setAttribute('heading', '38');
+        mapContainerRef.current!.innerHTML = '';
+        mapContainerRef.current!.appendChild(map3d);
+
+        const popover = document.createElement('gmp-popover');
+        popover.setAttribute('altitude-mode', 'relative-to-mesh');
+        map3d.appendChild(popover);
+
+        const placeDetails = document.createElement('gmp-place-details-compact');
+        popover.appendChild(placeDetails);
+
+        const detailsRequest = document.createElement('gmp-place-details-place-request');
+        placeDetails.appendChild(detailsRequest);
+
+        const standardContent = document.createElement('gmp-place-standard-content');
+        placeDetails.appendChild(standardContent);
+
+        const placeSearch = document.createElement('gmp-place-search');
+        placeSearch.setAttribute('selectable', 'true');
+        placeSearchContainerRef.current!.innerHTML = '';
+        placeSearchContainerRef.current!.appendChild(placeSearch);
+
+        const allContent = document.createElement('gmp-place-all-content');
+        placeSearch.appendChild(allContent);
+
+        const nearbyRequest = document.createElement('gmp-place-nearby-search-request');
+        nearbyRequest.setAttribute('max-result-count', '5');
+        nearbyRequest.setAttribute('included-primary-types', 'electric_vehicle_charging_station');
+        nearbyRequest.setAttribute('location-restriction', `1500@${mapCenter.lat},${mapCenter.lng}`);
+        placeSearch.appendChild(nearbyRequest);
+
+        await google.maps.importLibrary("places")
+        const {Marker3DInteractiveElement, AltitudeMode} = await google.maps.importLibrary("maps3d");
+        /* eslint-disable @typescript-eslint/no-explicit-any */ 
+        const handleClick = (place: any) => {
+          if (detailsRequest) {
+            (detailsRequest as any).place = place.id;
+          }
+          if (popover) {
+            (popover as any).positionAnchor = place.location;
+            (popover as any).open = true;
+          }
+        }
+
+        if (placeSearch) {
+          placeSearch.addEventListener('gmp-load', (e: any) => {
+            for (const place of e.target.places) {
+              const marker = new Marker3DInteractiveElement({
+                position: place.location,
+                extruded: true,
+                drawsWhenOccluded: true,
+                altitudeMode: AltitudeMode.RELATIVE_TO_MESH
+              })
+              marker.addEventListener("gmp-click", () => handleClick(place))
+              if (map3d) {
+                map3d.append(marker);
+              }
+            }
+          });
+
+          placeSearch.addEventListener('gmp-select', ({place}: any) => handleClick(place));
+        }
+      }
+
+      initMap();
     }
-  }, [selectedPlace])
+  }, [apiLoaded, mapCenter]);
 
   if (tokenError) {
     return (
@@ -162,44 +236,52 @@ export default function DoraPage() {
   }
 
   return (
-    <div className="w-full h-screen relative">
-      <Map center={mapCenter} />
+    <>
+      <style>
+        {`
+          #map-container {
+            width: 100%;
+            height: 100%;
+          }
+          #place-search-container {
+            position: absolute;
+            inset: 30px auto auto 30px;
+            width: 400px;
+          }
+          gmp-place-search {
+            --gmp-mat-font-title-medium: 400 12px / 14px Garamond;
+            --gmp-mat-color-on-surface: #e37400;
+          }
+          gmp-popover {
+            --gmp-popover-pixel-offset-y: -48px;
+          }
+          gmp-place-details-compact {
+            width: 350px;
+            --gmp-mat-color-on-surface: #e37400;
+          }
+        `}
+      </style>
+      <div className="w-full h-screen relative">
+        <div id="map-container" ref={mapContainerRef}></div>
+        <div id="place-search-container" ref={placeSearchContainerRef}></div>
 
-      <div className="absolute top-10 left-10 bg-white p-4 rounded-lg shadow-lg z-10">
-        {createElement(
-          'gmp-place-search',
-          { ref: placeSearchRef, orientation: "vertical", selectable: true },
-          createElement('gmp-place-all-content', null, ' '),
-          createElement('gmp-place-text-search-request')
+        {agentResponse && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white p-4 rounded-lg max-w-md shadow-lg animate-in fade-in-50">
+            <Response>{agentResponse}</Response>
+          </div>
         )}
-      </div>
 
-      {selectedPlace && (
-        <div className="absolute top-10 right-10 bg-white p-4 rounded-lg shadow-lg z-10">
-          {createElement(
-            'gmp-place-details-compact',
-            { ref: placeDetailsRef, orientation: "horizontal" },
-            createElement('gmp-place-details-place-request'),
-            createElement('gmp-place-all-content')
-          )}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md flex items-center space-x-2 p-4">
+          <Textarea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Send a message to Alora..."
+            className="flex-1"
+          />
+          <Button onClick={handleSendMessage}>Send</Button>
         </div>
-      )}
-
-      {agentResponse && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white p-4 rounded-lg max-w-md shadow-lg animate-in fade-in-50">
-          <Response>{agentResponse}</Response>
-        </div>
-      )}
-
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-md flex items-center space-x-2 p-4">
-        <Textarea
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Send a message to Alora..."
-          className="flex-1"
-        />
-        <Button onClick={handleSendMessage}>Send</Button>
       </div>
-    </div>
+    </>
   )
 }
+
