@@ -26,3 +26,4 @@ firebase-debug.*.log
 setup_workload_identity.sh
 server.md
 test_dora_agent.md
+places-test
