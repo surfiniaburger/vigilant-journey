@@ -61,7 +61,7 @@ const Map = ({ center }: MapProps) => {
 
       try {
         await loadGoogleMapsScript();
-        
+        // @ts-expect-error - google.maps is loaded dynamically
         const { Map3DElement } = await google.maps.importLibrary('maps3d');
         await google.maps.importLibrary('places');
         await google.maps.importLibrary('geometry');

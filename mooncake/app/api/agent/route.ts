@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AGENT_SERVER_URL = process.env.NEXT_PUBLIC_AGENT_SERVER_URL;
+const AGENT_SERVER_URL = process.env.AGENT_SERVER_URL;
 
 export async function POST(req: NextRequest) {
   console.log('Agent API route hit');

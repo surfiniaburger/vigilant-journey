@@ -176,6 +176,7 @@ export default function DoraPage() {
         placeSearch.appendChild(nearbyRequest);
 
         await google.maps.importLibrary("places")
+        // @ts-expect-error: maps3d library not yet in type definitions
         const {Marker3DInteractiveElement, AltitudeMode} = await google.maps.importLibrary("maps3d");
         /* eslint-disable @typescript-eslint/no-explicit-any */ 
         const handleClick = (place: any) => {
