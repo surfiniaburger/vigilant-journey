@@ -22,7 +22,11 @@ export default function DoraPage() {
   const [apiLoaded, setApiLoaded] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const placeSearchContainerRef = useRef<HTMLDivElement>(null);
-
+  
+  // Store references to map elements to avoid recreating them
+  const map3dRef = useRef<HTMLElement | null>(null);
+  const placeSearchRef = useRef<HTMLElement | null>(null);
+  
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/")
@@ -118,6 +122,7 @@ export default function DoraPage() {
     setText("")
   }, [text, isJsonString])
 
+  // Load Google Maps API once
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) {
       console.error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not defined.");
@@ -136,82 +141,122 @@ export default function DoraPage() {
     loadMapsApi();
   }, []);
 
+  // Initialize map and elements ONCE when API loads
   useEffect(() => {
-    if (apiLoaded && mapContainerRef.current && placeSearchContainerRef.current) {
-      const initMap = async () => {
-        const map3d = document.createElement('gmp-map-3d');
-        map3d.setAttribute('center', `${mapCenter.lat},${mapCenter.lng}`);
-        map3d.setAttribute('mode', 'satellite');
-        map3d.setAttribute('range', '1500');
-        map3d.setAttribute('tilt', '73');
-        map3d.setAttribute('heading', '38');
-        mapContainerRef.current!.innerHTML = '';
-        mapContainerRef.current!.appendChild(map3d);
+    if (!apiLoaded || !mapContainerRef.current || !placeSearchContainerRef.current) {
+      return;
+    }
 
-        const popover = document.createElement('gmp-popover');
-        popover.setAttribute('altitude-mode', 'relative-to-mesh');
-        map3d.appendChild(popover);
+    const initMap = async () => {
+      const map3d = document.createElement('gmp-map-3d');
+      map3d.setAttribute('center', `${mapCenter.lat},${mapCenter.lng}`);
+      map3d.setAttribute('mode', 'satellite');
+      map3d.setAttribute('range', '1500');
+      map3d.setAttribute('tilt', '73');
+      map3d.setAttribute('heading', '38');
+      mapContainerRef.current!.innerHTML = '';
+      mapContainerRef.current!.appendChild(map3d);
+      map3dRef.current = map3d;
 
-        const placeDetails = document.createElement('gmp-place-details-compact');
-        popover.appendChild(placeDetails);
+      const popover = document.createElement('gmp-popover');
+      popover.setAttribute('altitude-mode', 'relative-to-mesh');
+      map3d.appendChild(popover);
 
-        const detailsRequest = document.createElement('gmp-place-details-place-request');
-        placeDetails.appendChild(detailsRequest);
+      const placeDetails = document.createElement('gmp-place-details-compact');
+      popover.appendChild(placeDetails);
 
-        const standardContent = document.createElement('gmp-place-standard-content');
-        placeDetails.appendChild(standardContent);
+      const detailsRequest = document.createElement('gmp-place-details-place-request');
+      placeDetails.appendChild(detailsRequest);
 
-        const placeSearch = document.createElement('gmp-place-search');
-        placeSearch.setAttribute('selectable', 'true');
-        placeSearchContainerRef.current!.innerHTML = '';
-        placeSearchContainerRef.current!.appendChild(placeSearch);
+      const standardContent = document.createElement('gmp-place-standard-content');
+      placeDetails.appendChild(standardContent);
 
-        const allContent = document.createElement('gmp-place-all-content');
-        placeSearch.appendChild(allContent);
+      const placeSearch = document.createElement('gmp-place-search');
+      placeSearch.setAttribute('selectable', 'true');
+      placeSearchContainerRef.current!.innerHTML = '';
+      placeSearchContainerRef.current!.appendChild(placeSearch);
+      placeSearchRef.current = placeSearch;
 
-        const nearbyRequest = document.createElement('gmp-place-nearby-search-request');
-        nearbyRequest.setAttribute('max-result-count', '5');
-        nearbyRequest.setAttribute('included-primary-types', 'electric_vehicle_charging_station');
-        nearbyRequest.setAttribute('location-restriction', `1500@${mapCenter.lat},${mapCenter.lng}`);
-        placeSearch.appendChild(nearbyRequest);
+      const allContent = document.createElement('gmp-place-all-content');
+      placeSearch.appendChild(allContent);
 
-        await google.maps.importLibrary("places")
-        // @ts-expect-error: maps3d library not yet in type definitions
-        const {Marker3DInteractiveElement, AltitudeMode} = await google.maps.importLibrary("maps3d");
-        /* eslint-disable @typescript-eslint/no-explicit-any */ 
-        const handleClick = (place: any) => {
-          if (detailsRequest) {
-            (detailsRequest as any).place = place.id;
-          }
-          if (popover) {
-            (popover as any).positionAnchor = place.location;
-            (popover as any).open = true;
-          }
+      const nearbyRequest = document.createElement('gmp-place-nearby-search-request');
+      nearbyRequest.setAttribute('max-result-count', '5');
+      nearbyRequest.setAttribute('included-primary-types', 'electric_vehicle_charging_station');
+      nearbyRequest.setAttribute('location-restriction', `1500@${mapCenter.lat},${mapCenter.lng}`);
+      placeSearch.appendChild(nearbyRequest);
+
+      await google.maps.importLibrary("places")
+      // @ts-expect-error: maps3d library not yet in type definitions
+      const {Marker3DInteractiveElement, AltitudeMode} = await google.maps.importLibrary("maps3d");
+      
+      /* eslint-disable @typescript-eslint/no-explicit-any */ 
+      const handleClick = (place: any) => {
+        if (detailsRequest) {
+          (detailsRequest as any).place = place.id;
         }
-
-        if (placeSearch) {
-          placeSearch.addEventListener('gmp-load', (e: any) => {
-            for (const place of e.target.places) {
-              const marker = new Marker3DInteractiveElement({
-                position: place.location,
-                extruded: true,
-                drawsWhenOccluded: true,
-                altitudeMode: AltitudeMode.RELATIVE_TO_MESH
-              })
-              marker.addEventListener("gmp-click", () => handleClick(place))
-              if (map3d) {
-                map3d.append(marker);
-              }
-            }
-          });
-
-          placeSearch.addEventListener('gmp-select', ({place}: any) => handleClick(place));
+        if (popover) {
+          (popover as any).positionAnchor = place.location;
+          (popover as any).open = true;
         }
       }
 
-      initMap();
+      // Store event handler references for cleanup
+      const handleLoad = (e: any) => {
+        for (const place of e.target.places) {
+          const marker = new Marker3DInteractiveElement({
+            position: place.location,
+            extruded: true,
+            drawsWhenOccluded: true,
+            altitudeMode: AltitudeMode.RELATIVE_TO_MESH
+          })
+          marker.addEventListener("gmp-click", () => handleClick(place))
+          if (map3d) {
+            map3d.append(marker);
+          }
+        }
+      };
+
+      const handleSelect = ({place}: any) => handleClick(place);
+
+      if (placeSearch) {
+        placeSearch.addEventListener('gmp-load', handleLoad);
+        placeSearch.addEventListener('gmp-select', handleSelect);
+      }
+
+      // Cleanup function to remove event listeners
+      return () => {
+        if (placeSearch) {
+          placeSearch.removeEventListener('gmp-load', handleLoad);
+          placeSearch.removeEventListener('gmp-select', handleSelect);
+        }
+      };
     }
-  }, [apiLoaded, mapCenter]);
+
+    const cleanup = initMap();
+    
+    // Return cleanup function
+    return () => {
+      cleanup.then(cleanupFn => {
+        if (cleanupFn) cleanupFn();
+      });
+    };
+  }, [apiLoaded, mapCenter.lng, mapCenter.lat]); // Only run once when API loads
+
+  // Separate effect to update map center without recreating everything
+  useEffect(() => {
+    if (map3dRef.current) {
+      map3dRef.current.setAttribute('center', `${mapCenter.lat},${mapCenter.lng}`);
+      
+      // Update the nearby search location restriction
+      if (placeSearchRef.current) {
+        const nearbyRequest = placeSearchRef.current.querySelector('gmp-place-nearby-search-request');
+        if (nearbyRequest) {
+          nearbyRequest.setAttribute('location-restriction', `1500@${mapCenter.lat},${mapCenter.lng}`);
+        }
+      }
+    }
+  }, [mapCenter]); // Only update center when mapCenter changes
 
   if (tokenError) {
     return (
@@ -285,4 +330,3 @@ export default function DoraPage() {
     </>
   )
 }
-
