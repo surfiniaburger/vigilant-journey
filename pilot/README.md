@@ -29,6 +29,10 @@ The backend is designed as a hierarchical structure of agents, each with a speci
 2.  **Set Environment Variables:**
     Create a `.env` file and add the necessary environment variables (e.g., `GOOGLE_CLOUD_PROJECT`, `MONGO_DB_CONNECTION_STRING`).
 
+### Security Note
+
+**Authentication Token in Query Parameter:** The application currently transmits the Firebase ID token as a query parameter in the WebSocket URL. This is a potential security risk, as URLs can be logged in various places, including browser history, server logs, and by intermediate proxies. In a production environment, it is highly recommended to use a more secure method for token transmission, such as a short-lived token that is passed in the initial HTTP upgrade request, or to use a library that supports passing headers in WebSocket connections.
+
 ### Running Locally
 
 GOOGLE_APPLICATION_CREDENTIALS="./pilot-local-dev-sa-key.json" uv run uvicorn main:app --reload
