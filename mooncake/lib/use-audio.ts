@@ -33,6 +33,8 @@ function convertFloat32ToPCM(inputData: Float32Array): ArrayBuffer {
 
 export type AudioState = 'idle' | 'recording' | 'processing' | 'playing';
 
+// import DOMPurify from 'dompurify';
+
 export const useAudio = (idToken: string | null) => {
   const [audioState, setAudioState] = useState<AudioState>('idle');
   const [text, setText] = useState<string>('');
@@ -43,6 +45,18 @@ export const useAudio = (idToken: string | null) => {
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioBufferRef = useRef<Uint8Array[]>([]);
   const bufferTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // const sendText = useCallback((text: string) => {
+  //   if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
+  //     return;
+  //   }
+
+  //   const sanitizedText = DOMPurify.sanitize(text);
+  //   websocketRef.current.send(JSON.stringify({
+  //     mime_type: 'text/plain',
+  //     data: sanitizedText,
+  //   }));
+  // }, []);
 
   const startRecording = useCallback(async () => {
     setAudioState('recording');
@@ -180,5 +194,5 @@ export const useAudio = (idToken: string | null) => {
     setAudioState('idle');
   }, []);
 
-  return { audioState, text, startRecording, stopRecording };
+  return { audioState, text, /*sendText,*/ startRecording, stopRecording };
 };

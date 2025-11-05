@@ -194,6 +194,8 @@ async def agent_to_client_messaging(websocket, live_events):
             print(f"[AGENT TO CLIENT]: text/plain: {message}")
 
 
+import bleach
+
 async def client_to_agent_messaging(websocket, live_request_queue):
     """Client to agent communication"""
     while True:
@@ -205,10 +207,12 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 
         # Send the message to the agent
         if mime_type == "text/plain":
+            # Sanitize the user's input
+            sanitized_data = bleach.clean(data)
             # Send a text message
-            content = Content(role="user", parts=[Part.from_text(text=data)])
+            content = Content(role="user", parts=[Part.from_text(text=sanitized_data)])
             live_request_queue.send_content(content=content)
-            print(f"[CLIENT TO AGENT]: {data}")
+            print(f"[CLIENT TO AGENT]: {sanitized_data}")
         elif mime_type == "audio/pcm":
             # Send an audio data
             decoded_data = base64.b64decode(data)

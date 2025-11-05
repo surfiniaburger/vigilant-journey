@@ -40,3 +40,4 @@ gunicorn
 scikit-learn
 google-generativeai
 sentence-transformers
+bleach

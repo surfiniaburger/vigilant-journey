@@ -95,6 +95,11 @@ class MongoSessionService(SessionService):
 async def connect_to_mongodb():
     """
     Connect to MongoDB using URI from Secret Manager
+
+    SECURITY NOTE: This function does not implement client-side field level encryption.
+    In a production environment, it is highly recommended to implement client-side
+    field level encryption to protect sensitive data at rest. This can be achieved
+    by using a Key Management Service (KMS) like AWS KMS, GCP KMS, or Azure Key Vault.
     """
     logger, cloud_handler, gcp_log_client = setup_logging()
     try:
