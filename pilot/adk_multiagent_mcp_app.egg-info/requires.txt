@@ -19,6 +19,9 @@ pymongo
 pytest-asyncio
 google-cloud-secret-manager
 google-cloud-logging
+motor
+gunicorn
+pytest-mock
 
 [test]
 pytest

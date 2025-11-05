@@ -27,6 +27,7 @@ from callbacks import (
 )
 from .knn_validator import knn_validation_tool
 from .memory_tool import create_memory_tools
+from .url_context_tool import url_context_tool
 #from main import get_memory_service
 
 # --- Configure Logging ---
@@ -83,7 +84,7 @@ class DeterministicDecisionAgent(BaseAgent):
         )
 
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
-def create_root_agent(memory_service, use_mcp_tools: bool = True):
+def create_root_agent(memory_service, use_url_context_tool: bool = True):
     """
     Creates and wires together all agents and tools, using the provided memory service.
     This factory pattern is used to break the circular dependency between main.py and agent.py,
@@ -103,14 +104,20 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     )
 
     researcher_tools = [recall_memory_tool, google_search]
-    if use_mcp_tools:
-        from .mcp_tools import mcp_tools
-        researcher_tools.append(mcp_tools)
+    if use_url_context_tool:
+        researcher_tools.append(url_context_tool)
 
     researcher_agent = Agent(
         name="ResearcherAgent",
         model="gemini-2.5-pro",
-        instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
+        instruction=(
+            "You are an expert research assistant. Your goal is to comprehensively answer the user's request by following these steps:\n"
+            "1. First, use the `google_search` tool to find relevant information and URLs.\n"
+            "2. Review the search results. If the snippets provide enough information, synthesize them into a final answer.\n"
+            "3. If the query requires more detailed information, select the most relevant URL from the search results and use the `get_info_from_url` tool to get the full content.\n"
+            "4. Synthesize all the gathered information into a final, comprehensive answer.\n"
+            "5. Place the final answer in the 'draft_answer' session state key."
+        ),
         tools=researcher_tools,
         output_key="draft_answer",
         **individual_agent_callbacks,
