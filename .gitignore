@@ -1,5 +1,6 @@
 # Environments
 .venv/
+env/
 .env
 .env.*
 !.env.example
@@ -34,3 +35,4 @@ security_audit_report.md
 big.md
 pilot/build
 context.md
+you.md

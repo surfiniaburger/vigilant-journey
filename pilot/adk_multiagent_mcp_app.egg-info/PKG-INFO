@@ -28,6 +28,9 @@ Requires-Dist: google-cloud-logging
 Requires-Dist: motor
 Requires-Dist: gunicorn
 Requires-Dist: pytest-mock
+Requires-Dist: scikit-learn>=1.7.2
+Requires-Dist: google-generativeai>=0.8.5
+Requires-Dist: bleach>=6.3.0
 Provides-Extra: test
 Requires-Dist: pytest; extra == "test"
 Requires-Dist: pytest-mock; extra == "test"
