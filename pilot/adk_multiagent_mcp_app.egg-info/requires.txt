@@ -19,6 +19,12 @@ pymongo
 pytest-asyncio
 google-cloud-secret-manager
 google-cloud-logging
+motor
+gunicorn
+pytest-mock
+scikit-learn>=1.7.2
+google-generativeai>=0.8.5
+bleach>=6.3.0
 
 [test]
 pytest

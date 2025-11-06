@@ -1,0 +1,12 @@
+[project]
+name = "kelvin"
+version = "0.1.0"
+dependencies = [
+    "google-adk",
+    "httpx",
+    "google-auth",
+]
+
+[tool.setuptools.packages.find]
+where = ["./"]
+include = ["text_agent"]
