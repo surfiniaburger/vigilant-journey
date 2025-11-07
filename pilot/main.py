@@ -245,21 +245,35 @@ async def root():
 
 
 @app.websocket("/ws/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str, token: str = Query(...)):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    session_id: str,
+    is_audio: str,
+):
     """Client websocket endpoint"""
-
-    # Authenticate the user
+    token = None
     try:
+        # Extract the token from the subprotocols
+        # The subprotocols are in the format: ['Bearer', '<token>']
+        subprotocols = websocket.scope.get("subprotocols", [])
+        if len(subprotocols) == 2 and subprotocols[0] == "Bearer":
+            token = subprotocols[1]
+
+        if not token:
+            raise ValueError("Authentication token not found in subprotocols")
+
         decoded_token = auth.verify_id_token(token)
-        user_id = decoded_token['uid']
+        user_id = decoded_token["uid"]
         print(f"Client authenticated: {user_id} (session: {session_id})")
+
+        # Accept the connection with the agreed subprotocol
+        await websocket.accept(subprotocol="Bearer")
+
     except Exception as e:
         print(f"Authentication failed: {e}")
+        # Close the connection without accepting if authentication fails
         await websocket.close(code=1008, reason="Authentication failed")
         return
-
-    # Wait for client connection
-    await websocket.accept()
     print(f"Client connected, audio mode: {is_audio}")
 
     # Start agent session using the authenticated user's UID
