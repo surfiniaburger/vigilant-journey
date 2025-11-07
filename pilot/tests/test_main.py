@@ -24,7 +24,7 @@ async def test_websocket_endpoint(mocker):
 
     with client.websocket_connect(
         "/ws/123?is_audio=false",
-        headers={"Authorization": "Bearer test-token"},
+        subprotocols=["Bearer", "test-token"],
     ) as websocket:
         # If the connection is successful, the with block will execute without raising an exception.
         pass

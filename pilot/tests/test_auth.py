@@ -20,7 +20,7 @@ async def test_websocket_auth_valid_token(mock_start_agent_session, mock_verify_
     try:
         with client.websocket_connect(
             "/ws/test-session?is_audio=false",
-            headers={"Authorization": "Bearer valid-dummy-token"},
+            subprotocols=["Bearer", "valid-dummy-token"],
         ) as websocket:
             # If connection is successful, this block will execute
             mock_verify_id_token.assert_called_once_with("valid-dummy-token")
@@ -41,7 +41,7 @@ async def test_websocket_auth_invalid_token(mock_verify_id_token):
     with pytest.raises(WebSocketDisconnect) as excinfo:
         with client.websocket_connect(
             "/ws/test-session?is_audio=false",
-            headers={"Authorization": "Bearer invalid-dummy-token"},
+            subprotocols=["Bearer", "invalid-dummy-token"],
         ) as websocket:
             # This part should not be reached
             pass

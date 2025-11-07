@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import WebSocket from 'isomorphic-ws';
 
 // Helper function to convert ArrayBuffer to Base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -105,12 +104,7 @@ export const useAudio = (idToken: string | null) => {
         wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true`;
       }
       
-      // @ts-expect-error - isomorphic-ws allows headers
-      websocketRef.current = new WebSocket(wsUrl, {
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
-      });
+      websocketRef.current = new WebSocket(wsUrl, ["Bearer", idToken]);
 
       websocketRef.current.onopen = () => console.log("WebSocket connection opened.");
       websocketRef.current.onclose = () => console.log("WebSocket connection closed.");

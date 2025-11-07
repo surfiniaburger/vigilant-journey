@@ -33,7 +33,7 @@ async def test_audio_stream(mocker):
 
     with client.websocket_connect(
         "/ws/123?is_audio=true",
-        headers={"Authorization": "Bearer test-token"},
+        subprotocols=["Bearer", "test-token"],
     ) as websocket:
         mock_audio_data = "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
