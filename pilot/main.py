@@ -27,7 +27,7 @@ from google.genai import types
 from google.adk.memory import VertexAiMemoryBankService
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, Header
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -245,13 +245,20 @@ async def root():
 
 
 @app.websocket("/ws/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str, token: str = Query(...)):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    session_id: str,
+    is_audio: str,
+    authorization: str = Header(...),
+):
     """Client websocket endpoint"""
 
     # Authenticate the user
     try:
+        # Extract the token from the "Bearer <token>" format
+        token = authorization.split(" ")[1]
         decoded_token = auth.verify_id_token(token)
-        user_id = decoded_token['uid']
+        user_id = decoded_token["uid"]
         print(f"Client authenticated: {user_id} (session: {session_id})")
     except Exception as e:
         print(f"Authentication failed: {e}")
