@@ -105,7 +105,7 @@ export const useAudio = (idToken: string | null) => {
         wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true`;
       }
       
-      // @ts-ignore
+      // @ts-expect-error - isomorphic-ws allows headers
       websocketRef.current = new WebSocket(wsUrl, {
         headers: {
           Authorization: `Bearer ${idToken}`,
