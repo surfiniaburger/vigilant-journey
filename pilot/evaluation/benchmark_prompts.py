@@ -20,6 +20,7 @@ from sentence_transformers import SentenceTransformer, util
 # --- CONFIGURATION ---
 EVALUATION_DATASET_PATH = "pilot/evaluation/evaluation_dataset.json"
 SIMILARITY_THRESHOLD = 0.75
+PASS_RATE_THRESHOLD = 0.8  # 80% of the cases must pass
 
 # --- INITIALIZATION ---
 async def initialize_evaluation_services():
@@ -156,9 +157,19 @@ async def main():
 
     # --- REPORTING ---
     print("\n--- BENCHMARK RESULTS ---")
-    # Add more detailed reporting here in the future
+    correct_count = sum(1 for r in results if r['is_correct'])
+    total_count = len(results)
+    pass_rate = correct_count / total_count if total_count > 0 else 0
+
     print(json.dumps(results, indent=2))
     print("------------------------")
+    print(f"Pass Rate: {pass_rate:.2f}")
+
+    if pass_rate < PASS_RATE_THRESHOLD:
+        print(f"Evaluation failed: Pass rate ({pass_rate:.2f}) is below the threshold ({PASS_RATE_THRESHOLD:.2f})")
+        sys.exit(1)
+    else:
+        print("Evaluation passed!")
 
 if __name__ == "__main__":
     asyncio.run(main())
