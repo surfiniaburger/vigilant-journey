@@ -5,6 +5,7 @@ dependencies = [
     "google-adk",
     "httpx",
     "google-auth",
+    "litellm",
 ]
 
 [tool.setuptools.packages.find]

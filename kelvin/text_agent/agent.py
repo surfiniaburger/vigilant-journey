@@ -1,5 +1,6 @@
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools import FunctionTool
+from google.adk.models.lite_llm import LiteLlm
 
 # Placeholder tool for forwarding to the Router Agent
 def forward_to_router(user_message: str) -> str:
@@ -12,7 +13,7 @@ def forward_to_router(user_message: str) -> str:
     return f"Message '{user_message}' received and forwarded to Router Agent."
 
 root_agent = Agent(
-    model='gemini-2.5-flash',
+    model=LiteLlm(model="ollama/gpt-oss:20b-cloud"),
     name='KelvinTextAgent',
     description='A text-based agent that receives user messages and forwards them to the Router Agent.',
     instruction=(

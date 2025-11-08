@@ -72,3 +72,6 @@ The application is composed of three main services:
     ```bash
     npm run dev --prefix mooncake
     ```
+
+
+gcloud cloud-shell ssh --authorize-session --ssh-flag="--L 40359:127.0.0.1:4035" --ssh-flag="-4"
