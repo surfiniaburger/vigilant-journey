@@ -669,8 +669,6 @@ uritemplate==4.2.0
     # via google-api-python-client
 urllib3==2.5.0
     # via requests
-uv==0.9.9
-    # via adk-multiagent-mcp-app (pyproject.toml)
 uvicorn==0.38.0
     # via
     #   adk-multiagent-mcp-app (pyproject.toml)

@@ -43,7 +43,6 @@ dependencies = [
     "sounddevice",
     "soundfile",
     "sqlalchemy>=2.0.43",
-    "uv",
     "uvicorn",
     "websockets",
     "wikipedia",
