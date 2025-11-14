@@ -1,4 +1,4 @@
-google-adk>=1.16.0
+google-adk>=1.18.0
 langchain-google-vertexai
 uv
 fastapi
