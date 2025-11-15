@@ -85,10 +85,9 @@ class MonteCarloSimulation:
 
             lap_time, fuel_consumed = self.simulate_lap(live_data)
 
+            total_race_time += lap_time
             if safety_car_lap and lap == safety_car_lap and lap not in strategy:
-                total_race_time += lap_time + SAFETY_CAR_TIME_LOSS_SECONDS
-            else:
-                total_race_time += lap_time
+                total_race_time += SAFETY_CAR_TIME_LOSS_SECONDS
 
             tire_wear += 1
             fuel_level -= fuel_consumed
