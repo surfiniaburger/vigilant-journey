@@ -42,12 +42,13 @@ class MonteCarloSimulation:
 
         return lap_time, fuel_consumed
 
-    def run_strategy_simulation(self, strategy):
+    def run_strategy_simulation(self, strategy, safety_car_lap=None):
         """
         Runs a full race simulation for a given pit stop strategy.
 
         Args:
             strategy (list): A list of lap numbers for pit stops.
+            safety_car_lap (int): The lap on which a safety car is deployed.
 
         Returns:
             float: The total race time for the simulated strategy.
@@ -56,7 +57,7 @@ class MonteCarloSimulation:
         tire_wear = 0
         fuel_level = 100 # start with a full tank
 
-        total_laps = self.race_data.get('total_laps', 60)
+        total_laps = self.race_data['total_laps'].iloc[0] if 'total_laps' in self.race_data else 60
         pit_stop_time = 25 # seconds
 
         for lap in range(1, total_laps + 1):
@@ -82,7 +83,14 @@ class MonteCarloSimulation:
 
             lap_time, fuel_consumed = self.simulate_lap(live_data)
 
-            total_race_time += lap_time
+            if safety_car_lap and lap == safety_car_lap:
+                if lap in strategy: # Pitting during safety car
+                    total_race_time += lap_time
+                else: # Not pitting during safety car
+                    total_race_time += lap_time + 30 # 30 second time loss for staying out
+            else:
+                total_race_time += lap_time
+
             tire_wear += 1
             fuel_level -= fuel_consumed
 
@@ -161,17 +169,20 @@ class MonteCarloSimulation:
 
         # Simulate with adjusted lap times for the safety car period
         # (This is a simplified assumption)
-        original_lap_time = self.race_data.get('base_lap_time', 90)
-        self.race_data['base_lap_time'] = 120 # Slower lap times under safety car
 
-        pit_now_time = np.mean([self.run_strategy_simulation(pit_now_strategy) for _ in range(self.num_simulations)])
-        stay_out_time = np.mean([self.run_strategy_simulation(stay_out_strategy) for _ in range(self.num_simulations)])
+        # Scenario 1: Pit now
+        # During a safety car, the pit stop time is effectively less because the other cars are slower.
+        pit_stop_time = 25 # seconds
+
+        # Recalculate the race time with the saved pit stop time
+        pit_now_time = np.mean([self.run_strategy_simulation(pit_now_strategy, safety_car_lap=current_lap) for _ in range(self.num_simulations)])
+
+
+        # Scenario 2: Stay out
+        stay_out_time = np.mean([self.run_strategy_simulation(stay_out_strategy, safety_car_lap=current_lap) for _ in range(self.num_simulations)])
 
         print(f"Pit Now: {pit_now_time:.2f}s")
         print(f"Stay Out: {stay_out_time:.2f}s")
-
-        # Reset the lap time
-        self.race_data['base_lap_time'] = original_lap_time
 
         if pit_now_time < stay_out_time:
             print("Recommendation: PIT NOW")
