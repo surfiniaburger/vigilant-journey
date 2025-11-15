@@ -7,17 +7,18 @@ from pilot.models.fuel_consumption_model import train_fuel_consumption_model
 from pilot.models.pace_prediction_model import train_pace_prediction_model
 
 def test_train_tire_degradation_model():
-    """Tests that the tire degradation model trains without errors."""
+    """Tests that the tire degradation model trains and has a positive coefficient for the lap feature."""
     data = {
         'lap': np.arange(1, 51),
         'accx_can': np.random.rand(50),
         'accy_can': np.random.rand(50),
         'Steering_Angle': np.random.rand(50),
-        'lap_time': np.random.rand(50)
+        'lap_time': 90 + np.arange(1, 51) * 0.1 # Simulate lap time increasing with laps
     }
     df = pd.DataFrame(data)
     model = train_tire_degradation_model(df)
     assert isinstance(model, LinearRegression)
+    assert model.coef_[0] > 0 # The coefficient for the 'lap' feature should be positive
 
 def test_train_fuel_consumption_model():
     """Tests that the fuel consumption model trains without errors."""

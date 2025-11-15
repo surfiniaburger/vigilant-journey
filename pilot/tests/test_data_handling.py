@@ -15,7 +15,7 @@ def test_unzip_data(tmp_path):
     unzip_data(data_dir=str(tmp_path), output_dir=str(tmp_path / "unzipped"))
 
     # Check that the file was unzipped
-    assert os.path.exists(str(tmp_path / "unzipped" / "test" / "test.txt"))
+    assert (tmp_path / "unzipped" / "test" / "test.txt").exists()
 
 def test_parse_telemetry(tmp_path):
     """Tests that the telemetry_parser correctly merges and processes data."""
