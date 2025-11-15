@@ -4,37 +4,53 @@ Version: 0.1.0
 Summary: Add your description here
 Requires-Python: <3.13,>=3.11
 Description-Content-Type: text/markdown
+Requires-Dist: bleach>=6.3.0
+Requires-Dist: certifi>=2025.10.5
+Requires-Dist: cloud-sql-python-connector>=1.18.5
+Requires-Dist: dnspython
+Requires-Dist: fastapi
 Requires-Dist: firebase-admin>=6.5.0
+Requires-Dist: google-adk>=1.18.0
+Requires-Dist: google-api-python-client
+Requires-Dist: google-auth
+Requires-Dist: google-auth-httplib2
+Requires-Dist: google-auth-oauthlib
+Requires-Dist: google-cloud-aiplatform
+Requires-Dist: google-cloud-logging
+Requires-Dist: google-cloud-secret-manager
+Requires-Dist: google-cloud-storage
+Requires-Dist: google-generativeai>=0.8.5
+Requires-Dist: gunicorn
+Requires-Dist: langchain
+Requires-Dist: langchain-community
+Requires-Dist: langchain-google-vertexai
+Requires-Dist: motor
+Requires-Dist: numpy
+Requires-Dist: pandas
 Requires-Dist: opentelemetry-api
-Requires-Dist: opentelemetry-sdk
 Requires-Dist: opentelemetry-exporter-gcp-trace
 Requires-Dist: opentelemetry-resourcedetector-gcp
-Requires-Dist: certifi>=2025.10.5
-Requires-Dist: google-adk>=1.16.0
-Requires-Dist: google-adk[eval]>=1.15.0
-Requires-Dist: cloud-sql-python-connector>=1.18.5
+Requires-Dist: opentelemetry-sdk
 Requires-Dist: pg8000>=1.31.5
-Requires-Dist: sqlalchemy>=2.0.43
-Requires-Dist: fastapi
-Requires-Dist: uvicorn
-Requires-Dist: python-dotenv
-Requires-Dist: websockets
-Requires-Dist: httpx
-Requires-Dist: pytest>=8.4.2
+Requires-Dist: pydub
 Requires-Dist: pymongo
-Requires-Dist: pytest-asyncio
-Requires-Dist: google-cloud-secret-manager
-Requires-Dist: google-cloud-logging
-Requires-Dist: motor
-Requires-Dist: gunicorn
-Requires-Dist: pytest-mock
+Requires-Dist: python-dotenv
+Requires-Dist: python-socketio
+Requires-Dist: requests
 Requires-Dist: scikit-learn>=1.7.2
-Requires-Dist: google-generativeai>=0.8.5
-Requires-Dist: bleach>=6.3.0
+Requires-Dist: scipy
+Requires-Dist: sounddevice
+Requires-Dist: soundfile
+Requires-Dist: sqlalchemy>=2.0.43
+Requires-Dist: uvicorn
+Requires-Dist: websockets
+Requires-Dist: wikipedia
 Provides-Extra: test
-Requires-Dist: pytest; extra == "test"
-Requires-Dist: pytest-mock; extra == "test"
 Requires-Dist: httpx; extra == "test"
+Requires-Dist: pytest>=8.4.2; extra == "test"
+Requires-Dist: pytest-asyncio; extra == "test"
+Requires-Dist: pytest-mock; extra == "test"
+Requires-Dist: sentence-transformers>=5.1.2; extra == "test"
 
 # Pilot: The Alora Backend & Voice Agent
 

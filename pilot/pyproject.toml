@@ -28,6 +28,7 @@ dependencies = [
     "langchain-google-vertexai",
     "motor",
     "numpy",
+    "pandas",
     "opentelemetry-api",
     "opentelemetry-exporter-gcp-trace",
     "opentelemetry-resourcedetector-gcp",
