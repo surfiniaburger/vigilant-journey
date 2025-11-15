@@ -1,33 +1,44 @@
 import numpy as np
 import pandas as pd
+import joblib
+import os
 
-# Assume the models are in a directory that can be imported
-# from pilot.models.tire_degradation_model import predict_lap_time_dropoff
-# from pilot.models.fuel_consumption_model import predict_fuel_consumption
-# from pilot.models.pace_prediction_model import predict_pace
+from pilot.models.tire_degradation_model import predict_lap_time_dropoff
+from pilot.models.fuel_consumption_model import predict_fuel_consumption
+from pilot.models.pace_prediction_model import predict_pace
 
 class MonteCarloSimulation:
-    def __init__(self, race_data, num_simulations=1000):
+    def __init__(self, race_data, num_simulations=1000, model_dir="trained_models"):
         self.race_data = race_data
         self.num_simulations = num_simulations
-        # self.tire_model = None # Load your trained model here
-        # self.fuel_model = None # Load your trained model here
-        # self.pace_model = None # Load your trained model here
+        self.tire_model = joblib.load(os.path.join(model_dir, "tire_degradation_model.pkl"))
+        self.fuel_model = joblib.load(os.path.join(model_dir, "fuel_consumption_model.pkl"))
+        self.pace_model = joblib.load(os.path.join(model_dir, "pace_prediction_model.pkl"))
 
-    def simulate_lap(self, current_lap, tire_wear, fuel_level):
+        # Calculate average driver inputs
+        self.avg_driver_inputs = {
+            'accx_can': self.race_data['accx_can'].mean(),
+            'accy_can': self.race_data['accy_can'].mean(),
+            'Steering_Angle': self.race_data['Steering_Angle'].mean(),
+            'nmot': self.race_data['nmot'].mean(),
+            'aps': self.race_data['aps'].mean(),
+            'pbrake_f': self.race_data['pbrake_f'].mean(),
+            'pbrake_r': self.race_data['pbrake_r'].mean(),
+            'speed': self.race_data['speed'].mean(),
+            'gear': self.race_data['gear'].mean(),
+        }
+
+
+    def simulate_lap(self, live_data):
         """Simulates a single lap of the race."""
-        # This is a placeholder. In a real scenario, you would use the
-        # predictive models to get more accurate forecasts.
 
-        # lap_time = predict_lap_time_dropoff(self.tire_model, ...)
-        # fuel_consumed = predict_fuel_consumption(self.fuel_model, ...)
+        tire_features = ['lap', 'accx_can', 'accy_can', 'Steering_Angle']
+        fuel_features = ['nmot', 'aps']
+        pace_features = ['speed', 'gear', 'nmot', 'aps', 'pbrake_f', 'pbrake_r',
+                         'accx_can', 'accy_can', 'Steering_Angle', 'traffic']
 
-        # Simple placeholder logic
-        base_lap_time = 90 # seconds
-        lap_time_dropoff = tire_wear * 0.05
-        lap_time = base_lap_time + lap_time_dropoff + np.random.normal(0, 0.2)
-
-        fuel_consumed = 1.5 + np.random.normal(0, 0.1) # gallons
+        lap_time = predict_lap_time_dropoff(self.tire_model, live_data[tire_features])
+        fuel_consumed = predict_fuel_consumption(self.fuel_model, live_data[fuel_features])
 
         return lap_time, fuel_consumed
 
@@ -42,7 +53,6 @@ class MonteCarloSimulation:
             float: The total race time for the simulated strategy.
         """
         total_race_time = 0
-        current_lap = 1
         tire_wear = 0
         fuel_level = 100 # start with a full tank
 
@@ -56,7 +66,21 @@ class MonteCarloSimulation:
                 tire_wear = 0 # Fresh tires
                 fuel_level = 100 # Refuel
 
-            lap_time, fuel_consumed = self.simulate_lap(lap, tire_wear, fuel_level)
+            live_data = pd.DataFrame({
+                'lap': [tire_wear], # Use tire_wear as the feature for the model
+                'accx_can': [self.avg_driver_inputs['accx_can']],
+                'accy_can': [self.avg_driver_inputs['accy_can']],
+                'Steering_Angle': [self.avg_driver_inputs['Steering_Angle']],
+                'nmot': [self.avg_driver_inputs['nmot']],
+                'aps': [self.avg_driver_inputs['aps']],
+                'pbrake_f': [self.avg_driver_inputs['pbrake_f']],
+                'pbrake_r': [self.avg_driver_inputs['pbrake_r']],
+                'speed': [self.avg_driver_inputs['speed']],
+                'gear': [self.avg_driver_inputs['gear']],
+                'traffic': [0] # Placeholder for traffic data
+            })
+
+            lap_time, fuel_consumed = self.simulate_lap(live_data)
 
             total_race_time += lap_time
             tire_wear += 1

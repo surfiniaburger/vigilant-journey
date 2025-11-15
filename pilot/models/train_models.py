@@ -46,8 +46,3 @@ def train_and_save_models(race_data_dir, model_dir="trained_models"):
     pace_model = train_pace_prediction_model(data)
     joblib.dump(pace_model, os.path.join(model_dir, "pace_prediction_model.pkl"))
     print("Pace Prediction Model saved.")
-
-if __name__ == '__main__':
-    # Use the barber motorsports park data for training
-    race_dir = 'unzipped_data/barber-motorsports-park/barber'
-    train_and_save_models(race_dir)
