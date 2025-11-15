@@ -31,7 +31,7 @@ def test_find_optimal_pit_window(mocker):
     mc_sim = setup_simulation(mocker)
     best_strategy, best_time = mc_sim.find_optimal_pit_window()
     assert best_strategy == "1-stop"
-    assert best_time < 60 * 90 + 2 * 25
+    assert best_time == 60 * 90 + 25
 
 def test_react_to_safety_car(mocker):
     """Tests the react_to_safety_car method."""
