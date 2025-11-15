@@ -37,4 +37,5 @@ def test_react_to_safety_car(mocker):
     """Tests the react_to_safety_car method."""
     mc_sim = setup_simulation(mocker)
     pit_now_time, stay_out_time = mc_sim.react_to_safety_car(current_lap=25)
-    assert pit_now_time < stay_out_time
+    assert pit_now_time == 60 * 90 + 25
+    assert stay_out_time == 60 * 90 + 25 + 30
