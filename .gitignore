@@ -5,6 +5,10 @@ env/
 .env.*
 !.env.example
 
+# Data
+data/
+unzipped_data/
+
 # Python
 __pycache__/
 

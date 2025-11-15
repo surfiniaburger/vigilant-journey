@@ -20,6 +20,7 @@ google_search_agent/url_context_tool.py
 tests/test_agent.py
 tests/test_audio.py
 tests/test_auth.py
+tests/test_evaluation.py
 tests/test_main.py
 tests/test_mongo_db.py
 tests/test_prompt_tool.py
