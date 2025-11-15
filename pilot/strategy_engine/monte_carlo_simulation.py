@@ -7,6 +7,8 @@ from pilot.models.tire_degradation_model import predict_lap_time_dropoff
 from pilot.models.fuel_consumption_model import predict_fuel_consumption
 from pilot.models.pace_prediction_model import predict_pace
 
+SAFETY_CAR_TIME_LOSS_SECONDS = 30
+
 class MonteCarloSimulation:
     def __init__(self, race_data, num_simulations=1000, model_dir="trained_models"):
         self.race_data = race_data
@@ -83,11 +85,8 @@ class MonteCarloSimulation:
 
             lap_time, fuel_consumed = self.simulate_lap(live_data)
 
-            if safety_car_lap and lap == safety_car_lap:
-                if lap in strategy: # Pitting during safety car
-                    total_race_time += lap_time
-                else: # Not pitting during safety car
-                    total_race_time += lap_time + 30 # 30 second time loss for staying out
+            if safety_car_lap and lap == safety_car_lap and lap not in strategy:
+                total_race_time += lap_time + SAFETY_CAR_TIME_LOSS_SECONDS
             else:
                 total_race_time += lap_time
 
@@ -171,10 +170,6 @@ class MonteCarloSimulation:
         # (This is a simplified assumption)
 
         # Scenario 1: Pit now
-        # During a safety car, the pit stop time is effectively less because the other cars are slower.
-        pit_stop_time = 25 # seconds
-
-        # Recalculate the race time with the saved pit stop time
         pit_now_time = np.mean([self.run_strategy_simulation(pit_now_strategy, safety_car_lap=current_lap) for _ in range(self.num_simulations)])
 
 
