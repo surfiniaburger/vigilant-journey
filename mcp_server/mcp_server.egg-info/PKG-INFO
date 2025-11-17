@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: mcp-server
+Version: 0.1.0
+Summary: MCP Server for the Hack the Track Monte Carlo Simulation
+Requires-Python: <3.13,>=3.11
+Requires-Dist: google-adk>=1.18.0
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scikit-learn>=1.7.2
+Requires-Dist: joblib
+Requires-Dist: requests
+Provides-Extra: test
+Requires-Dist: pytest>=8.4.2; extra == "test"
