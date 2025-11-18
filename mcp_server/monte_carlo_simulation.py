@@ -10,7 +10,7 @@ from models.pace_prediction_model import predict_pace
 SAFETY_CAR_TIME_LOSS_SECONDS = 30
 
 class MonteCarloSimulation:
-    def __init__(self, race_data, num_simulations=1000, model_dir="trained_models"):
+    def __init__(self, race_data, model_dir, num_simulations=1000):
         self.race_data = race_data
         self.num_simulations = num_simulations
         self.tire_model = joblib.load(os.path.join(model_dir, "tire_degradation_model.pkl"))
