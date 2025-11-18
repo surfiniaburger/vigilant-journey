@@ -67,10 +67,10 @@ def create_pipeline(
         model=trainer.outputs['model']
     )
 
-    # 5. Model Pushing (Pusher)
+    # 5. Model Pushing (Pusher) - Conditional on Blessing
     pusher = tfx.components.Pusher(
         model=trainer.outputs['model'],
-        model_blessing=evaluator.outputs['blessing'],
+        model_blessing=evaluator.outputs['blessing'], # This is the critical connection
         push_destination=tfx.proto.PushDestination(
             filesystem=tfx.proto.PushDestination.Filesystem(
                 base_directory=serving_model_dir
@@ -98,6 +98,9 @@ def create_pipeline(
 if __name__ == '__main__':
     logging.set_verbosity(logging.INFO)
 
+    # To run this pipeline, you would typically use a TFX orchestrator like
+    # Kubeflow or a local runner. The BeamDagRunner is for local execution.
+    # We are including this to make the pipeline runnable directly.
     pipeline = create_pipeline(
         pipeline_name=PIPELINE_NAME,
         pipeline_root=PIPELINE_ROOT,
