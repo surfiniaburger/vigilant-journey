@@ -14,3 +14,5 @@ models/fuel_consumption_model.py
 models/pace_prediction_model.py
 models/tire_degradation_model.py
 models/train_models.py
+tests/test_prepare_data.py
+tests/test_trainer_module.py

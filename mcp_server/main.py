@@ -1,6 +1,7 @@
 import asyncio
 import os
 import pandas as pd
+import glob
 
 from mcp import types as mcp_types
 from mcp.server.lowlevel import Server
@@ -10,10 +11,9 @@ import mcp.server.stdio as mcp_stdio
 from google.adk.tools.function_tool import FunctionTool
 from google.adk.tools.mcp_tool import adk_to_mcp_tool_type
 
-from data_handling.data_downloader import download_and_move_files
-from data_handling.data_loader import unzip_data
 from data_handling.telemetry_parser import parse_telemetry
 from monte_carlo_simulation import MonteCarloSimulation
+from pipeline.pipeline import SERVING_MODEL_DIR
 
 # --- Globals ---
 app = Server(name="MonteCarloServer")
@@ -56,30 +56,40 @@ async def run_mcp_stdio_server():
         await app.run(read_stream, write_stream, init_options)
 
 
+def get_latest_model_dir():
+    """Finds the latest model directory from the TFX pipeline output."""
+    # The Pusher component creates a directory for each pushed model, named by the model version (timestamp).
+    # We find the latest one by sorting the directory names.
+    pushed_model_dirs = glob.glob(os.path.join(SERVING_MODEL_DIR, "*"))
+    if not pushed_model_dirs:
+        return None
+    return max(pushed_model_dirs, key=os.path.getmtime)
+
+
 def main():
     """Initializes and runs the MCP server."""
     global adk_tool_to_expose, mc_simulation
-    # 1. Download and unzip data if not already present
+
+    # 1. Find the latest TFX-managed model
+    latest_model_dir = get_latest_model_dir()
+    if not latest_model_dir:
+        print(f"No models found in the serving directory: {SERVING_MODEL_DIR}")
+        print("Please run the TFX pipeline first to produce a model.")
+        return
+
+    print(f"Loading models from: {latest_model_dir}")
+
+    # 2. Load the race data (the simulation still needs this for context)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(script_dir, 'data')
-    unzipped_data_dir = os.path.join(script_dir, 'unzipped_data')
-
-    if not os.path.exists(data_dir):
-        download_and_move_files(data_dir)
-    if not os.path.exists(unzipped_data_dir):
-        unzip_data(data_dir, unzipped_data_dir)
-
-    # 2. Load the race data
-    # For this example, we'll use the Barber Motorsports Park data.
-    race_data_dir = os.path.join(unzipped_data_dir, 'barber-motorsports-park/barber')
-    race_data = parse_telemetry(race_data_dir)
+    race_data_dir = os.path.join(script_dir, 'unzipped_data', 'barber-motorsports-park', 'barber')
+    race_data = parse_telemetry(race_data_dir) # We still need the raw data for simulation context
 
     if race_data is None:
         print("Failed to load race data. Exiting.")
         return
 
-    # 3. Initialize the Monte Carlo simulation
-    mc_simulation = MonteCarloSimulation(race_data)
+    # 3. Initialize the Monte Carlo simulation with the TFX model
+    mc_simulation = MonteCarloSimulation(race_data, model_dir=latest_model_dir)
 
     # 4. Create the ADK tool to expose
     adk_tool_to_expose = FunctionTool(
