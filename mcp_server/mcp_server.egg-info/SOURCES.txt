@@ -1,0 +1,17 @@
+README.md
+main.py
+monte_carlo_simulation.py
+pyproject.toml
+data_handling/data_downloader.py
+data_handling/data_loader.py
+data_handling/data_stream_simulator.py
+data_handling/telemetry_parser.py
+mcp_server.egg-info/PKG-INFO
+mcp_server.egg-info/SOURCES.txt
+mcp_server.egg-info/dependency_links.txt
+mcp_server.egg-info/requires.txt
+mcp_server.egg-info/top_level.txt
+models/fuel_consumption_model.py
+models/pace_prediction_model.py
+models/tire_degradation_model.py
+models/train_models.py

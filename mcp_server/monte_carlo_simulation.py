@@ -3,9 +3,9 @@ import pandas as pd
 import joblib
 import os
 
-from pilot.models.tire_degradation_model import predict_lap_time_dropoff
-from pilot.models.fuel_consumption_model import predict_fuel_consumption
-from pilot.models.pace_prediction_model import predict_pace
+from models.tire_degradation_model import predict_lap_time_dropoff
+from models.fuel_consumption_model import predict_fuel_consumption
+from models.pace_prediction_model import predict_pace
 
 SAFETY_CAR_TIME_LOSS_SECONDS = 30
 
