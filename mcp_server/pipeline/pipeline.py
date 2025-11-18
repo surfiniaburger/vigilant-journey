@@ -6,6 +6,8 @@ from tfx import v1 as tfx
 from tfx.orchestration import pipeline
 from tfx.orchestration.beam.beam_dag_runner import BeamDagRunner
 
+from mcp_server.pipeline.evaluator import CustomEvaluator
+
 # --- Pipeline Configuration ---
 
 PIPELINE_NAME = "mcp-server-pipeline"
@@ -29,9 +31,6 @@ def create_pipeline(
     """Creates a TFX pipeline."""
 
     # 1. Data Ingestion (ExampleGen)
-    # For this example, we assume the telemetry data has been parsed into a CSV.
-    # We will need to create a CSV from the parsed data.
-    # For now, we will point to the directory, and assume a CSV file exists.
     output_config = tfx.proto.Output(
         split_config=tfx.proto.SplitConfig(splits=[
             tfx.proto.SplitConfig.Split(name='train', hash_buckets=4),
@@ -43,7 +42,7 @@ def create_pipeline(
         output_config=output_config
     )
 
-    # 2. Data Validation (StatisticsGen, SchemaGen, ExampleValidator)
+    # 2. Data Validation (StatisticsGen, SchemaGen)
     statistics_gen = tfx.components.StatisticsGen(
         examples=example_gen.outputs['examples']
     )
@@ -58,18 +57,20 @@ def create_pipeline(
         module_file=module_file,
         examples=example_gen.outputs['examples'],
         schema=schema_gen.outputs['schema'],
-        # We don't need train_args or eval_args for this scikit-learn setup
         custom_executor_spec=tfx.extensions.google_cloud_ai_platform.ExecutorSpec(
             python_executor=tfx.components.trainer.executor.GenericExecutor
         )
     )
 
-    # 4. Model Evaluation & Pushing (Pusher)
-    # In a real-world scenario, an Evaluator component would be used here
-    # to assess the model's quality before pushing. For this example, we will
-    # unconditionally push the model.
+    # 4. Model Evaluation (CustomEvaluator)
+    evaluator = CustomEvaluator(
+        model=trainer.outputs['model']
+    )
+
+    # 5. Model Pushing (Pusher) - Conditional on Blessing
     pusher = tfx.components.Pusher(
         model=trainer.outputs['model'],
+        model_blessing=evaluator.outputs['blessing'], # This is the critical connection
         push_destination=tfx.proto.PushDestination(
             filesystem=tfx.proto.PushDestination.Filesystem(
                 base_directory=serving_model_dir
@@ -82,6 +83,7 @@ def create_pipeline(
         statistics_gen,
         schema_gen,
         trainer,
+        evaluator,
         pusher,
     ]
 
@@ -98,18 +100,13 @@ if __name__ == '__main__':
 
     # To run this pipeline, you would typically use a TFX orchestrator like
     # Kubeflow or a local runner. The BeamDagRunner is for local execution.
-    # For this example, we're just defining the pipeline. A separate script
-    # will be needed to run it.
-    print("Pipeline definition complete. To run, use an orchestrator or a custom run script.")
-
-    # Example of how to run with BeamDagRunner:
-    #
-    # pipeline = create_pipeline(
-    #     pipeline_name=PIPELINE_NAME,
-    #     pipeline_root=PIPELINE_ROOT,
-    #     data_root=DATA_ROOT,
-    #     module_file=MODULE_FILE,
-    #     serving_model_dir=SERVING_MODEL_DIR,
-    #     metadata_path=METADATA_PATH,
-    # )
-    # BeamDagRunner().run(pipeline)
+    # We are including this to make the pipeline runnable directly.
+    pipeline = create_pipeline(
+        pipeline_name=PIPELINE_NAME,
+        pipeline_root=PIPELINE_ROOT,
+        data_root=DATA_ROOT,
+        module_file=MODULE_FILE,
+        serving_model_dir=SERVING_MODEL_DIR,
+        metadata_path=METADATA_PATH,
+    )
+    BeamDagRunner().run(pipeline)
