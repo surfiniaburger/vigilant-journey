@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
+import sys
 
 from models.tire_degradation_model import predict_lap_time_dropoff
 from models.fuel_consumption_model import predict_fuel_consumption
@@ -98,7 +99,7 @@ class MonteCarloSimulation:
 
         return total_race_time
 
-    def find_optimal_pit_window(self):
+    def find_optimal_pit_window(self) -> str:
         """
         Uses Monte Carlo simulation to find the optimal pit stop strategy.
         """
@@ -127,7 +128,7 @@ class MonteCarloSimulation:
                 best_time = avg_time
                 best_strategy = name
 
-        return best_strategy, best_time
+        return f"Best Strategy: {best_strategy}, Time: {best_time:.2f}s"
 
     def analyze_undercut_overcut(self, competitor_pit_lap):
         """

@@ -34,9 +34,9 @@ mcp_tools_headers = {}
 if os.environ.get("SKIP_MCP_AUTH") != "true":
     mcp_tools_headers["Authorization"] = f"Bearer {get_id_token_for_mcp()}"
 
-#mcp_tools = McpToolset(
-#            connection_params=StreamableHTTPConnectionParams(
-#                url=mcp_server_url,
-#                headers=mcp_tools_headers,
-#            ),
-#        )
+mcp_tools = McpToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url=mcp_server_url,
+                headers=mcp_tools_headers,
+            ),
+        )

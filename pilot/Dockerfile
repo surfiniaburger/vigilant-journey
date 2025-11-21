@@ -22,8 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # General build tools and network utilities
     curl \
     build-essential \
-    # Install Node.js directly from the standard Debian repository for reliability
-    nodejs \
+    # Install NodeSource repo for a recent version of Node.js
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    # Install Node.js from the newly added repository
+    && apt-get install -y --no-install-recommends nodejs \
     # Clean up APT caches to keep the final image smaller
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

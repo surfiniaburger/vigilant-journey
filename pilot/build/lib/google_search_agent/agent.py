@@ -1,206 +1,85 @@
-import logging
-from typing import AsyncGenerator
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from google.adk.agents import (
-    Agent,
-    BaseAgent,  # Import BaseAgent to create our custom agent
-    LoopAgent,
-    ParallelAgent,
-    SequentialAgent,
+from google.adk.agents import Agent, SequentialAgent
+from google.adk.tools import google_search
+from .prompt_tool import add_prompt_to_state
+from .memory_tool import save_memory_tool, recall_memory_tool
+from .mcp_tools import mcp_tools
+
+# Step 3: The Researcher Agent
+# This agent uses the prompt from the state and decides which tool to use.
+researcher_agent = Agent(
+    name="ResearcherAgent",
+    model="gemini-flash-latest",
+    description="Researches user queries using memory, car manual expertise, and web search.",
+    instruction="""You are a helpful research assistant for the Alora car co-pilot.
+    Your goal is to fully answer the user's PROMPT, which is saved in the session state.
+
+    You have access to several tools, in order of priority:
+    1. `RecallMemory`: To check for past information about the user.
+    2. `ask_amg_manual` (via MCP): An expert tool that consults the car's official operator's manual.
+    3. `SaveMemory`: To save important new user preferences.
+    4. `google_search`: For general public information NOT related to the car's specific functions.
+
+    **Your process is strict:**
+    1.  First, ALWAYS use `RecallMemory` to check for user preferences or past context.
+    2.  If the user's PROMPT is about the car's features, warnings, or how to operate something, you MUST use the `ask_amg_manual` tool.
+    3.  Only use `google_search` if the question is general knowledge and cannot be answered by the car manual.
+    4.  If the user states a new preference, use `SaveMemory` to remember it.
+
+    Synthesize the results from the tools you use into a final, helpful answer.
+
+    USER_PROMPT: {{ USER_PROMPT }}
+    """,
+    tools=[recall_memory_tool, save_memory_tool, mcp_tools, google_search],
 )
 
-
-from google.adk.agents.invocation_context import InvocationContext
-from google.adk.events import Event
-from google.adk.tools import agent_tool, google_search, preload_memory_tool
-from google.genai.types import Content, Part
-from pydantic import BaseModel, Field
-
-# Local Imports
-from callbacks import (
-    after_agent_callback,
-    after_model_callback,
-    after_tool_callback,
-    before_agent_callback,
-    before_model_callback,
-    before_tool_callback,
+# Step 4: The Session Summarizer Agent
+# This agent runs at the end to save a summary of the conversation.
+session_summarizer_agent = Agent(
+    name="SessionSummarizerAgent",
+    model="gemini-flash-latest",
+    description="Summarizes the conversation and saves it to memory.",
+    instruction="""Review the entire conversation history. Create a concise, one-sentence summary of the key outcomes, decisions, or facts learned. 
+    Then, call the `SaveMemory` tool to save this summary under the topic 'conversation_summary'.
+    Finally, output a friendly closing message to the user, like 'Is there anything else?'""",
+    tools=[save_memory_tool],
 )
-from .knn_validator import knn_validation_tool
-from .memory_tool import create_memory_tools
-from .url_context_tool import url_context_tool
-#from main import get_memory_service
 
-# --- Configure Logging ---
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+# Step 2: The Main Workflow Agent
+# This agent orchestrates the main logic.
+main_workflow_agent = SequentialAgent(
+    name="MainWorkflowAgent",
+    description="The main workflow for handling a user's request.",
+    sub_agents=[
+        researcher_agent, 
+        session_summarizer_agent
+    ]
 )
-logger = logging.getLogger(__name__)
 
-
-# --- Constants ---
-CONFIDENCE_THRESHOLD = 0.25
-LIVE_MODEL = "gemini-live-2.5-flash-preview-native-audio"
-INTERNAL_MODEL = "gemini-2.5-pro"
-
-
-
-# --- Input Schema ---
-class WorkflowInput(BaseModel):
-    user_query: str = Field(
-        description="The user's original question that needs to be answered."
-    )
-
-
-# --- NEW: Deterministic Decision Agent (Replaces LLM Agent) ---
-class DeterministicDecisionAgent(BaseAgent):
-    """A custom, code-driven agent that makes a decision based on session state."""
-
-    async def _run_async_impl(
-        self, ctx: InvocationContext
-    ) -> AsyncGenerator[Event, None]:
-        logger.info("Executing deterministic decision logic.")
-        state = ctx.session.state
-
-        critique = state.get("critique")
-        # Ensure confidence is a float, defaulting to 0.0 if not present
-        try:
-            confidence = float(state.get("confidence", 0.0))
-        except (ValueError, TypeError):
-            confidence = 0.0
-        
-        validation_result = False
-        if critique == "APPROVED" and confidence >= CONFIDENCE_THRESHOLD:
-            validation_result = True
-
-        # Directly update the session state
-        state["validation_passed"] = validation_result
-        logger.info(f"Decision made: validation_passed = {validation_result}")
-
-        # Yield a content event so the framework can populate the output_key
-        yield Event(
-            author=self.name,
-            content=Content(parts=[Part(text=str(validation_result))]),
-        )
-
-# --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
-def create_root_agent(memory_service, use_url_context_tool: bool = True):
-    """
-    Creates and wires together all agents and tools, using the provided memory service.
-    This factory pattern is used to break the circular dependency between main.py and agent.py,
-    allowing for isolated testing.
-    """
-    # Initialize tools that depend on the memory service
-    save_memory_tool, recall_memory_tool = create_memory_tools(memory_service)
-
-    # All agent definitions now live inside this factory function
-    individual_agent_callbacks = dict(
-        before_agent_callback=before_agent_callback,
-        after_agent_callback=after_agent_callback,
-        before_model_callback=before_model_callback,
-        after_model_callback=after_model_callback,
-        before_tool_callback=before_tool_callback,
-        after_tool_callback=after_tool_callback,
-    )
-
-    researcher_tools = [recall_memory_tool, google_search]
-    if use_url_context_tool:
-        researcher_tools.append(url_context_tool)
-
-    researcher_agent = Agent(
-        name="ResearcherAgent",
-        model="gemini-2.5-pro",
-        instruction=(
-            "You are an expert research assistant. Your goal is to comprehensively answer the user's request by following these steps:\n"
-            "1. First, use the `google_search` tool to find relevant information and URLs.\n"
-            "2. Review the search results. If the snippets provide enough information, synthesize them into a final answer.\n"
-            "3. If the query requires more detailed information, select the most relevant URL from the search results and use the `get_info_from_url` tool to get the full content.\n"
-            "4. Synthesize all the gathered information into a final, comprehensive answer.\n"
-            "5. Place the final answer in the 'draft_answer' session state key."
-        ),
-        tools=researcher_tools,
-        output_key="draft_answer",
-        **individual_agent_callbacks,
-    )
-
-    safety_and_compliance_agent = Agent(
-        name="SafetyAndComplianceAgent",
-        model="gemini-2.5-pro",
-        instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
-        output_key="critique",
-        **individual_agent_callbacks,
-    )
-
-    knn_validator_agent = Agent(
-        name="KnnValidatorAgent",
-        model="gemini-2.5-pro",
-        instruction="Use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Output only the final confidence score as a number.",
-        tools=[knn_validation_tool],
-        output_key="confidence",
-        **individual_agent_callbacks,
-    )
-
-    parallel_validator = ParallelAgent(
-        name="ParallelValidator",
-        sub_agents=[safety_and_compliance_agent, knn_validator_agent],
-    )
-
-    reviser_agent = Agent(
-        name="ReviserAgent",
-        model=INTERNAL_MODEL,
-        instruction="Revise the text in 'draft_answer' based on the feedback in 'critique' to create an improved version. Overwrite the 'draft_answer' with the new version.",
-        output_key="draft_answer",
-        **individual_agent_callbacks,
-    )
-
-    decision_agent = DeterministicDecisionAgent(name="DecisionAgent")
-
-    critique_and_refine_loop = LoopAgent(
-        name="CritiqueAndRefineLoop",
-        sub_agents=[parallel_validator, decision_agent, reviser_agent],
-        max_iterations=2,
-    )
-
-    session_summarizer_agent = Agent(
-        name="SessionSummarizerAgent",
-        model="gemini-2.5-flash",
-        instruction="Review the conversation. If 'validation_passed' is True, take the final answer from 'draft_answer', save a one-sentence summary to memory using save_memory_tool, and present the final answer to the user. If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.",
-        tools=[save_memory_tool],
-        output_key="final_answer",
-        **individual_agent_callbacks,
-    )
-
-    main_workflow_agent = SequentialAgent(
-        name="MainWorkflowAgent",
-        sub_agents=[
-            researcher_agent,
-            critique_and_refine_loop,
-            session_summarizer_agent,
-        ],
-        before_agent_callback=before_agent_callback,
-        after_agent_callback=after_agent_callback,
-    )
-
-    main_workflow_tool = agent_tool.AgentTool(
-        agent=main_workflow_agent,
-
-    )
-
-    # Finally, create and return the root agent
-    root_agent = Agent(
-        name="OrchestratorAgent",
-        model=LIVE_MODEL,
-        description="The central AI co-pilot for the vehicle, Alora.",
-        instruction=(
-        "You are Alora, the friendly and helpful AI co-pilot for the vehicle. "
-        "Greet the user. When the user asks a question, you MUST use the "
-        "'MainWorkflowAgent' tool to find the answer. Once the tool returns the "
-        "final answer, present that answer back to the user in a clear and "
-        "conversational way. Your role is to be the final interface to the user, "
-        "using your internal workflow tool to fulfill their request."
-        ),
-        tools=[preload_memory_tool.PreloadMemoryTool(), main_workflow_tool],
-        **individual_agent_callbacks,
-    )
-    
-    return root_agent
+# Step 1: The Greeter Agent (Root Agent)
+# This is the entry point. It greets, saves the prompt, and transfers control.
+root_agent = Agent(
+    name="OrchestratorAgent",
+    model="gemini-live-2.5-flash-preview-native-audio",
+    description="The central AI co-pilot for the vehicle. Greets the user and kicks off the main workflow.",
+    instruction="""You are Alora, the master AI co-pilot for a vehicle.
+    - Greet the user warmly and ask how you can help.
+    - When the user responds, use the 'add_prompt_to_state' tool to save their full request.
+    - After saving the prompt, you MUST transfer control to the 'MainWorkflowAgent' agent to handle the request.
+    """,
+    tools=[add_prompt_to_state],
+    sub_agents=[main_workflow_agent]
+)

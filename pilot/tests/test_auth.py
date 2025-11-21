@@ -18,10 +18,7 @@ async def test_websocket_auth_valid_token(mock_start_agent_session, mock_verify_
 
     # Act & Assert: Attempt to connect, should not raise an exception
     try:
-        with client.websocket_connect(
-            "/ws/test-session?is_audio=false",
-            subprotocols=["Bearer", "valid-dummy-token"],
-        ) as websocket:
+        with client.websocket_connect("/ws/test-session?is_audio=false&token=valid-dummy-token") as websocket:
             # If connection is successful, this block will execute
             mock_verify_id_token.assert_called_once_with("valid-dummy-token")
             mock_start_agent_session.assert_called_once_with("test-user-123", False)
@@ -39,14 +36,10 @@ async def test_websocket_auth_invalid_token(mock_verify_id_token):
 
     # Act & Assert: Expect a WebSocketDisconnect exception with code 1008
     with pytest.raises(WebSocketDisconnect) as excinfo:
-        with client.websocket_connect(
-            "/ws/test-session?is_audio=false",
-            subprotocols=["Bearer", "invalid-dummy-token"],
-        ) as websocket:
+        with client.websocket_connect("/ws/test-session?is_audio=false&token=invalid-dummy-token") as websocket:
             # This part should not be reached
             pass
     
     assert excinfo.value.code == 1008
-    # The reason is not checked here because it's not consistently populated
-    # assert excinfo.value.reason == "Authentication failed"
+    assert excinfo.value.reason == "Authentication failed"
     mock_verify_id_token.assert_called_once_with("invalid-dummy-token")

@@ -194,8 +194,6 @@ async def agent_to_client_messaging(websocket, live_events):
             print(f"[AGENT TO CLIENT]: text/plain: {message}")
 
 
-import bleach
-
 async def client_to_agent_messaging(websocket, live_request_queue):
     """Client to agent communication"""
     while True:
@@ -207,12 +205,10 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 
         # Send the message to the agent
         if mime_type == "text/plain":
-            # Sanitize the user's input
-            sanitized_data = bleach.clean(data)
             # Send a text message
-            content = Content(role="user", parts=[Part.from_text(text=sanitized_data)])
+            content = Content(role="user", parts=[Part.from_text(text=data)])
             live_request_queue.send_content(content=content)
-            print(f"[CLIENT TO AGENT]: {sanitized_data}")
+            print(f"[CLIENT TO AGENT]: {data}")
         elif mime_type == "audio/pcm":
             # Send an audio data
             decoded_data = base64.b64decode(data)
@@ -245,35 +241,21 @@ async def root():
 
 
 @app.websocket("/ws/{session_id}")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    session_id: str,
-    is_audio: str,
-):
+async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str, token: str = Query(...)):
     """Client websocket endpoint"""
-    token = None
+
+    # Authenticate the user
     try:
-        # Extract the token from the subprotocols
-        # The subprotocols are in the format: ['Bearer', '<token>']
-        subprotocols = websocket.scope.get("subprotocols", [])
-        if len(subprotocols) == 2 and subprotocols[0] == "Bearer":
-            token = subprotocols[1]
-
-        if not token:
-            raise ValueError("Authentication token not found in subprotocols")
-
         decoded_token = auth.verify_id_token(token)
-        user_id = decoded_token["uid"]
+        user_id = decoded_token['uid']
         print(f"Client authenticated: {user_id} (session: {session_id})")
-
-        # Accept the connection with the agreed subprotocol
-        await websocket.accept(subprotocol="Bearer")
-
     except Exception as e:
         print(f"Authentication failed: {e}")
-        # Close the connection without accepting if authentication fails
         await websocket.close(code=1008, reason="Authentication failed")
         return
+
+    # Wait for client connection
+    await websocket.accept()
     print(f"Client connected, audio mode: {is_audio}")
 
     # Start agent session using the authenticated user's UID
