@@ -33,7 +33,7 @@ const loadGoogleMapsScript = () => {
 
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=beta`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
@@ -63,8 +63,6 @@ const Map = ({ center }: MapProps) => {
         await loadGoogleMapsScript();
         // @ts-expect-error - google.maps is loaded dynamically
         const { Map3DElement } = await google.maps.importLibrary('maps3d');
-        await google.maps.importLibrary('places');
-        await google.maps.importLibrary('geometry');
         
         if (!mapInstanceRef.current) {
             const map = new Map3DElement({

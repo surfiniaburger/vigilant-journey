@@ -36,7 +36,12 @@ jobs:
           node-version: '20'
 
       - name: Install npm dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
         working-directory: ./pilot
 
       - name: Set up Python
@@ -49,6 +54,7 @@ jobs:
           python -m venv .venv
           source .venv/bin/activate
           pip install uv
+          uv pip install setuptools wheel
           uv pip install .
         working-directory: ./pilot
         env:
@@ -108,5 +114,3 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
             --platform managed
-
-

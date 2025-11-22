@@ -31,10 +31,7 @@ async def test_audio_stream(mocker):
     live_request_queue_mock = MagicMock()
     mocker.patch("main.start_agent_session", new_callable=AsyncMock, return_value=(live_events_mock, live_request_queue_mock))
 
-    with client.websocket_connect(
-        "/ws/123?is_audio=true",
-        subprotocols=["Bearer", "test-token"],
-    ) as websocket:
+    with client.websocket_connect("/ws/123?is_audio=true&token=test-token") as websocket:
         mock_audio_data = "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
 
         websocket.send_json({

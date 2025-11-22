@@ -47,7 +47,7 @@ def root_agent(mock_memory_service_getter):
     """
     # The `mock_memory_service_getter` fixture returns the mock instance we created.
     # We pass this mock into our agent factory.
-    return create_root_agent(mock_memory_service_getter, use_url_context_tool=False)
+    return create_root_agent(mock_memory_service_getter, use_mcp_tools=False)
 
 
 @pytest.fixture(scope="function")
