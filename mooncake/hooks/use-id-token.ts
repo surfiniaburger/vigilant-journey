@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 interface UseIdTokenOptions {
-  user: any // Replace with your actual User type
+  user: unknown // Firebase User type - use unknown instead of any for type safety
   enabled?: boolean
 }
 
