@@ -31,7 +31,12 @@ export function useIdToken({ user, enabled = true }: UseIdTokenOptions) {
           controller.abort()
         }, 10000)
 
-        const token = await user.getIdToken()
+        // Type guard: check if user has getIdToken method
+        if (!user || typeof user !== 'object' || !('getIdToken' in user)) {
+          throw new Error('Invalid user object')
+        }
+
+        const token = await (user as { getIdToken: () => Promise<string> }).getIdToken()
 
         clearTimeout(timeoutId)
 
