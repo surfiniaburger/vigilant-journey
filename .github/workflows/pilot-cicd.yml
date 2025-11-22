@@ -49,6 +49,7 @@ jobs:
           python -m venv .venv
           source .venv/bin/activate
           pip install uv
+          uv pip install setuptools wheel
           uv pip install .
         working-directory: ./pilot
         env:
