@@ -36,7 +36,12 @@ jobs:
           node-version: '20'
 
       - name: Install npm dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
         working-directory: ./pilot
 
       - name: Set up Python
@@ -48,8 +53,12 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install uv
-          uv pip install .
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install .
+          fi
         working-directory: ./pilot
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
@@ -94,8 +103,6 @@ jobs:
           name: pilot-docker-image
           path: pilot/
 
-
-
       - name: Load Docker image from artifact
         run: docker load -i pilot/pilot_image.tar
 
@@ -108,5 +115,3 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
             --platform managed
-
-
