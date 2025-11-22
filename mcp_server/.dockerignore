@@ -1,0 +1,23 @@
+# Python
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+
+# Data and models (will be downloaded from GCS in Cloud Run)
+unzipped_data
+downloaded_assets
+trained_models
+
+# Tests
+tests

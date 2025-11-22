@@ -78,20 +78,28 @@ def initialize_simulation():
         logger.error(f"Failed to initialize simulation: {e}")
         return False
 
-# Initialize on startup
-if not initialize_simulation():
-    logger.warning("Simulation failed to initialize. Tools may not work.")
+# Don't initialize on startup - defer to first tool call to allow server to start quickly
+# if not initialize_simulation():
+#     logger.warning("Simulation failed to initialize. Tools may not work.")
 
 @mcp.tool()
-def find_optimal_pit_window() -> str:
+def find_optimal_pit_window(strategy_name: str = None) -> str:
     """
     Uses Monte Carlo simulation to find the optimal pit stop strategy.
+    Args:
+        strategy_name (str, optional): The name of the specific strategy to run (e.g., "1-stop").
+                                       If None, runs all strategies.
     Returns a string describing the best strategy and its average time.
     """
-    if mc_simulation is None:
-        return "Error: Simulation not initialized."
+    global mc_simulation
     
-    return mc_simulation.find_optimal_pit_window()
+    # Lazy initialization on first tool call
+    if mc_simulation is None:
+        logger.info("Initializing simulation on first tool call...")
+        if not initialize_simulation():
+            return "Error: Failed to initialize simulation. Check server logs."
+    
+    return mc_simulation.find_optimal_pit_window(strategy_name)
 
 if __name__ == "__main__":
     # Cloud Run sets PORT environment variable

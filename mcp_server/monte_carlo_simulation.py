@@ -99,20 +99,31 @@ class MonteCarloSimulation:
 
         return total_race_time
 
-    def find_optimal_pit_window(self) -> str:
+    def find_optimal_pit_window(self, strategy_name: str = None) -> str:
         """
         Uses Monte Carlo simulation to find the optimal pit stop strategy.
+        Args:
+            strategy_name (str, optional): The name of the specific strategy to run (e.g., "1-stop").
+                                           If None, runs all strategies.
         """
         # For simplicity, we'll test a few pre-defined strategies.
         # A more advanced implementation would generate these dynamically.
-        strategies = {
+        all_strategies = {
             "1-stop": [[28]],
             "2-stop": [[20, 40]],
             "3-stop": [[15, 30, 45]]
         }
 
+        if strategy_name:
+            if strategy_name not in all_strategies:
+                return f"Error: Unknown strategy '{strategy_name}'. Available: {list(all_strategies.keys())}"
+            strategies = {strategy_name: all_strategies[strategy_name]}
+        else:
+            strategies = all_strategies
+
         best_strategy = None
         best_time = float('inf')
+        results = []
 
         for name, pit_stops in strategies.items():
             simulation_times = []
@@ -121,6 +132,7 @@ class MonteCarloSimulation:
                 simulation_times.append(total_time)
 
             avg_time = np.mean(simulation_times)
+            results.append(f"Strategy: {name}, Avg. Time: {avg_time:.2f}s")
 
             print(f"Strategy: {name}, Avg. Time: {avg_time:.2f}s")
 
@@ -128,6 +140,9 @@ class MonteCarloSimulation:
                 best_time = avg_time
                 best_strategy = name
 
+        if strategy_name:
+             return f"Strategy: {strategy_name}, Avg. Time: {best_time:.2f}s"
+        
         return f"Best Strategy: {best_strategy}, Time: {best_time:.2f}s"
 
     def analyze_undercut_overcut(self, competitor_pit_lap):
