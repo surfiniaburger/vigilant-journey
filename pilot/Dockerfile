@@ -33,11 +33,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy dependency definition files first for better caching
-COPY pyproject.toml uv.lock requirements.txt* ./
+COPY pyproject.toml requirements.txt* ./
 
 # Create virtual environment and install dependencies
 RUN uv venv && \
-    uv sync --frozen
+    uv pip install -r requirements.txt
 
 # Add the virtual environment's bin directory to the system's PATH
 ENV PATH="/app/.venv/bin:$PATH"
