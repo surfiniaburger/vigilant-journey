@@ -35,11 +35,10 @@ export default function MapPage() {
   })
 
   // Initialize audio hook only when we have a token
-  const { audioState, text, /*sendText,*/ startRecording, stopRecording } = useAudio(idToken)
+  const { audioState, text, startRecording, stopRecording } = useAudio(idToken)
 
   const [mapCenter, setMapCenter] = useState({ lat: 37.7704, lng: -122.3985 })
   const [agentResponse, setAgentResponse] = useState("")
-  // const [inputValue, setInputValue] = useState("")
 
   const handleToggleRecording = useCallback(() => {
     if (audioState === "recording") {
@@ -49,14 +48,6 @@ export default function MapPage() {
       startRecording()
     }
   }, [audioState, startRecording, stopRecording])
-
-  // const handleTextSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault()
-  //   if (inputValue.trim()) {
-  //     sendText(inputValue)
-  //     setInputValue("")
-  //   }
-  // }
 
   // or use useCallback if it needs access to component state
   const isJsonString = useCallback((str: string): boolean => {
@@ -128,21 +119,6 @@ export default function MapPage() {
       )}
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-        {/* <form onSubmit={handleTextSubmit} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="w-full px-4 py-2 text-white bg-black/50 border border-white/20 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type a message..."
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 text-white bg-blue-500 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Send
-          </button>
-        </form> */}
         <VoiceButton
           state={audioState === "recording" ? "recording" : "idle"}
           onPress={handleToggleRecording}

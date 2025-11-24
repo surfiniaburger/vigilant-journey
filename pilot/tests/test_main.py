@@ -22,10 +22,7 @@ async def test_websocket_endpoint(mocker):
     mocker.patch("main.agent_to_client_messaging")
     mocker.patch("main.client_to_agent_messaging")
 
-    with client.websocket_connect(
-        "/ws/123?is_audio=false",
-        subprotocols=["Bearer", "test-token"],
-    ) as websocket:
+    with client.websocket_connect("/ws/123?is_audio=false&token=test-token") as websocket:
         # If the connection is successful, the with block will execute without raising an exception.
         pass
 

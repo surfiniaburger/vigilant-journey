@@ -36,9 +36,6 @@ const nextConfig: NextConfig = {
     "micromark-factory-space",
     "micromark-core-commonmark",
   ],
-  allowedDevOrigins: ["*.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev"],
-  experimental: {
-  },
   async headers() {
     return [
       {

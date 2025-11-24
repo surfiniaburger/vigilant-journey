@@ -1,0 +1,7 @@
+pandas
+numpy
+scikit-learn
+joblib
+requests
+fastmcp==2.12.4
+google-cloud-storage

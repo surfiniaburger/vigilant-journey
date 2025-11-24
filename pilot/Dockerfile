@@ -22,8 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # General build tools and network utilities
     curl \
     build-essential \
-    # Install Node.js directly from the standard Debian repository for reliability
-    nodejs \
+    # Install NodeSource repo for a recent version of Node.js
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    # Install Node.js from the newly added repository
+    && apt-get install -y --no-install-recommends nodejs \
     # Clean up APT caches to keep the final image smaller
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -31,11 +33,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy dependency definition files first for better caching
-COPY pyproject.toml uv.lock requirements.txt* ./
+COPY pyproject.toml requirements.txt* ./
 
 # Create virtual environment and install dependencies
 RUN uv venv && \
-    uv sync --frozen
+    uv pip install -r requirements.txt
 
 # Add the virtual environment's bin directory to the system's PATH
 ENV PATH="/app/.venv/bin:$PATH"

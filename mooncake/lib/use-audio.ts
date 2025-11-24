@@ -33,8 +33,6 @@ function convertFloat32ToPCM(inputData: Float32Array): ArrayBuffer {
 
 export type AudioState = 'idle' | 'recording' | 'processing' | 'playing';
 
-// import DOMPurify from 'dompurify';
-
 export const useAudio = (idToken: string | null) => {
   const [audioState, setAudioState] = useState<AudioState>('idle');
   const [text, setText] = useState<string>('');
@@ -45,18 +43,6 @@ export const useAudio = (idToken: string | null) => {
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioBufferRef = useRef<Uint8Array[]>([]);
   const bufferTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // const sendText = useCallback((text: string) => {
-  //   if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
-  //     return;
-  //   }
-
-  //   const sanitizedText = DOMPurify.sanitize(text);
-  //   websocketRef.current.send(JSON.stringify({
-  //     mime_type: 'text/plain',
-  //     data: sanitizedText,
-  //   }));
-  // }, []);
 
   const startRecording = useCallback(async () => {
     setAudioState('recording');
@@ -97,14 +83,14 @@ export const useAudio = (idToken: string | null) => {
 
       if (isLocal) {
         // Use non-secure WebSocket for local development
-        wsUrl = `ws://localhost:8000/ws/${sessionId}?is_audio=true`;
+        wsUrl = `ws://localhost:8000/ws/${sessionId}?is_audio=true&token=${idToken}`;
       } else {
         // Use existing logic for deployed environments
         const backendHostname = process.env.NEXT_PUBLIC_PILOT_HOSTNAME || window.location.hostname.replace('3000-', '8000-');
-        wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true`;
+        wsUrl = `wss://${backendHostname}/ws/${sessionId}?is_audio=true&token=${idToken}`;
       }
       
-      websocketRef.current = new WebSocket(wsUrl, ["Bearer", idToken]);
+      websocketRef.current = new WebSocket(wsUrl);
 
       websocketRef.current.onopen = () => console.log("WebSocket connection opened.");
       websocketRef.current.onclose = () => console.log("WebSocket connection closed.");
@@ -194,5 +180,5 @@ export const useAudio = (idToken: string | null) => {
     setAudioState('idle');
   }, []);
 
-  return { audioState, text, /*sendText,*/ startRecording, stopRecording };
+  return { audioState, text, startRecording, stopRecording };
 };

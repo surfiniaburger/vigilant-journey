@@ -1,0 +1,14 @@
+.git
+.gitignore
+venv/
+__pycache__/
+*.pyc
+mcp_server/unzipped_data/
+mcp_server/trained_models/
+mcp_server/data/
+downloaded_assets/
+mooncake/
+pilot/
+kelvin/
+js-api-samples/
+korvo/

@@ -1,74 +1,68 @@
-# Alora: The Mercedes-AMG AI Co-Pilot
+# Alora Racing Strategy: Real-Time AI Analytics
 
-Alora is an intelligent, voice-first automotive co-pilot designed to provide drivers with a seamless and intuitive way to interact with their vehicle's features. This project integrates a web-based frontend, a sophisticated multi-agent backend, and a powerful Retrieval-Augmented Generation (RAG) pipeline to answer questions about the Mercedes-AMG GT R.
+> **"How might we make the single best strategic decision in seconds, when a simple miscalculation will lose the race?"**
 
-## How it Works
+**Alora** is an AI-powered Race Strategy Optimization System designed to solve the race engineer's most pervasive problem: the battle against time and unpredictability.
 
-The application is composed of three main services:
+## The Problem: Zero Tolerance for Error
 
-1.  **Frontend (Mooncake):** A Next.js application that provides the user interface for the co-pilot. It uses Firebase for user authentication and establishes a WebSocket connection to the backend to stream communication with the agent.
+In high-stakes motorsport (F1, IndyCar, NASCAR), the Race Strategist faces an overwhelming challenge. They must process gigabytes of telemetry data—tire degradation, fuel loads, weather patterns, competitor pace—in milliseconds.
 
-2.  **Backend/Voice Agent (Pilot):** The core of the application, built with the Google Agent Development Kit (ADK). It's a multi-agent system that orchestrates the conversation with the user. The `ResearcherAgent` is responsible for calling the MCP server to get answers to user questions.
+*   **The Pain Point**: A human cannot simulate thousands of race strategies in seconds. When a safety car comes out or a sudden downpour begins, the "pre-race plan" is useless. The engineer is overwhelmed, and a single bad call costs millions in prize money and championship points.
+*   **The Stakes**: The decision must be made now. There is no "undo" button.
 
-3.  **MCP Server (Korvo):** A Python server built with `FastMCP` that exposes a single tool: `ask_amg_manual`. This tool is a RAG pipeline that answers questions about the Mercedes-AMG GT R. It works by:
-    *   Taking a user's question.
-    *   Performing a hybrid search (keyword and vector) on an Elasticsearch index containing the car's manual.
-    *   Using the retrieved context and the user's question to generate a grounded answer with the Cohere API.
+## The Solution: AI-Driven Monte Carlo Simulation
 
-## Deployment
+Alora solves this by leveraging **Artificial Intelligence** to do what humans cannot: scale.
 
-*   **Backend (`pilot`):** Deployed to Cloud Run.
-*   **Frontend (`mooncake`):** Deployed to Firebase Hosting.
-*   **MCP Server (`korvo`):** Deployed to Cloud Run.
+*   **Massive Scale**: Instead of guessing, Alora runs thousands of **Monte Carlo simulations** in real-time to find the statistically optimal path.
+*   **Adaptation**: It adapts to adverse conditions (safety cars, traffic) instantly, providing a data-backed recommendation when the pressure is highest.
+*   **Speed**: By parallelizing computations on the cloud, Alora delivers complex strategy analysis (1-stop vs. 2-stop vs. 3-stop) in ~2 minutes, transforming a 7-minute manual calculation into an interactive decision-making tool.
 
-## Getting Started
+---
 
-### Prerequisites
+## System Architecture
 
-*   Node.js and npm
-*   Python and uv
-*   Google Cloud SDK
-*   Firebase CLI
+The system consists of two main components:
 
-### Installation
+### 1. The Backend (`mcp_server/`)
+A **Model Context Protocol (MCP)** server built with Python and **FastMCP**, deployed on **Google Cloud Run**.
+*   **Core Engine**: `monte_carlo_simulation.py` loads trained ML models (Tire Degradation, Fuel Consumption, Pace Prediction) from **Google Cloud Storage**.
+*   **Infrastructure**:
+    *   **Cloud Run**: Serverless, auto-scaling container execution.
+    *   **Lazy Loading**: Models are loaded only on the first request to ensure instant server startup.
+    *   **Parallel Execution**: The server supports concurrent requests, allowing the client to trigger multiple strategy simulations simultaneously.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-repo/vigilant-journey.git
-    cd vigilant-journey
-    ```
+### 2. The Client (`android_app/` - Mooncake Repo)
+An Android application that serves as the race engineer's command center.
+*   **Visualization**: A 3D map of Barber Motorsports Park (using Sceneform/OpenGL) visualizes car positions and strategy overlays.
+*   **Real-Time Updates**: Connects to the backend via **Server-Sent Events (SSE)** to receive strategy updates as they are calculated.
+*   **Heads-Up Display (HUD)**: Displays the optimal pit window and predicted race time for each strategy.
 
-2.  **Install frontend dependencies:**
-    ```bash
-    npm install --prefix mooncake
-    ```
+## Deployment & Setup
 
-3.  **Install backend dependencies:**
-    ```bash
-    uv pip install -e ./pilot
-    ```
+### Backend (Google Cloud Run)
+The server is deployed to the `us-central1` region.
 
-4.  **Install MCP server dependencies:**
-    ```bash
-    uv pip install -e ./korvo
-    ```
+```bash
+gcloud run deploy monte-carlo-mcp-server \
+  --source . \
+  --region us-central1 \
+  --project gem-creator \
+  --allow-unauthenticated \
+  --set-env-vars GCS_BUCKET_NAME=monte-carlo-mcp-assets \
+  --timeout=3600 \
+  --cpu-boost \
+  --no-cpu-throttling
+```
 
-### Running Locally
+### Android Client
+The Android app is hosted in the `mooncake` submodule. It uses **GitHub Actions** for CI/CD to automatically build and release signed APKs.
 
-1.  **Set Environment Variables:**
-    Create a `.env` file in the `pilot` and `korvo` directories and add the necessary environment variables (e.g., `GOOGLE_CLOUD_PROJECT`, `ELASTIC_CLOUD_ID`, `ELASTIC_API_KEY`, `COHERE_API_KEY`).
-
-2.  **Run the MCP Server:**
-    ```bash
-    uv run --active uvicorn korvo.server:app --reload
-    ```
-
-3.  **Run the Backend:**
-    ```bash
-    GOOGLE_APPLICATION_CREDENTIALS="./pilot-local-dev-sa-key.json" uv run uvicorn pilot.main:app --reload
-    ```
-
-4.  **Run the Frontend:**
-    ```bash
-    npm run dev --prefix mooncake
-    ```
+## Key Technologies
+*   **Python 3.11** & **uv** (Dependency Management)
+*   **FastMCP** (Server Framework)
+*   **Scikit-Learn** & **Pandas** (ML Models)
+*   **Google Cloud Platform** (Run, Storage)
+*   **Kotlin** & **OkHttp** (Android Client)
+*   **Server-Sent Events (SSE)** (Real-time Communication)
