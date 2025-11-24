@@ -253,9 +253,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: st
     token = None
     if subprotocols:
         # Parse subprotocols: "Bearer, <token>"
-        parts = [p.strip() for p in subprotocols.split(",")]
-        if len(parts) >= 2 and parts[0] == "Bearer":
-            token = parts[1]
+        parts = subprotocols.split(',', 1)
+        if len(parts) == 2 and parts[0].strip() == 'Bearer':
+            token = parts[1].strip()
     
     if not token:
         print("Authentication failed: No token provided in WebSocket subprotocol")
