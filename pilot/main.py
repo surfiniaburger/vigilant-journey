@@ -6,6 +6,7 @@ import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 
+import bleach
 import vertexai
 
 # New imports for Firebase Admin
@@ -205,10 +206,12 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 
         # Send the message to the agent
         if mime_type == "text/plain":
+            # Sanitize user input to prevent XSS vulnerabilities
+            sanitized_data = bleach.clean(data)
             # Send a text message
-            content = Content(role="user", parts=[Part.from_text(text=data)])
+            content = Content(role="user", parts=[Part.from_text(text=sanitized_data)])
             live_request_queue.send_content(content=content)
-            print(f"[CLIENT TO AGENT]: {data}")
+            print(f"[CLIENT TO AGENT]: {sanitized_data}")
         elif mime_type == "audio/pcm":
             # Send an audio data
             decoded_data = base64.b64decode(data)
@@ -241,8 +244,23 @@ async def root():
 
 
 @app.websocket("/ws/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str, token: str = Query(...)):
+async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: str):
     """Client websocket endpoint"""
+
+    # Extract token from WebSocket subprotocol header
+    # The client sends ["Bearer", token] as subprotocols
+    subprotocols = websocket.headers.get("sec-websocket-protocol", "")
+    token = None
+    if subprotocols:
+        # Parse subprotocols: "Bearer, <token>"
+        parts = subprotocols.split(',', 1)
+        if len(parts) == 2 and parts[0].strip() == 'Bearer':
+            token = parts[1].strip()
+    
+    if not token:
+        print("Authentication failed: No token provided in WebSocket subprotocol")
+        await websocket.close(code=1008, reason="Authentication failed")
+        return
 
     # Authenticate the user
     try:
@@ -254,8 +272,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, is_audio: st
         await websocket.close(code=1008, reason="Authentication failed")
         return
 
-    # Wait for client connection
-    await websocket.accept()
+    # Wait for client connection - accept with the Bearer subprotocol
+    await websocket.accept(subprotocol="Bearer")
     print(f"Client connected, audio mode: {is_audio}")
 
     # Start agent session using the authenticated user's UID

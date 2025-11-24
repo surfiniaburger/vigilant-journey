@@ -3,6 +3,7 @@ import sys
 import asyncio
 import logging
 from fastmcp import FastMCP
+from google.cloud import exceptions as gcs_exceptions
 
 # Add the current directory to sys.path to ensure modules can be imported
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -52,7 +53,7 @@ def initialize_simulation():
             model_dir_to_use = local_model_dir
             race_data_dir = local_data_dir
             
-        except Exception as e:
+        except (gcs_exceptions.GoogleCloudError, FileNotFoundError, IOError) as e:
             logger.error(f"Failed to download assets from GCS: {e}")
             return False
     else:
@@ -74,7 +75,7 @@ def initialize_simulation():
         mc_simulation = MonteCarloSimulation(race_data, model_dir=model_dir_to_use)
         logger.info("Monte Carlo Simulation initialized successfully.")
         return True
-    except Exception as e:
+    except (FileNotFoundError, IOError, ValueError, AttributeError) as e:
         logger.error(f"Failed to initialize simulation: {e}")
         return False
 

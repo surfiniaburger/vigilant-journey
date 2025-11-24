@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { User } from "firebase/auth"
 
 interface UseIdTokenOptions {
-  user: unknown // Firebase User type - use unknown instead of any for type safety
+  user: User | null
   enabled?: boolean
 }
 
@@ -31,12 +32,7 @@ export function useIdToken({ user, enabled = true }: UseIdTokenOptions) {
           controller.abort()
         }, 10000)
 
-        // Type guard: check if user has getIdToken method
-        if (!user || typeof user !== 'object' || !('getIdToken' in user)) {
-          throw new Error('Invalid user object')
-        }
-
-        const token = await (user as { getIdToken: () => Promise<string> }).getIdToken()
+        const token = await user.getIdToken()
 
         clearTimeout(timeoutId)
 
