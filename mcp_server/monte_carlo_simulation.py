@@ -123,7 +123,6 @@ class MonteCarloSimulation:
 
         best_strategy = None
         best_time = float('inf')
-        results = []
 
         for name, pit_stops in strategies.items():
             simulation_times = []
@@ -132,7 +131,6 @@ class MonteCarloSimulation:
                 simulation_times.append(total_time)
 
             avg_time = np.mean(simulation_times)
-            results.append(f"Strategy: {name}, Avg. Time: {avg_time:.2f}s")
 
             print(f"Strategy: {name}, Avg. Time: {avg_time:.2f}s")
 

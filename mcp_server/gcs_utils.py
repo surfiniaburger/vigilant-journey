@@ -1,5 +1,6 @@
 import os
 from google.cloud import storage
+from google.cloud import exceptions as gcs_exceptions
 import sys
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -10,7 +11,7 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
         blob = bucket.blob(source_blob_name)
         blob.download_to_filename(destination_file_name)
         print(f"Downloaded storage object {source_blob_name} from bucket {bucket_name} to local file {destination_file_name}.", file=sys.stderr)
-    except Exception as e:
+    except (gcs_exceptions.GoogleCloudError, FileNotFoundError, IOError) as e:
         print(f"Failed to download {source_blob_name} from {bucket_name}: {e}", file=sys.stderr)
         raise
 
@@ -39,6 +40,6 @@ def download_directory(bucket_name, prefix, local_dir):
             blob.download_to_filename(local_path)
             print(f"Downloaded {blob.name} to {local_path}", file=sys.stderr)
             
-    except Exception as e:
+    except (gcs_exceptions.GoogleCloudError, FileNotFoundError, IOError) as e:
         print(f"Failed to download directory {prefix} from {bucket_name}: {e}", file=sys.stderr)
         raise
