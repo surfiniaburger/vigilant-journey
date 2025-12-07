@@ -66,3 +66,10 @@ The Android app is hosted in the `mooncake` submodule. It uses **GitHub Actions*
 *   **Google Cloud Platform** (Run, Storage)
 *   **Kotlin** & **OkHttp** (Android Client)
 *   **Server-Sent Events (SSE)** (Real-time Communication)
+
+## We built two android clients
+one using native and the other using capacitor js. Both links below
+[muliplatform](https://github.com/surfiniaburger/Alora)
+[kotlin](https://github.com/surfiniaburger/mooncake)
+
+The updated documentation can also be found in the multiplatform repo in the docs directory [docs](https://github.com/surfiniaburger/Alora/tree/main/docs)
