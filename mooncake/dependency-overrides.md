@@ -10,6 +10,6 @@ This document explains the reasons for the `overrides` configured in `package.js
 
 ## `safer-buffer`
 
-- **Package**: `safer-buffer`
+- **Package**: [`safer-buffer`](https://www.npmjs.com/package/safer-buffer)
 - **Override**: `npm:safe-buffer@^5.2.1`
 - **Reason**: The `safer-buffer` package is deprecated and was flagged by security scanners for containing potentially obfuscated code. We have overridden it with `safe-buffer`, which is the official and recommended replacement. This resolves the security warning and ensures we are not using a deprecated package.
