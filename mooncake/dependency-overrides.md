@@ -6,7 +6,7 @@ This document explains the reasons for the `overrides` configured in `package.js
 
 - **Package**: [`js-yaml`](https://www.npmjs.com/package/js-yaml)
 - **Override**: `^4.1.0`
-- **Reason**: A security vulnerability was identified in versions of `js-yaml` below `4.1.0`. The `yaml.load()` function is unsafe and can lead to arbitrary code execution. To mitigate this risk across all transitive dependencies, we are enforcing a minimum version of `4.1.0`.
+- **Reason**: A security vulnerability (e.g., [CVE-2022-25859](https://security.snyk.io/vuln/SNYK-JS-JSYAML-3157958)) was identified in versions of `js-yaml` below `4.1.0`. The `yaml.load()` function was unsafe by default and could lead to arbitrary code execution when parsing untrusted YAML. To mitigate this risk across all transitive dependencies, we are enforcing a minimum version of `4.1.0`, where `yaml.load()` is safe by default.
 
 ## `safer-buffer`
 
