@@ -4,7 +4,7 @@ This document explains the reasons for the `overrides` configured in `package.js
 
 ## `js-yaml`
 
-- **Package**: `js-yaml`
+- **Package**: [`js-yaml`](https://www.npmjs.com/package/js-yaml)
 - **Override**: `^4.1.0`
 - **Reason**: A security vulnerability was identified in versions of `js-yaml` below `4.1.0`. The `yaml.load()` function is unsafe and can lead to arbitrary code execution. To mitigate this risk across all transitive dependencies, we are enforcing a minimum version of `4.1.0`.
 
