@@ -101,8 +101,8 @@ async def run_single_evaluation(runner, user_query):
                 break # Stop after the first complete turn with a text answer
     return final_answer
 
-async def main():
-    """Main function to run the benchmark evaluation."""
+async def run_benchmark():
+    """Runs the benchmark evaluation and returns the results."""
     print("Initializing services for evaluation...")
     runner = await initialize_evaluation_services()
 
@@ -120,15 +120,7 @@ async def main():
 
         generated_answer = await run_single_evaluation(runner, case['user_query'])
 
-        generated_answer = await run_single_evaluation(runner, case['user_query'])
-
         print(f"Generated Answer: {generated_answer}")
-        print(f"Reference Answer: {case['reference_answer']}")
-
-        # Calculate similarity score
-        if generated_answer:
-            embedding1 = model.encode(generated_answer, convert_to_tensor=True)
-            embedding2 = model.encode(case['reference_answer'], convert_to_tensor=True)
         print(f"Reference Answer: {case['reference_answer']}")
 
         # Calculate similarity score
@@ -154,9 +146,14 @@ async def main():
         })
         print("--------------------------------------------------")
 
+    return results
+
+async def main():
+    """Main function to run the benchmark evaluation."""
+    results = await run_benchmark()
+
     # --- REPORTING ---
     print("\n--- BENCHMARK RESULTS ---")
-    # Add more detailed reporting here in the future
     print(json.dumps(results, indent=2))
     print("------------------------")
 

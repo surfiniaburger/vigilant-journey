@@ -365,6 +365,7 @@ numpy==2.3.4
     #   bottleneck
     #   langchain-community
     #   numexpr
+    #   pandas
     #   scikit-learn
     #   scipy
     #   shapely
@@ -437,6 +438,8 @@ packaging==25.0
     #   langchain-core
     #   langsmith
     #   marshmallow
+pandas==2.3.3
+    # via adk-multiagent-mcp-app (pyproject.toml)
 pg8000==1.31.5
     # via adk-multiagent-mcp-app (pyproject.toml)
 propcache==0.4.1
@@ -529,6 +532,7 @@ python-dateutil==2.9.0.post0
     # via
     #   google-adk
     #   google-cloud-bigquery
+    #   pandas
     #   pg8000
 python-dotenv==1.2.1
     # via
@@ -541,6 +545,8 @@ python-multipart==0.0.20
     # via mcp
 python-socketio==5.14.3
     # via adk-multiagent-mcp-app (pyproject.toml)
+pytz==2025.2
+    # via pandas
 pyyaml==6.0.3
     # via
     #   google-adk
@@ -663,6 +669,8 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
+tzdata==2025.2
+    # via pandas
 tzlocal==5.3.1
     # via google-adk
 uritemplate==4.2.0
