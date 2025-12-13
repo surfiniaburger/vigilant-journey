@@ -13,7 +13,15 @@ def test_agent_name(root_agent):
 def test_agent_model(root_agent):
     # It's better practice to check if the model name is in the expected string
     # in case of minor version changes.
-    assert "gemini-live-2.5-flash-preview-native-audio-09-2025" in root_agent.model
+    # Check that the model is either the default live model or the override
+    expected_models = [
+        "gemini-live-2.5-flash-preview-native-audio-09-2025",
+        os.getenv("AGENT_MODEL")
+    ]
+    # Filter out None if env var not set
+    expected_models = [m for m in expected_models if m]
+    
+    assert root_agent.model in expected_models
 
 
 def test_agent_description(root_agent):

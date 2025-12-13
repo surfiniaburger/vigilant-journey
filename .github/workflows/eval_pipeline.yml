@@ -18,6 +18,9 @@ jobs:
       GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
       GOOGLE_CLOUD_LOCATION: us-central1
       AGENT_ENGINE_ID: ${{ secrets.AGENT_ENGINE_ID }}
+      # Use a standard multimodal model for evaluation as the live audio model
+      # does not support the generateContent API used by the test runner.
+      AGENT_MODEL: "gemini-2.0-flash-exp"
 
     steps:
     - uses: actions/checkout@v4
