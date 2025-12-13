@@ -6,6 +6,8 @@ import sys
 # Standard import assuming the package is installed in editable mode (or similar)
 from evaluation.benchmark_prompts import run_benchmark, SIMILARITY_THRESHOLD
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:.*automatic function calling.*")
 @pytest.mark.asyncio
 async def test_evaluation_pipeline():
     """
