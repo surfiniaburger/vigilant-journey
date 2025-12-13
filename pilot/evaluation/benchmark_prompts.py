@@ -18,8 +18,12 @@ from google.adk.agents import BaseAgent
 from sentence_transformers import SentenceTransformer, util
 
 # --- CONFIGURATION ---
-EVALUATION_DATASET_PATH = "pilot/evaluation/evaluation_dataset.json"
+EVALUATION_DATASET_FILENAME = "evaluation_dataset.json"
+# Ensure we get the absolute path relative to this file
+EVALUATION_DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), EVALUATION_DATASET_FILENAME))
 SIMILARITY_THRESHOLD = 0.75
+
+print(f"DEBUG: EVALUATION_DATASET_PATH resolved to: {EVALUATION_DATASET_PATH}")
 
 # --- INITIALIZATION ---
 async def initialize_evaluation_services():
@@ -93,16 +97,29 @@ async def run_single_evaluation(runner, user_query):
     initial_content = Content(parts=[Part(text=user_query)])
 
     final_answer = None
+    candidate_answer = None
     async for event in runner.run_async(session_id=session_id, user_id="evaluation_user", new_message=initial_content, run_config=run_config):
+        # Capture any text content as a candidate
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    candidate_answer = part.text
+        
         if event.turn_complete and event.content:
             final_answer_part = event.content.parts[0]
             if final_answer_part.text:
                 final_answer = final_answer_part.text
                 break # Stop after the first complete turn with a text answer
+    
+    # Fallback if no turn_complete event with text was found
+    if final_answer is None:
+        final_answer = candidate_answer
+        print(f"DEBUG: Using fallback answer: {final_answer}")
+        
     return final_answer
 
-async def main():
-    """Main function to run the benchmark evaluation."""
+async def run_benchmark():
+    """Runs the benchmark evaluation and returns the results."""
     print("Initializing services for evaluation...")
     runner = await initialize_evaluation_services()
 
@@ -120,15 +137,7 @@ async def main():
 
         generated_answer = await run_single_evaluation(runner, case['user_query'])
 
-        generated_answer = await run_single_evaluation(runner, case['user_query'])
-
         print(f"Generated Answer: {generated_answer}")
-        print(f"Reference Answer: {case['reference_answer']}")
-
-        # Calculate similarity score
-        if generated_answer:
-            embedding1 = model.encode(generated_answer, convert_to_tensor=True)
-            embedding2 = model.encode(case['reference_answer'], convert_to_tensor=True)
         print(f"Reference Answer: {case['reference_answer']}")
 
         # Calculate similarity score
@@ -154,9 +163,14 @@ async def main():
         })
         print("--------------------------------------------------")
 
+    return results
+
+async def main():
+    """Main function to run the benchmark evaluation."""
+    results = await run_benchmark()
+
     # --- REPORTING ---
     print("\n--- BENCHMARK RESULTS ---")
-    # Add more detailed reporting here in the future
     print(json.dumps(results, indent=2))
     print("------------------------")
 

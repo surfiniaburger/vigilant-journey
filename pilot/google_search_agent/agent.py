@@ -36,11 +36,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+import os
 
 # --- Constants ---
 CONFIDENCE_THRESHOLD = 0.25
-LIVE_MODEL = "gemini-live-2.5-flash-preview-native-audio"
-INTERNAL_MODEL = "gemini-2.5-pro"
+LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
+INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
 
 
@@ -102,23 +103,41 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
         after_tool_callback=after_tool_callback,
     )
 
-    researcher_tools = [recall_memory_tool, google_search]
+    analysis_tools = [recall_memory_tool]
     if use_mcp_tools:
         from .mcp_tools import mcp_tools
-        researcher_tools.append(mcp_tools)
+        analysis_tools.append(mcp_tools)
 
-    researcher_agent = Agent(
-        name="ResearcherAgent",
-        model="gemini-2.5-pro",
-        instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
-        tools=researcher_tools,
+    # --- Split Researcher into Search & Analysis to support strict tool rules of Gemini 2.x ---
+    
+    search_agent = Agent(
+        name="SearchAgent",
+        model=INTERNAL_MODEL,
+        instruction="You are a search specialist. Search Google for information relevant to the user's request. Output a detailed summary of the key findings. Do not check memory.",
+        tools=[google_search],
+        output_key="search_results",
+        **individual_agent_callbacks,
+    )
+
+    analysis_agent = Agent(
+        name="ResearchAnalysisAgent",
+        model=INTERNAL_MODEL,
+        instruction="You are a research analyst. The message you receive contains search results. Synthesize this information into a final, comprehensive answer. If the search results are empty, say 'No information found'.",
+        tools=analysis_tools,
         output_key="draft_answer",
         **individual_agent_callbacks,
     )
 
+    researcher_agent = SequentialAgent(
+        name="ResearcherAgent",
+        sub_agents=[search_agent, analysis_agent],
+        before_agent_callback=before_agent_callback,
+        after_agent_callback=after_agent_callback,
+    )
+
     safety_and_compliance_agent = Agent(
         name="SafetyAndComplianceAgent",
-        model="gemini-2.5-pro",
+        model=INTERNAL_MODEL,
         instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
         output_key="critique",
         **individual_agent_callbacks,
@@ -126,7 +145,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     knn_validator_agent = Agent(
         name="KnnValidatorAgent",
-        model="gemini-2.5-pro",
+        model=INTERNAL_MODEL,
         instruction="Use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Output only the final confidence score as a number.",
         tools=[knn_validation_tool],
         output_key="confidence",
