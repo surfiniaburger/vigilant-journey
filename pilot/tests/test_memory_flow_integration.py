@@ -16,8 +16,6 @@ async def test_postgres_session_persistence():
     """
     # 1. Setup
     # We use the factory which pulls from env vars (defaults to localhost:5432)
-    # 1. Setup
-    # We use the factory which pulls from env vars (defaults to localhost:5432)
     service_1 = get_local_postgres_session_service()
     
     # Create a unique session
