@@ -131,7 +131,8 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     researcher_agent = SequentialAgent(
         name="ResearcherAgent",
         sub_agents=[search_agent, analysis_agent],
-        **individual_agent_callbacks,
+        before_agent_callback=before_agent_callback,
+        after_agent_callback=after_agent_callback,
     )
 
     safety_and_compliance_agent = Agent(
