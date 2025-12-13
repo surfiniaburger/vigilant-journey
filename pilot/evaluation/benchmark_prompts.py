@@ -52,39 +52,50 @@ async def initialize_evaluation_services():
         agent_engine_id=agent_engine_id,
     )
 
-    # Use a mock session service for evaluation
-    class MockSessionService(BaseSessionService):
-        def __init__(self):
-            self.sessions = {}
+    # --- Session Service Selection ---
+    # Allow testing against real databases (Local Postgres) if configured
+    storage_type = os.environ.get("SESSION_STORAGE", "mock")
+    
+    if storage_type == "local-postgres":
+        print("DEBUG: Using Local Postgres Session Service for Evaluation")
+        from database.local_postgres import get_local_postgres_session_service
+        session_service = get_local_postgres_session_service()
+    else:
+        # Use a mock session service for evaluation (default)
+        print("DEBUG: Using Mock Session Service for Evaluation")
+        class MockSessionService(BaseSessionService):
+            def __init__(self):
+                self.sessions = {}
 
-        async def create_session(self, app_name, user_id, **kwargs):
-            session_id = f"eval-session-{len(self.sessions)}"
-            session = Session(id=session_id, app_name=app_name, user_id=user_id, events=[], state={})
-            self.sessions[session_id] = session
-            return session
+            async def create_session(self, app_name, user_id, **kwargs):
+                session_id = f"eval-session-{len(self.sessions)}"
+                session = Session(id=session_id, app_name=app_name, user_id=user_id, events=[], state={})
+                self.sessions[session_id] = session
+                return session
 
-        async def get_session(self, session_id, app_name, user_id, **kwargs):
-            return self.sessions.get(session_id)
+            async def get_session(self, session_id, app_name, user_id, **kwargs):
+                return self.sessions.get(session_id)
 
-        async def update_session(self, session: Session, **kwargs):
-            self.sessions[session.id] = session
+            async def update_session(self, session: Session, **kwargs):
+                self.sessions[session.id] = session
 
-        async def append_event(self, session: Session, event, **kwargs):
-            session.events.append(event)
-            await self.update_session(session)
+            async def append_event(self, session: Session, event, **kwargs):
+                session.events.append(event)
+                await self.update_session(session)
 
-        async def delete_session(self, session_id, app_name, user_id, **kwargs):
-            if session_id in self.sessions:
-                del self.sessions[session_id]
+            async def delete_session(self, session_id, app_name, user_id, **kwargs):
+                if session_id in self.sessions:
+                    del self.sessions[session_id]
 
-        async def list_sessions(self, app_name, user_id, **kwargs):
-            return list(self.sessions.values())
+            async def list_sessions(self, app_name, user_id, **kwargs):
+                return list(self.sessions.values())
+        session_service = MockSessionService()
 
     agent = create_root_agent(memory_service, use_mcp_tools=False)
     runner = Runner(
-        app_name="EvaluationRunner",
+        app_name="agents",  # Must match the implicit package namespace for ADK
         agent=agent,
-        session_service=MockSessionService(),
+        session_service=session_service,
         memory_service=memory_service,
     )
     return runner
@@ -93,7 +104,7 @@ async def initialize_evaluation_services():
 async def run_single_evaluation(runner, user_query):
     """Runs a single evaluation case and returns the final answer."""
     session = await runner.session_service.create_session(
-        app_name="EvaluationApp",
+        app_name="agents",
         user_id="evaluation_user"
     )
     session_id = session.id

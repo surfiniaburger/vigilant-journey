@@ -1,0 +1,38 @@
+{
+    "eval_set_id": "eval_memory",
+    "name": "Memory Functionality Tests",
+    "eval_cases": [
+        {
+            "eval_id": "mem_001_save",
+            "user_query": "My name is Lewis. Please remember that.",
+            "reference_answer": "I have saved that your name is Lewis.",
+            "expected_tool_sequence": [
+                "save_memory"
+            ]
+        },
+        {
+            "eval_id": "mem_002_recall",
+            "user_query": "What is my name?",
+            "reference_answer": "Your name is Lewis.",
+            "expected_tool_sequence": [
+                "recall_memory"
+            ]
+        },
+        {
+            "eval_id": "ltm_001_save_context",
+            "user_query": "I prefer the 'RACE' drive program for circuit driving. Please remember this preference.",
+            "reference_answer": "I have saved that you prefer the 'RACE' drive program for circuit driving.",
+            "expected_tool_sequence": [
+                "save_memory"
+            ]
+        },
+        {
+            "eval_id": "ltm_002_recall_context",
+            "user_query": "Which drive program do I prefer for circuits?",
+            "reference_answer": "You prefer the 'RACE' drive program.",
+            "expected_tool_sequence": [
+                "recall_memory"
+            ]
+        }
+    ]
+}
