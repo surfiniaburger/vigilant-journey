@@ -20,8 +20,8 @@ jobs:
       AGENT_ENGINE_ID: ${{ secrets.AGENT_ENGINE_ID }}
       # Use a standard multimodal model for evaluation as the live audio model
       # does not support the generateContent API used by the test runner.
-      AGENT_MODEL: "gemini-1.5-pro-001"
-      INTERNAL_MODEL: "gemini-1.5-pro-001"
+      AGENT_MODEL: "gemini-2.5-flash"
+      INTERNAL_MODEL: "gemini-2.5-flash"
 
     steps:
     - uses: actions/checkout@v4

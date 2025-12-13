@@ -41,7 +41,7 @@ import os
 # --- Constants ---
 CONFIDENCE_THRESHOLD = 0.25
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
-INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-pro")
+INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
 
 
@@ -103,17 +103,34 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
         after_tool_callback=after_tool_callback,
     )
 
-    researcher_tools = [recall_memory_tool, google_search]
+    analysis_tools = [recall_memory_tool]
     if use_mcp_tools:
         from .mcp_tools import mcp_tools
-        researcher_tools.append(mcp_tools)
+        analysis_tools.append(mcp_tools)
 
-    researcher_agent = Agent(
-        name="ResearcherAgent",
+    # --- Split Researcher into Search & Analysis to support strict tool rules of Gemini 2.x ---
+    
+    search_agent = Agent(
+        name="SearchAgent",
         model=INTERNAL_MODEL,
-        instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
-        tools=researcher_tools,
+        instruction="You are a search specialist. Search Google for information relevant to the user's request. Summarize the key findings in your output.",
+        tools=[google_search],
+        output_key="search_results",
+        **individual_agent_callbacks,
+    )
+
+    analysis_agent = Agent(
+        name="ResearchAnalysisAgent",
+        model=INTERNAL_MODEL,
+        instruction="You are a research analyst. Read the 'search_results' from the previous step. Use your memory tools if needed. Synthesize the information into a final answer and place it in the 'draft_answer' session state key.",
+        tools=analysis_tools,
         output_key="draft_answer",
+        **individual_agent_callbacks,
+    )
+
+    researcher_agent = SequentialAgent(
+        name="ResearcherAgent",
+        sub_agents=[search_agent, analysis_agent],
         **individual_agent_callbacks,
     )
 
