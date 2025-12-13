@@ -86,7 +86,16 @@ async def initialize_services():
         print(f"Firebase Admin SDK initialized for project '{firebase_project_id}'.")
 
     # --- Database Connection Setup ---
-    session_service = await get_mongo_session_service()
+    storage_type = os.environ.get("SESSION_STORAGE", "mongo")
+    print(f"Initializing session storage: {storage_type}")
+
+    if storage_type == "local-postgres":
+        from database.local_postgres import get_local_postgres_session_service
+        # Note: Local Postgres initialization is synchronous
+        session_service = get_local_postgres_session_service()
+    else:
+        # Default to MongoDB (Legacy)
+        session_service = await get_mongo_session_service()
 
     agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
     if not agent_engine_id:

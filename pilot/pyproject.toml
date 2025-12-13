@@ -68,6 +68,13 @@ where = ["."]
 include = ["google_search_agent*", "database*", "evaluation*", "callbacks*"]
 exclude = ["static"]
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests as integration tests (requires external services like Docker)",
+    "asyncio: marks tests as async",
+]
+asyncio_mode = "strict"
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
