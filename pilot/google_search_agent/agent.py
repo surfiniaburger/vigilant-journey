@@ -64,11 +64,14 @@ class DeterministicDecisionAgent(BaseAgent):
         state = ctx.session.state
 
         critique = state.get("critique")
+        print(f"DEBUG: Decision Agent - Critique: {critique}") # Re-adding for CI debug
+
         # Ensure confidence is a float, defaulting to 0.0 if not present
         try:
             confidence = float(state.get("confidence", 0.0))
         except (ValueError, TypeError):
             confidence = 0.0
+        print(f"DEBUG: Decision Agent - Confidence: {confidence}") # Re-adding for CI debug
         
         validation_result = False
         if critique == "APPROVED" and confidence >= CONFIDENCE_THRESHOLD:
