@@ -18,8 +18,12 @@ from google.adk.agents import BaseAgent
 from sentence_transformers import SentenceTransformer, util
 
 # --- CONFIGURATION ---
-EVALUATION_DATASET_PATH = os.path.join(os.path.dirname(__file__), "evaluation_dataset.json")
+EVALUATION_DATASET_FILENAME = "evaluation_dataset.json"
+# Ensure we get the absolute path relative to this file
+EVALUATION_DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), EVALUATION_DATASET_FILENAME))
 SIMILARITY_THRESHOLD = 0.75
+
+print(f"DEBUG: EVALUATION_DATASET_PATH resolved to: {EVALUATION_DATASET_PATH}")
 
 # --- INITIALIZATION ---
 async def initialize_evaluation_services():
