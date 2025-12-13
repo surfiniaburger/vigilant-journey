@@ -97,13 +97,27 @@ async def run_single_evaluation(runner, user_query):
     initial_content = Content(parts=[Part(text=user_query)])
 
     final_answer = None
+    candidate_answer = None
     async for event in runner.run_async(session_id=session_id, user_id="evaluation_user", new_message=initial_content, run_config=run_config):
         print(f"DEBUG: Event received: Type={type(event)}, TurnComplete={getattr(event, 'turn_complete', 'N/A')}, Content={getattr(event, 'content', 'None')}")
+        
+        # Capture any text content as a candidate
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    candidate_answer = part.text
+        
         if event.turn_complete and event.content:
             final_answer_part = event.content.parts[0]
             if final_answer_part.text:
                 final_answer = final_answer_part.text
                 break # Stop after the first complete turn with a text answer
+    
+    # Fallback if no turn_complete event with text was found
+    if final_answer is None:
+        final_answer = candidate_answer
+        print(f"DEBUG: Using fallback answer: {final_answer}")
+        
     return final_answer
 
 async def run_benchmark():

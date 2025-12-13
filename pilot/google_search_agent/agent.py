@@ -113,7 +113,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     search_agent = Agent(
         name="SearchAgent",
         model=INTERNAL_MODEL,
-        instruction="You are a search specialist. Search Google for information relevant to the user's request. Summarize the key findings.",
+        instruction="You are a search specialist. Search Google for information relevant to the user's request. Output a detailed summary of the key findings. Do not check memory.",
         tools=[google_search],
         output_key="search_results",
         **individual_agent_callbacks,
@@ -122,7 +122,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     analysis_agent = Agent(
         name="ResearchAnalysisAgent",
         model=INTERNAL_MODEL,
-        instruction="You are a research analyst. Review the search results from the previous step. Use your memory tools if needed. Synthesize the information into a final answer.",
+        instruction="You are a research analyst. The message you receive contains search results. Synthesize this information into a final, comprehensive answer. If the search results are empty, say 'No information found'.",
         tools=analysis_tools,
         output_key="draft_answer",
         **individual_agent_callbacks,
