@@ -18,7 +18,7 @@ from google.adk.agents import BaseAgent
 from sentence_transformers import SentenceTransformer, util
 
 # --- CONFIGURATION ---
-EVALUATION_DATASET_PATH = "pilot/evaluation/evaluation_dataset.json"
+EVALUATION_DATASET_PATH = os.path.join(os.path.dirname(__file__), "evaluation_dataset.json")
 SIMILARITY_THRESHOLD = 0.75
 
 # --- INITIALIZATION ---

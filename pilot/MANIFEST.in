@@ -1,2 +1,2 @@
 include google_search_agent/*.json
-include pilot/evaluation/evaluation_dataset.json
+include evaluation/evaluation_dataset.json
