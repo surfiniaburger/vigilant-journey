@@ -3,10 +3,8 @@ import asyncio
 import os
 import sys
 
-# Ensure imports work by adding the parent directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from evaluation.benchmark_prompts import run_benchmark
+# Standard import assuming the package is installed in editable mode (or similar)
+from evaluation.benchmark_prompts import run_benchmark, SIMILARITY_THRESHOLD
 
 @pytest.mark.asyncio
 async def test_evaluation_pipeline():
@@ -30,7 +28,7 @@ async def test_evaluation_pipeline():
     if failed_cases:
         error_msg = f"Evaluation failed for {len(failed_cases)} cases:\n"
         for case in failed_cases:
-            error_msg += f"- ID: {case['eval_id']}\n  Query: {case['user_query']}\n  Result: {case['similarity_score']:.4f} (Threshold: 0.75)\n"
+            error_msg += f"- ID: {case['eval_id']}\n  Query: {case['user_query']}\n  Result: {case['similarity_score']:.4f} (Threshold: {SIMILARITY_THRESHOLD})\n"
         pytest.fail(error_msg)
     
     assert len(results) > 0, "No evaluation cases were run!"

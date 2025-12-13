@@ -59,7 +59,10 @@ test = [
     "sentence-transformers>=5.1.2",
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["google_search_agent*", "database*"]
+include = ["google_search_agent*", "database*", "evaluation*"]
 exclude = ["static"]
