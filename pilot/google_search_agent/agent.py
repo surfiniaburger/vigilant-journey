@@ -83,6 +83,27 @@ class DeterministicDecisionAgent(BaseAgent):
             content=Content(parts=[Part(text=str(validation_result))]),
         )
 
+# --- HELPER FUNCTIONS FOR AGENT CREATION (TIER 1 TESTING) ---
+def create_search_agent(callbacks):
+    return Agent(
+        name="SearchAgent",
+        model=INTERNAL_MODEL,
+        instruction="You are a search specialist. Search Google for information relevant to the user's request. Output a detailed summary of the key findings. Do not check memory.",
+        tools=[google_search],
+        output_key="search_results",
+        **callbacks,
+    )
+
+def create_analysis_agent(tools, callbacks):
+    return Agent(
+        name="ResearchAnalysisAgent",
+        model=INTERNAL_MODEL,
+        instruction="You are a research analyst. The message you receive contains search results. Synthesize this information into a final, comprehensive answer. If the search results are empty, say 'No information found'.",
+        tools=tools,
+        output_key="draft_answer",
+        **callbacks,
+    )
+
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
 def create_root_agent(memory_service, use_mcp_tools: bool = True):
     """
@@ -110,23 +131,8 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     # --- Split Researcher into Search & Analysis to support strict tool rules of Gemini 2.x ---
     
-    search_agent = Agent(
-        name="SearchAgent",
-        model=INTERNAL_MODEL,
-        instruction="You are a search specialist. Search Google for information relevant to the user's request. Output a detailed summary of the key findings. Do not check memory.",
-        tools=[google_search],
-        output_key="search_results",
-        **individual_agent_callbacks,
-    )
-
-    analysis_agent = Agent(
-        name="ResearchAnalysisAgent",
-        model=INTERNAL_MODEL,
-        instruction="You are a research analyst. The message you receive contains search results. Synthesize this information into a final, comprehensive answer. If the search results are empty, say 'No information found'.",
-        tools=analysis_tools,
-        output_key="draft_answer",
-        **individual_agent_callbacks,
-    )
+    search_agent = create_search_agent(individual_agent_callbacks)
+    analysis_agent = create_analysis_agent(analysis_tools, individual_agent_callbacks)
 
     researcher_agent = SequentialAgent(
         name="ResearcherAgent",

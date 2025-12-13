@@ -26,8 +26,7 @@ def create_memory_tools(memory_service):
             # Use the injected memory_service and provide only the new fact.
             # This is much more efficient than re-processing the entire session.
             await memory_service.add_session_to_memory(
-                tool_context.session,
-                direct_contents_source={"events": [{"content": {"role": "user", "parts": [{"text": fact}]}}]},
+                tool_context.session
             )
             response = {"status": "success", "message": f"Successfully remembered: {fact}"}
             logger.info(response)
