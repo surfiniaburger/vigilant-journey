@@ -41,7 +41,7 @@ import os
 # --- Constants ---
 CONFIDENCE_THRESHOLD = 0.25
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
-INTERNAL_MODEL = "gemini-2.5-pro"
+INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-pro")
 
 
 
@@ -110,7 +110,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     researcher_agent = Agent(
         name="ResearcherAgent",
-        model="gemini-2.5-pro",
+        model=INTERNAL_MODEL,
         instruction="You are a research assistant. Your goal is to answer the user's request using your tools. Synthesize the results into a final answer and place it in the 'draft_answer' session state key.",
         tools=researcher_tools,
         output_key="draft_answer",
@@ -119,7 +119,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     safety_and_compliance_agent = Agent(
         name="SafetyAndComplianceAgent",
-        model="gemini-2.5-pro",
+        model=INTERNAL_MODEL,
         instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
         output_key="critique",
         **individual_agent_callbacks,
@@ -127,7 +127,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     knn_validator_agent = Agent(
         name="KnnValidatorAgent",
-        model="gemini-2.5-pro",
+        model=INTERNAL_MODEL,
         instruction="Use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Output only the final confidence score as a number.",
         tools=[knn_validation_tool],
         output_key="confidence",
