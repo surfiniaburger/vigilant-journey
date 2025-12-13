@@ -33,7 +33,29 @@ To "stretch" our evaluation and ensure reliability beyond just "it didn't crash"
 *   **Implementation**: `pilot/evaluation/human_review.py`.
 *   **Result**: Each run generates a clean Markdown report in `pilot/evaluation_reports/` containing the full Q&A trace, tool usage, and scores. This is uploaded as a **CI Artifact** (`human-review-reports`) for easy inspection.
 
-## 3. Current Limitations (The "Honest" Part)
+## 3. Architecture Evolution & Metamorphosis 🦋
+
+Our agent architecture has undergone a significant metamorphosis to address the "infinite loop" problem and optimize for cost/latency.
+
+### 📜 Phase 1: The "Spinning" Researcher (Legacy)
+Initially, the agent was a **Reactive** entity. It blindly entered a research loop for every query.
+*   **The Flaw**: When validating jargon-heavy queries (e.g., "activate RACE START"), the validator would reject imperfect answers, forcing the agent to research again and again—spinning indefinitely.
+*   **The Diagram**:
+![Initial Loop](docs/architecture/1_initial_research_loop.png)
+
+### 🧠 Phase 2: The Intelligence Center (Modern)
+We re-architected the system into a **Predictive** "Intelligence Center". The agent now acts as a Planner, routing queries based on knowledge state.
+*   **The Fix**: A **Memory-First** strategy.
+    1.  **Recall**: The agent *must* check Long-Term Memory (Vertex AI) first. If the answer exists, it returns immediately (0 searching cost).
+    2.  **Research**: Only if memory misses does it deploy the heavy `DeepResearchWorkflow` tool.
+*   **The Diagram**:
+![Intelligence Center](docs/architecture/2_intelligence_center_flow.png)
+
+### 🔄 The Metamorphosis
+This shift transforms the agent from a simple tool-user to a state-aware orchestrator.
+![Metamorphosis](docs/architecture/4_metamorphosis.png)
+
+## 4. Current Limitations (The "Honest" Part)
 *   **Monte Carlo Tree Search (MCTS)**: While intended to be part of the advanced planning capabilities, the MCTS component is currently **not fully functional** and disabled in the active evaluation path. We are relying on the deterministic `SequentialAgent` flow for now.
 *   **Dependency Speed**: The `sentence-transformers` library (used for similarity scoring) is heavy. We implemented a robust fallback to a mock scorer if the download times out, ensuring the pipeline doesn't flake due to network issues, but this means local runs might sometimes skip semantic verification if the environment isn't cached.
 
