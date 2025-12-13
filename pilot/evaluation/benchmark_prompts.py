@@ -99,8 +99,6 @@ async def run_single_evaluation(runner, user_query):
     final_answer = None
     candidate_answer = None
     async for event in runner.run_async(session_id=session_id, user_id="evaluation_user", new_message=initial_content, run_config=run_config):
-        print(f"DEBUG: Event received: Type={type(event)}, TurnComplete={getattr(event, 'turn_complete', 'N/A')}, Content={getattr(event, 'content', 'None')}")
-        
         # Capture any text content as a candidate
         if event.content and event.content.parts:
             for part in event.content.parts:

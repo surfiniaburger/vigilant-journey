@@ -16,8 +16,8 @@ async def test_evaluation_pipeline():
     This integrates the evaluation into the CI/CD workflow.
     """
     # Suppress noisy logs from the SDK
-    # logging.getLogger("google_genai").setLevel(logging.ERROR)
-    # logging.getLogger("google_adk").setLevel(logging.ERROR)
+    logging.getLogger("google_genai").setLevel(logging.ERROR)
+    logging.getLogger("google_adk").setLevel(logging.ERROR)
     
     print("Starting Evaluation Pipeline...")
     
