@@ -13,7 +13,7 @@ def test_agent_name(root_agent):
 def test_agent_model(root_agent):
     # It's better practice to check if the model name is in the expected string
     # in case of minor version changes.
-    assert "gemini-live-2.5-flash-preview-native-audio" in root_agent.model
+    assert "gemini-live-2.5-flash-preview-native-audio-09-2025" in root_agent.model
 
 
 def test_agent_description(root_agent):

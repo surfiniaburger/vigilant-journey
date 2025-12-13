@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 # --- Constants ---
 CONFIDENCE_THRESHOLD = 0.25
-LIVE_MODEL = "gemini-live-2.5-flash-preview-native-audio"
+LIVE_MODEL = "gemini-live-2.5-flash-preview-native-audio-09-2025"
 INTERNAL_MODEL = "gemini-2.5-pro"
 
 
