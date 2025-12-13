@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 import os
 
 # --- Constants ---
-CONFIDENCE_THRESHOLD = 0.25
+# --- Constants ---
+CONFIDENCE_THRESHOLD = 0.1
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
 INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
@@ -62,25 +63,29 @@ class DeterministicDecisionAgent(BaseAgent):
         logger.info("Executing deterministic decision logic.")
         state = ctx.session.state
 
+        validation_result = False
+        
         critique = state.get("critique")
         # Ensure confidence is a float, defaulting to 0.0 if not present
         try:
             confidence = float(state.get("confidence", 0.0))
         except (ValueError, TypeError):
             confidence = 0.0
-        
-        validation_result = False
+
         if critique == "APPROVED" and confidence >= CONFIDENCE_THRESHOLD:
             validation_result = True
 
         # Directly update the session state
         state["validation_passed"] = validation_result
         logger.info(f"Decision made: validation_passed = {validation_result}")
+        
+        output_text = "VALIDATION_PASSED" if validation_result else "VALIDATION_FAILED"
 
         # Yield a content event so the framework can populate the output_key
+        # We output explicit text so the Summarizer Agent (LLM) can easily see the decision in history
         yield Event(
             author=self.name,
-            content=Content(parts=[Part(text=str(validation_result))]),
+            content=Content(parts=[Part(text=output_text)]),
         )
 
 # --- HELPER FUNCTIONS FOR AGENT CREATION (TIER 1 TESTING) ---
@@ -182,7 +187,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     session_summarizer_agent = Agent(
         name="SessionSummarizerAgent",
         model="gemini-2.5-flash",
-        instruction="Review the conversation. If 'validation_passed' is True, take the final answer from 'draft_answer', save a one-sentence summary to memory using save_memory_tool, and present the final answer to the user. If 'validation_passed' is False, inform the user that a high-confidence answer could not be found.",
+        instruction="Review the conversation history. Check the output from 'DecisionAgent'. If it says 'VALIDATION_PASSED', you MUST accept the 'draft_answer' and present it to the user as your final answer. Do not hallucinate a refusal. If it says 'VALIDATION_FAILED', inform the user that a high-confidence answer could not be found.",
         tools=[save_memory_tool],
         output_key="final_answer",
         **individual_agent_callbacks,

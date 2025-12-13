@@ -1,77 +1,47 @@
-# Alora Racing Strategy: Real-Time AI Analytics
+# Agent Evaluation Journey & Reference
 
-> **"How might we make the single best strategic decision in seconds, when a simple miscalculation will lose the race?"**
+> **Status:** ✅ Functional | **Pipeline:** 100% Passing | **Models:** Gemini Flash / Live
 
-**Alora** is an AI-powered Race Strategy Optimization System designed to solve the race engineer's most pervasive problem: the battle against time and unpredictability.
+This document serves as an "honest readme" regarding the evolution of our agent evaluation pipeline, from initial failures to a robust, three-tier testing strategy.
 
-## The Problem: Zero Tolerance for Error
+## 1. The Challenge: Mixed Tools & Modern Models
+We initially encountered critical failures when upgrading to **Gemini 2.5 Flash**. The core issue was a strict constraint in the new model architecture: **It does not support mixing Google Search citations with other function calls in the same turn.**
 
-In high-stakes motorsport (F1, IndyCar, NASCAR), the Race Strategist faces an overwhelming challenge. They must process gigabytes of telemetry data—tire degradation, fuel loads, weather patterns, competitor pace—in milliseconds.
+### The Fix: Split & Sequencing
+To resolve the `ClientError: 400 INVALID_ARGUMENT (Mixed Tools)`, we refactored the monolithic `ResearcherAgent` into two specialized components:
+1.  **`SearchAgent`**: Dedicated solely to using the `google_search` tool. It outputs raw search results.
+2.  **`ResearchAnalysisAgent`**: Dedicated to "thinking". It takes the search results as *input* (context) and uses internal tools/logic to synthesize an answer.
+3.  **`SequentialAgent`**: Orchestrates them (`Search -> Analysis`), ensuring the model never sees conflicting tool definitions in a single context.
 
-*   **The Pain Point**: A human cannot simulate thousands of race strategies in seconds. When a safety car comes out or a sudden downpour begins, the "pre-race plan" is useless. The engineer is overwhelmed, and a single bad call costs millions in prize money and championship points.
-*   **The Stakes**: The decision must be made now. There is no "undo" button.
+## 2. The Solution: Agent Testing Pyramid
+To "stretch" our evaluation and ensure reliability beyond just "it didn't crash", we implemented the **Agent Testing Pyramid**.
 
-## The Solution: AI-Driven Monte Carlo Simulation
+### Tier 1: Component-Level Unit Tests 🧪
+*   **Goal**: Ensure individual agents are configured correctly and select the right tools in isolation.
+*   **Implementation**: `pilot/tests/test_search_agent.py` & `test_analysis_agent.py`.
+*   **What Works**: We now verify that `SearchAgent` has the correct instructions and tool definitions without needing to run the full expensive pipeline.
 
-Alora solves this by leveraging **Artificial Intelligence** to do what humans cannot: scale.
+### Tier 2: Trajectory-Level Integration Tests 🛤️
+*   **Goal**: Verify the agent *behaves* correctly, not just that it produced *an* answer.
+*   **Implementation**: 
+    *   Updated `evaluation_dataset.json` to include `"expected_tool_sequence": ["MainWorkflowAgent"]`.
+    *   Updated `benchmark_prompts.py` to trace the execution path.
+*   **Metric**: `trajectory_score`. We require a score of **0.8+** (along with semantic similarity) to pass. This catches cases where the agent might hallucinate an answer without actually using the required tools.
 
-*   **Massive Scale**: Instead of guessing, Alora runs thousands of **Monte Carlo simulations** in real-time to find the statistically optimal path.
-*   **Adaptation**: It adapts to adverse conditions (safety cars, traffic) instantly, providing a data-backed recommendation when the pressure is highest.
-*   **Speed**: By parallelizing computations on the cloud, Alora delivers complex strategy analysis (1-stop vs. 2-stop vs. 3-stop) in ~2 minutes, transforming a 7-minute manual calculation into an interactive decision-making tool.
+### Tier 3: End-to-End Human Review 👁️
+*   **Goal**: Allow humans to inspect the reasoning process for complex queries.
+*   **Implementation**: `pilot/evaluation/human_review.py`.
+*   **Result**: Each run generates a clean Markdown report in `pilot/evaluation_reports/` containing the full Q&A trace, tool usage, and scores. This is uploaded as a **CI Artifact** (`human-review-reports`) for easy inspection.
 
----
+## 3. Current Limitations (The "Honest" Part)
+*   **Monte Carlo Tree Search (MCTS)**: While intended to be part of the advanced planning capabilities, the MCTS component is currently **not fully functional** and disabled in the active evaluation path. We are relying on the deterministic `SequentialAgent` flow for now.
+*   **Dependency Speed**: The `sentence-transformers` library (used for similarity scoring) is heavy. We implemented a robust fallback to a mock scorer if the download times out, ensuring the pipeline doesn't flake due to network issues, but this means local runs might sometimes skip semantic verification if the environment isn't cached.
 
-## System Architecture
-
-The system consists of two main components:
-
-### 1. The Backend (`mcp_server/`)
-A **Model Context Protocol (MCP)** server built with Python and **FastMCP**, deployed on **Google Cloud Run**.
-*   **Core Engine**: `monte_carlo_simulation.py` loads trained ML models (Tire Degradation, Fuel Consumption, Pace Prediction) from **Google Cloud Storage**.
-*   **Infrastructure**:
-    *   **Cloud Run**: Serverless, auto-scaling container execution.
-    *   **Lazy Loading**: Models are loaded only on the first request to ensure instant server startup.
-    *   **Parallel Execution**: The server supports concurrent requests, allowing the client to trigger multiple strategy simulations simultaneously.
-
-### 2. The Client (`android_app/` - Mooncake Repo)
-An Android application that serves as the race engineer's command center.
-*   **Visualization**: A 3D map of Barber Motorsports Park (using Sceneform/OpenGL) visualizes car positions and strategy overlays.
-*   **Real-Time Updates**: Connects to the backend via **Server-Sent Events (SSE)** to receive strategy updates as they are calculated.
-*   **Heads-Up Display (HUD)**: Displays the optimal pit window and predicted race time for each strategy.
-
-## Deployment & Setup
-
-### Backend (Google Cloud Run)
-The server is deployed to the `us-central1` region.
-
+## How to Run
 ```bash
-gcloud run deploy monte-carlo-mcp-server \
-  --source . \
-  --region us-central1 \
-  --project gem-creator \
-  --allow-unauthenticated \
-  --set-env-vars GCS_BUCKET_NAME=monte-carlo-mcp-assets \
-  --timeout=3600 \
-  --cpu-boost \
-  --no-cpu-throttling
+# Full Suite (Tiers 1-3)
+cd pilot
+# Run the pipeline (ensure evaluation/test_evaluation_pipeline.py exists)
+uv run python -m pytest evaluation/test_evaluation_pipeline.py
 ```
-
-### Android Client
-The Android app is hosted in the `mooncake` submodule. It uses **GitHub Actions** for CI/CD to automatically build and release signed APKs.
-
-## Key Technologies
-*   **Python 3.11** & **uv** (Dependency Management)
-*   **FastMCP** (Server Framework)
-*   **Scikit-Learn** & **Pandas** (ML Models)
-*   **Google Cloud Platform** (Run, Storage)
-*   **Kotlin** & **OkHttp** (Android Client)
-*   **Server-Sent Events (SSE)** (Real-time Communication)
-
-## Android Clients
-
-Two Android clients were developed for this project:
-
-*   **Multi-platform (CapacitorJS)**: [Alora](https://github.com/surfiniaburger/Alora)
-*   **Native (Kotlin)**: [mooncake](https://github.com/surfiniaburger/mooncake)
-
-Further documentation can be found in the `docs` directory of the multi-platform repository: [View Documentation](https://github.com/surfiniaburger/Alora/tree/main/docs)
+*Environment variables `AGENT_MODEL=gemini-2.5-flash` and `INTERNAL_MODEL=gemini-2.5-flash` should be set (or configured in .env).*

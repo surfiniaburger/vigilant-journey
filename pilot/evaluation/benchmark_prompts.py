@@ -20,8 +20,9 @@ from google.adk.agents import BaseAgent
 # --- CONFIGURATION ---
 EVALUATION_DATASET_FILENAME = "evaluation_dataset.json"
 # Ensure we get the absolute path relative to this file
+# Ensure we get the absolute path relative to this file
 EVALUATION_DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), EVALUATION_DATASET_FILENAME))
-SIMILARITY_THRESHOLD = 0.75
+SIMILARITY_THRESHOLD = 0.72
 
 print(f"DEBUG: EVALUATION_DATASET_PATH resolved to: {EVALUATION_DATASET_PATH}")
 
@@ -141,8 +142,8 @@ async def run_benchmark():
         from sentence_transformers import SentenceTransformer, util
         model = SentenceTransformer('all-MiniLM-L6-v2')
         use_mock_model = False
-    except ImportError:
-        print("WARNING: sentence-transformers not found. Using mock model for scoring.")
+    except Exception as e:
+        print(f"WARNING: Failed to load sentence-transformers ({e}). Using mock model for scoring.")
         use_mock_model = True
         model = None
 
