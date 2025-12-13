@@ -48,6 +48,7 @@ dependencies = [
     "uvicorn",
     "websockets",
     "wikipedia",
+    "sentence-transformers>=5.2.0",
 ]
 
 [project.optional-dependencies]
@@ -66,3 +67,9 @@ include-package-data = true
 where = ["."]
 include = ["google_search_agent*", "database*", "evaluation*", "callbacks*"]
 exclude = ["static"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]

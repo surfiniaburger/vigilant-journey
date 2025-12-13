@@ -49,3 +49,10 @@ jobs:
         
         # Run the evaluation pipeline
         pytest evaluation/test_evaluation_pipeline.py -v
+
+    - name: Upload Evaluation Reports
+      uses: actions/upload-artifact@v4
+      if: always()  # Upload even if tests fail
+      with:
+        name: human-review-reports
+        path: pilot/evaluation_reports/human_review_*.md
