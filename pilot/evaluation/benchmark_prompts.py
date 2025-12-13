@@ -213,18 +213,7 @@ async def run_benchmark():
         })
         print("--------------------------------------------------")
 
-    return results
-
-async def main():
-    """Main function to run the benchmark evaluation."""
-    results = await run_benchmark()
-
-    # --- REPORTING ---
-    print("\n--- BENCHMARK RESULTS ---")
-    print(json.dumps(results, indent=2))
-    print("------------------------")
-    
-    # Tier 3: Human Review Report
+    # Tier 3: Human Review Report (Generate here so it runs during CI tests)
     try:
         from .human_review import generate_human_review_report
         report_path = generate_human_review_report(results)
@@ -233,6 +222,19 @@ async def main():
         print("\n[Tier 3] Warning: Could not import human_review module.")
     except Exception as e:
         print(f"\n[Tier 3] Error generating report: {e}")
+
+    return results
+
+async def main():
+    """Main function to run the benchmark evaluation."""
+    results = await run_benchmark()
+    
+    # --- REPORTING ---
+    print("\n--- BENCHMARK RESULTS ---")
+    print(json.dumps(results, indent=2))
+    print("------------------------")
+    
+    # Tier 3 report is now generated inside run_benchmark()
 
 if __name__ == "__main__":
     asyncio.run(main())
