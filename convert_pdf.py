@@ -16,6 +16,10 @@ def convert_pdf_to_text(pdf_path, txt_path):
         sys.exit(1)
 
 if __name__ == "__main__":
-    pdf_path = "/Users/surfiniaburger/Desktop/vigilant-journey/Context Engineering_ Sessions & Memory.pdf"
-    txt_path = "/Users/surfiniaburger/Desktop/vigilant-journey/Context_Engineering_Sessions_Memory.txt"
+    if len(sys.argv) != 3:
+        print(f"Usage: python {sys.argv[0]} <input.pdf> <output.txt>")
+        sys.exit(1)
+    
+    pdf_path = sys.argv[1]
+    txt_path = sys.argv[2]
     convert_pdf_to_text(pdf_path, txt_path)

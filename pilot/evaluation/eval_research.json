@@ -7,7 +7,7 @@
             "user_query": "Explain the evolution of Mercedes-Benz safety features from the 1950s to present.",
             "reference_answer": "From the crumple zone in the 1950s (Bela Barenyi) to ABS in the 70s, airbags in the 80s, ESP in the 90s, and modern PRE-SAFE and Intelligent Drive systems.",
             "expected_tool_sequence": [
-                "MainWorkflowAgent"
+                "IntelligenceCenterAgent"
             ]
         }
     ]

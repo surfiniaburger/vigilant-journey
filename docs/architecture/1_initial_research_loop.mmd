@@ -1,0 +1,11 @@
+flowchart TD
+    UserQuery[User Query] --> Researcher[Researcher Agent]
+    Researcher --> GoogleSearch[Google Search Tool]
+    GoogleSearch --> |Results| Researcher
+    Researcher --> Validator{Is Jargon Valid?}
+    Validator --> |No| Researcher
+    Validator --> |Yes| FinalAnswer[Final Answer]
+    
+    style Researcher fill:#f9f,stroke:#333,stroke-width:2px
+    style Validator fill:#ff9999,stroke:#f00,stroke-width:2px
+    linkStyle 4 stroke:red,stroke-width:2px,label:Infinite Loop Risk

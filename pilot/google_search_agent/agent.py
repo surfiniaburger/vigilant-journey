@@ -193,8 +193,9 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
         **individual_agent_callbacks,
     )
 
-    main_workflow_agent = SequentialAgent(
-        name="MainWorkflowAgent",
+    deep_research_workflow = SequentialAgent(
+        name="DeepResearchWorkflow",
+        description="Performs deep research on a topic, verifies facts, and summarizes findings.",
         sub_agents=[
             researcher_agent,
             critique_and_refine_loop,
@@ -204,9 +205,25 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
         after_agent_callback=after_agent_callback,
     )
 
-    main_workflow_tool = agent_tool.AgentTool(
-        agent=main_workflow_agent,
+    research_task_tool = agent_tool.AgentTool(
+        agent=deep_research_workflow,
+    )
 
+    intelligence_center_agent = Agent(
+        name="IntelligenceCenterAgent",
+        model=INTERNAL_MODEL,
+        instruction=(
+            "You are the Intelligence Center. Your goal is to answer the user's question efficiently.\n"
+            "1. ALWAYS checks long-term memory first using `recall_memory`.\n"
+            "2. If the answer is found in memory, answer directly. Do NOT perform new research.\n"
+            "3. If the answer is NOT in memory, use the `DeepResearchWorkflow` tool to research it."
+        ),
+        tools=[recall_memory_tool, research_task_tool],
+        **individual_agent_callbacks,
+    )
+
+    main_workflow_tool = agent_tool.AgentTool(
+        agent=intelligence_center_agent,
     )
 
     # Finally, create and return the root agent

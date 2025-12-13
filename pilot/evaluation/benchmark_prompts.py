@@ -18,8 +18,16 @@ from google.adk.agents import BaseAgent
 # from sentence_transformers import SentenceTransformer, util
 
 # --- CONFIGURATION ---
-EVALUATION_DATASET_FILENAME = "evaluation_dataset.json"
-# Ensure we get the absolute path relative to this file
+# --- CONFIGURATION ---
+import argparse
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Run agent benchmark evaluation.')
+parser.add_argument('--dataset', type=str, default="evaluation_dataset.json",
+                    help='Filename of the evaluation dataset (default: evaluation_dataset.json)')
+args, unknown = parser.parse_known_args()
+
+EVALUATION_DATASET_FILENAME = args.dataset
 # Ensure we get the absolute path relative to this file
 EVALUATION_DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), EVALUATION_DATASET_FILENAME))
 SIMILARITY_THRESHOLD = 0.72

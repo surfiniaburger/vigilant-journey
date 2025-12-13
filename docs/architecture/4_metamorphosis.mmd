@@ -1,0 +1,27 @@
+flowchart TB
+    subgraph Legacy ["The Spinning Workflow"]
+        L_Start(Start) --> L_Agent(Agent)
+        L_Agent --> |Low Confidence| L_Search(Search)
+        L_Search --> L_Agent
+    end
+
+    subgraph Transformation ["The Shift"]
+        T_Logic[Shift from Reactive to Proactive]
+        T_Tool[New Tool: Research Task]
+        T_Mind[New Mindset: Planner]
+    end
+
+    subgraph Modern ["The Intelligence Center"]
+        M_Start(Start) --> M_Planner{Intelligence Center}
+        M_Planner --> |Fast Path| M_Memory((Memory))
+        M_Planner --> |Slow Path| M_Worker[[Deep Research Tool]]
+        M_Worker --> M_Verify[Validation]
+        M_Verify --> M_Memory
+    end
+
+    Legacy -- "Refactored to" --> Modern
+    Transformation -. "Enabled via" .-> Modern
+    
+    style Legacy fill:#ffe6e6,stroke:#ff9999
+    style Modern fill:#e6fffa,stroke:#00cc99
+    style M_Planner fill:#ffd700,stroke:#e6c200,stroke-width:4px

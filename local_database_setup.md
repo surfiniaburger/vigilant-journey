@@ -19,7 +19,7 @@ Ensure your `.env` or run command includes:
 - `POSTGRES_PORT=5432`
 - `POSTGRES_USER=user`
 - `POSTGRES_PASSWORD=password`
-- `POSTGRES_DB=pilot_sessions`
+- `POSTGRES_DB=sessions`
 
 ## 3. Run Commands
 

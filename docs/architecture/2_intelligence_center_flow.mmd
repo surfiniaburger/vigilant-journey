@@ -1,0 +1,25 @@
+flowchart TD
+    UserQuery[User Query] --> IntelligenceCenter[Intelligence Center Agent]
+    
+    subgraph Planning ["Decision Layer"]
+        IntelligenceCenter
+    end
+    
+    IntelligenceCenter --> CheckMem{Check Memory?}
+    
+    CheckMem --> |Found in LTM| Recall[Recall Memory Tool]
+    Recall --> FinalAnswer[Final Answer]
+    
+    CheckMem --> |Not Found| DeepResearch[Deep Research Workflow]
+    
+    subgraph Execution ["Action Layer"]
+        DeepResearch --> Search[Google Search]
+        Search --> Summarize[Summarizer]
+        Summarize --> Save[Save to Memory]
+    end
+    
+    Save --> FinalAnswer
+    
+    style IntelligenceCenter fill:#99ff99,stroke:#090,stroke-width:2px
+    style Recall fill:#99ccff,stroke:#00f,stroke-width:2px
+    style DeepResearch fill:#ffcc99,stroke:#f90,stroke-width:2px
