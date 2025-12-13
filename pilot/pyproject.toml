@@ -64,5 +64,5 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["google_search_agent*", "database*", "evaluation*"]
+include = ["google_search_agent*", "database*", "evaluation*", "callbacks*"]
 exclude = ["static"]
