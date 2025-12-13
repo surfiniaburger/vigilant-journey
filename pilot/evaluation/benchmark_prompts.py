@@ -142,8 +142,8 @@ async def run_benchmark():
         from sentence_transformers import SentenceTransformer, util
         model = SentenceTransformer('all-MiniLM-L6-v2')
         use_mock_model = False
-    except ImportError:
-        print("WARNING: sentence-transformers not found. Using mock model for scoring.")
+    except Exception as e:
+        print(f"WARNING: Failed to load sentence-transformers ({e}). Using mock model for scoring.")
         use_mock_model = True
         model = None
 

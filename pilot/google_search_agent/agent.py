@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 import os
 
 # --- Constants ---
-CONFIDENCE_THRESHOLD = 0.25
+# --- Constants ---
+CONFIDENCE_THRESHOLD = 0.1
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
 INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
