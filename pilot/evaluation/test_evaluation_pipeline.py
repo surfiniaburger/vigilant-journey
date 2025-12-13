@@ -2,6 +2,7 @@ import pytest
 import asyncio
 import os
 import sys
+import logging
 
 # Standard import assuming the package is installed in editable mode (or similar)
 from evaluation.benchmark_prompts import run_benchmark, SIMILARITY_THRESHOLD
@@ -14,6 +15,10 @@ async def test_evaluation_pipeline():
     Runs the agent evaluation pipeline and fails if any test case is incorrect.
     This integrates the evaluation into the CI/CD workflow.
     """
+    # Suppress noisy logs from the SDK
+    logging.getLogger("google_genai").setLevel(logging.ERROR)
+    logging.getLogger("google_adk").setLevel(logging.ERROR)
+    
     print("Starting Evaluation Pipeline...")
     
     # Run the benchmark
