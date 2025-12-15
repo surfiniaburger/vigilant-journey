@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt.plugin)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -55,7 +56,7 @@ android {
 dependencies {
     implementation("androidx.xr.glimmer:glimmer:1.0.0-alpha02")
     implementation("androidx.xr.projected:projected:1.0.0-alpha03")
-    implementation("com.google.firebase:firebase-ai:17.5.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))

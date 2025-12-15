@@ -135,9 +135,7 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
                         currentSession.startAudioConversation(::handleFunctionCall)
                     }
 
-                    catch (e: CancellationException) {
-                        throw e
-                    }
+
                     catch (e: Exception) {
                         Log.e(TAG, "Error starting Live Session: ${e.message}", e)
                         todoRepository.updateMicStatus(micIsOn = false)
@@ -160,9 +158,7 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
                         liveSessionState.update { LiveSessionState.Ready }
                         Log.i(TAG, "API Sync: Live Session Stopped.")
                     }
-                    catch (e: CancellationException) {
-                        throw e
-                    }
+
                     catch (e: Exception) {
                         Log.e(TAG, "Error stopping Live Session: ${e.message}", e)
                         liveSessionState.update { LiveSessionState.Ready }
@@ -269,10 +265,7 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
                 todoRepository.updateMicStatus(micIsOn = false)
                 Log.i(TAG, "MIC STATE UPDATE: Session connected (LiveSessionState.Ready).")
             }
-            // Change: Rethrow CancellationException so the coroutine cancels properly
-            catch (e: CancellationException) {
-                throw e
-            }
+
             catch (e: Exception) {
                 Log.e(TAG, "Error connecting to the model", e)
                 liveSessionState.update { LiveSessionState.Error }

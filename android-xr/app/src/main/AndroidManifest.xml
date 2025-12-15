@@ -11,13 +11,18 @@
         android:label="@string/gemini_live_title"
         android:theme="@style/Theme.Alora">
         <activity
-            android:name=".GlassesActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Alora">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".GlassesActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Alora">
         </activity>
     </application>
 </manifest>
