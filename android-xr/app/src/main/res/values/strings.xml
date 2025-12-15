@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2025 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+<resources>
+    <string name="gemini_live_title">Gemini Live API Todo</string>
+    <string name="gemini_live_subtitle">Simple ToDo app using the Gemini Live API to interact with the items in the list.</string>
+    <string name="new_task_placeholder">New Task</string>
+    <string name="add_button">Add</string>
+    <string name="error_title">Error</string>
+    <string name="error_message">The live session model could not be initialized.</string>
+    <string name="dismiss_button">Dismiss</string>
+    <string name="interact_with_todolist_by_voice">Button to start the live session and interact with the todo list by voice</string>
+    <string name="see_code">See code</string>
+    <string name="listening">I am listening...</string>
+    <string name="mic_status_initial">Mic Status</string>
+    <string name="mic_status_on">Microphone Status: On</string>
+    <string name="mic_status_off">Microphone Status: Off</string>
+    <string name="mic_on_label">Turn off microphone</string>
+    <string name="mic_off_label">Turn on microphone</string>
+    <string name="exit_app">Exit app</string>
+    <string name="permission_rationale_mic_access">We need microphone access to continue to the main experience.</string>
+    <string name="permissions_denied_mic_access">Permissions Denied. Please grant Audio access on the host phone to proceed.</string>
+
+    <string name="loading_todo_list">Loading Todo List...</string>
+    <string name="error_loading_list">Error loading list. Please try again.</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_pending">Pending</string>
+</resources>
