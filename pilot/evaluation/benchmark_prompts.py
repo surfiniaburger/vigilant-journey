@@ -123,6 +123,9 @@ async def run_single_evaluation(runner, user_query):
     candidate_answer = None
     actual_tool_sequence = []
 
+    import time
+    start_time = time.time()
+
     async for event in runner.run_async(session_id=session_id, user_id="evaluation_user", new_message=initial_content, run_config=run_config):
         # Capture tool calls
         if event.content and event.content.parts:
@@ -139,12 +142,15 @@ async def run_single_evaluation(runner, user_query):
                 final_answer = final_answer_part.text
                 break # Stop after the first complete turn with a text answer
     
+    end_time = time.time()
+    latency_seconds = end_time - start_time
+    
     # Fallback if no turn_complete event with text was found
     if final_answer is None:
         final_answer = candidate_answer
         print(f"DEBUG: Using fallback answer: {final_answer}")
         
-    return final_answer, actual_tool_sequence
+    return final_answer, actual_tool_sequence, latency_seconds
 
 async def run_benchmark():
     """Runs the benchmark evaluation and returns the results."""
@@ -170,11 +176,12 @@ async def run_benchmark():
         print(f"--- Running Evaluation Case: {case['eval_id']} ---")
         print(f"User Query: {case['user_query']}")
 
-        generated_answer, actual_tool_sequence = await run_single_evaluation(runner, case['user_query'])
+        generated_answer, actual_tool_sequence, latency = await run_single_evaluation(runner, case['user_query'])
 
         print(f"Generated Answer: {generated_answer}")
         print(f"Reference Answer: {case['reference_answer']}")
         print(f"Actual API Calls: {actual_tool_sequence}")
+        print(f"Latency: {latency:.2f}s | Steps: {len(actual_tool_sequence)}")
         
         expected_tools = case.get('expected_tool_sequence', [])
         print(f"Expected API Calls: {expected_tools}")
@@ -228,7 +235,9 @@ async def run_benchmark():
             "expected_tools": expected_tools,
             "similarity_score": similarity_score,
             "trajectory_score": trajectory_score,
-            "is_correct": is_correct
+            "is_correct": is_correct,
+            "latency_seconds": latency,
+            "step_count": len(actual_tool_sequence)
         })
         print("--------------------------------------------------")
 

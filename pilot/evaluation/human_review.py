@@ -28,7 +28,8 @@ def generate_human_review_report(results, output_dir="evaluation_reports"):
             f.write(f"**User Query:** {case['user_query']}\n\n")
             f.write(f"**Expected Trajectory:** `{case.get('expected_tools', [])}`\n")
             f.write(f"**Actual Trajectory:** `{case.get('actual_tools', [])}`\n")
-            f.write(f"**Trajectory Score:** {case.get('trajectory_score', 0.0):.2f}\n\n")
+            f.write(f"**Trajectory Score:** {case.get('trajectory_score', 0.0):.2f}\n")
+            f.write(f"**Latency:** {case.get('latency_seconds', 0.0):.2f}s | **Steps:** {case.get('step_count', 0)}\n\n")
             
             f.write(f"**Reference Answer:**\n> {case['reference_answer']}\n\n")
             f.write(f"**Generated Answer:**\n> {case['generated_answer']}\n\n")
