@@ -93,6 +93,22 @@ async def initialize_services():
         from database.local_postgres import get_local_postgres_session_service
         # Note: Local Postgres initialization is synchronous
         session_service = get_local_postgres_session_service()
+    elif storage_type == "memory":
+        print("Using InMemorySessionService (Non-persistent)")
+        from google.adk.sessions import BaseSessionService, Session
+        class InMemorySessionService(BaseSessionService):
+            def __init__(self): self.sessions = {}
+            async def create_session(self, app_name, user_id, **kwargs):
+                s_id = str(kwargs.get("id", f"session-{len(self.sessions)}"))
+                session = Session(id=s_id, app_name=app_name, user_id=user_id, events=[], state={})
+                self.sessions[s_id] = session
+                return session
+            async def get_session(self, session_id, **kwargs): return self.sessions.get(session_id)
+            async def update_session(self, session, **kwargs): self.sessions[session.id] = session
+            async def append_event(self, session, event, **kwargs): session.events.append(event); await self.update_session(session)
+            async def delete_session(self, session_id, **kwargs): self.sessions.pop(session_id, None)
+            async def list_sessions(self, **kwargs): return list(self.sessions.values())
+        session_service = InMemorySessionService()
     else:
         # Default to MongoDB (Legacy)
         session_service = await get_mongo_session_service()
