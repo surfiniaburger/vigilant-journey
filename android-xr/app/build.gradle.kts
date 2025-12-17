@@ -19,7 +19,6 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt.plugin)
-    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -61,8 +60,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.material.icons.extended)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.ai)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.okhttp)
     implementation(libs.androidx.lifecycle.viewmodel.android)
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)

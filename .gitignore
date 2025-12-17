@@ -6,7 +6,7 @@ env/
 !.env.example
 
 # Data
-data/
+/data/
 unzipped_data/
 
 # Python
