@@ -41,8 +41,8 @@ import os
 # --- Constants ---
 # --- Constants ---
 CONFIDENCE_THRESHOLD = 0.05
-LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-live-2.5-flash-preview-native-audio-09-2025")
-INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-3-pro-preview")
+LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
+INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
 
 

@@ -25,10 +25,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.surfiniaburger.alora.data.AdkMessage
 import com.surfiniaburger.alora.data.AudioStreamer
+import com.surfiniaburger.alora.data.MediaChunk
 import com.surfiniaburger.alora.data.MicControl
 import com.surfiniaburger.alora.data.PilotEvent
 import com.surfiniaburger.alora.data.PilotWebSocketClient
+import com.surfiniaburger.alora.data.RealtimeInput
 import com.surfiniaburger.alora.data.Todo
 import com.surfiniaburger.alora.data.TodoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +42,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonPrimitive
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 
@@ -57,6 +63,11 @@ class TodoScreenViewModel @Inject constructor(
 
     private val liveSessionState = MutableStateFlow<LiveSessionState>(LiveSessionState.NotReady)
     private val todos = todoRepository.todos
+
+    private val json = Json { 
+        ignoreUnknownKeys = true 
+        encodeDefaults = true
+    }
 
     val uiState: StateFlow<TodoScreenUiState> = combine(liveSessionState, todos) { liveSessionState, currentTodos ->
         val micItem = currentTodos.filterIsInstance<MicControl>().firstOrNull()
@@ -101,7 +112,6 @@ class TodoScreenViewModel @Inject constructor(
                         todoRepository.updateMicStatus(micIsOn = false)
                     }
                     is PilotEvent.Message -> {
-                        // Log.d(TAG, "Pilot: Received ${event.content}")
                         handlePilotMessage(event.content)
                     }
                 }
@@ -109,19 +119,43 @@ class TodoScreenViewModel @Inject constructor(
         }
     }
     
-    // Primitive parsing for now - in production use a real JSON parser or Protobuf
     private fun handlePilotMessage(text: String) {
-        if (text.contains("\"audio\"")) {
-            // Handle audio message: {"audio": "base64..."}
-            try {
-                // This is a very rough mock for parsing JSON without a full library dependency here if possible
-                // Otherwise we should use proper serialization. For now let's assume valid JSON.
-                // Or better, let's treat binary audio differently if we can. 
-                // Since this is text, we'll need to optimize.
-                // TODO: Implement proper Base64 decoding and audio queuing
-                // audioStreamer.queueAudio(decodedBytes)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse audio message", e)
+        try {
+            val adkMessage = json.decodeFromString<AdkMessage>(text)
+            adkMessage.serverContent?.modelTurn?.parts?.forEach { part ->
+                // Handle Text
+                part.text?.let { 
+                    Log.i(TAG, "AI: $it")
+                }
+
+                // Handle Audio
+                part.inlineData?.let { data ->
+                    if (data.mimeType == "audio/pcm") {
+                        val pcmBytes = android.util.Base64.decode(data.data, android.util.Base64.DEFAULT)
+                        audioStreamer.queueAudio(pcmBytes)
+                    }
+                }
+
+                // Handle Tool Calls
+                part.functionCall?.let { call ->
+                    handleFunctionCall(call)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse Pilot message: $text", e)
+        }
+    }
+
+    private fun handleFunctionCall(call: com.surfiniaburger.alora.data.FunctionCall) {
+        Log.i(TAG, "Tool Call: ${call.name} ${call.args}")
+        when (call.name) {
+            "add_todo" -> {
+                val task = call.args?.get("task")?.jsonPrimitive?.content ?: "New Task"
+                todoRepository.addTodo(task)
+            }
+            "remove_todo" -> {
+                val id = call.args?.get("id")?.jsonPrimitive?.content?.toIntOrNull()
+                id?.let { todoRepository.removeTodo(it) }
             }
         }
     }

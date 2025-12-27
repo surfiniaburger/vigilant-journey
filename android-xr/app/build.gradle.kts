@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt.plugin)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -28,6 +29,7 @@ android {
     defaultConfig {
         applicationId = "com.surfiniaburger.alora"
         minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
