@@ -100,8 +100,6 @@ jobs:
           name: pilot-docker-image
           path: pilot/
 
-
-
       - name: Load Docker image from artifact
         run: docker load -i pilot/pilot_image.tar
 
@@ -113,4 +111,6 @@ jobs:
           gcloud run deploy pilot \
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
-            --platform managed
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars "DD_API_KEY=${{ secrets.DD_API_KEY }},DD_LLMOBS_ENABLED=1,DD_LLMOBS_ML_APP=alora,DD_SERVICE=pilot,DD_ENV=production,SESSION_STORAGE=memory"
