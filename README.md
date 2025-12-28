@@ -67,3 +67,7 @@ cd pilot
 uv run python -m pytest evaluation/test_evaluation_pipeline.py
 ```
 *Environment variables `AGENT_MODEL=gemini-2.5-flash` and `INTERNAL_MODEL=gemini-2.5-flash` should be set (or configured in .env).*
+
+
+
+https://pilot-v1-684569726907.us-central1.run.app

@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt.plugin)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -28,6 +29,7 @@ android {
     defaultConfig {
         applicationId = "com.surfiniaburger.alora"
         minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -55,13 +57,13 @@ android {
 dependencies {
     implementation("androidx.xr.glimmer:glimmer:1.0.0-alpha02")
     implementation("androidx.xr.projected:projected:1.0.0-alpha03")
-    implementation("com.google.firebase:firebase-ai:17.5.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.material.icons.extended)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.ai)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.okhttp)
     implementation(libs.androidx.lifecycle.viewmodel.android)
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)

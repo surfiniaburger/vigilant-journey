@@ -25,28 +25,16 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.surfiniaburger.alora.data.AdkMessage
+import com.surfiniaburger.alora.data.AudioStreamer
+import com.surfiniaburger.alora.data.MediaChunk
 import com.surfiniaburger.alora.data.MicControl
+import com.surfiniaburger.alora.data.PilotEvent
+import com.surfiniaburger.alora.data.PilotWebSocketClient
+import com.surfiniaburger.alora.data.RealtimeInput
 import com.surfiniaburger.alora.data.Todo
 import com.surfiniaburger.alora.data.TodoRepository
-import com.google.firebase.Firebase
-import com.google.firebase.ai.ai
-import com.google.firebase.ai.type.FunctionCallPart
-import com.google.firebase.ai.type.FunctionDeclaration
-import com.google.firebase.ai.type.FunctionResponsePart
-import com.google.firebase.ai.type.GenerativeBackend
-import com.google.firebase.ai.type.LiveSession
-import com.google.firebase.ai.type.PublicPreviewAPI
-import com.google.firebase.ai.type.ResponseModality
-import com.google.firebase.ai.type.Schema
-import com.google.firebase.ai.type.SpeechConfig
-import com.google.firebase.ai.type.Tool
-import com.google.firebase.ai.type.Voice
-import com.google.firebase.ai.type.content
-import com.google.firebase.ai.type.liveGenerationConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.lang.ref.WeakReference
-import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,27 +42,34 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.int
+import java.lang.ref.WeakReference
+import javax.inject.Inject
 
 private const val MIC_TODO_ID = 111
 private const val MIC_STATUS_TODO_ID = -999
+private const val PILOT_BACKEND_URL = "wss://pilot-v1-684569726907.us-central1.run.app/ws/android-xr" // Placeholder endpoint
 
-@OptIn(PublicPreviewAPI::class)
 @HiltViewModel
-class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRepository) : ViewModel() {
+class TodoScreenViewModel @Inject constructor(
+    private val todoRepository: TodoRepository,
+    private val pilotClient: PilotWebSocketClient,
+    private val audioStreamer: AudioStreamer
+) : ViewModel() {
     private val TAG = "TodoScreenViewModel"
-    private var session: LiveSession? = null
     private var hostActivityRef: WeakReference<Activity>? = null
 
     private val liveSessionState = MutableStateFlow<LiveSessionState>(LiveSessionState.NotReady)
     private val todos = todoRepository.todos
 
+    private val json = Json { 
+        ignoreUnknownKeys = true 
+        encodeDefaults = true
+    }
+
     val uiState: StateFlow<TodoScreenUiState> = combine(liveSessionState, todos) { liveSessionState, currentTodos ->
-
-
         val micItem = currentTodos.filterIsInstance<MicControl>().firstOrNull()
         val isMicOn = micItem?.isMicOn ?: false
 
@@ -93,6 +88,77 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
         started = SharingStarted.WhileSubscribed(5000L),
         initialValue = TodoScreenUiState.Initial,
     )
+
+    init {
+        // Listen for Pilot events
+        viewModelScope.launch {
+            pilotClient.events.collect { event ->
+                when (event) {
+                    is PilotEvent.Connected -> {
+                        Log.i(TAG, "Pilot: Connected")
+                        liveSessionState.update { LiveSessionState.Ready }
+                        todoRepository.updateMicStatus(micIsOn = false)
+                    }
+                    is PilotEvent.Disconnected -> {
+                        Log.i(TAG, "Pilot: Disconnected")
+                        liveSessionState.update { LiveSessionState.NotReady }
+                        todoRepository.updateMicStatus(micIsOn = false)
+                        audioStreamer.stopRecording()
+                        audioStreamer.stopPlayback()
+                    }
+                    is PilotEvent.Error -> {
+                        Log.e(TAG, "Pilot: Error", event.throwable)
+                        liveSessionState.update { LiveSessionState.Error }
+                        todoRepository.updateMicStatus(micIsOn = false)
+                    }
+                    is PilotEvent.Message -> {
+                        handlePilotMessage(event.content)
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun handlePilotMessage(text: String) {
+        try {
+            val adkMessage = json.decodeFromString<AdkMessage>(text)
+            adkMessage.serverContent?.modelTurn?.parts?.forEach { part ->
+                // Handle Text
+                part.text?.let { 
+                    Log.i(TAG, "AI: $it")
+                }
+
+                // Handle Audio
+                part.inlineData?.let { data ->
+                    if (data.mimeType == "audio/pcm") {
+                        val pcmBytes = android.util.Base64.decode(data.data, android.util.Base64.DEFAULT)
+                        audioStreamer.queueAudio(pcmBytes)
+                    }
+                }
+
+                // Handle Tool Calls
+                part.functionCall?.let { call ->
+                    handleFunctionCall(call)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse Pilot message: $text", e)
+        }
+    }
+
+    private fun handleFunctionCall(call: com.surfiniaburger.alora.data.FunctionCall) {
+        Log.i(TAG, "Tool Call: ${call.name} ${call.args}")
+        when (call.name) {
+            "add_todo" -> {
+                val task = call.args?.get("task")?.jsonPrimitive?.content ?: "New Task"
+                todoRepository.addTodo(task)
+            }
+            "remove_todo" -> {
+                val id = call.args?.get("id")?.jsonPrimitive?.content?.toIntOrNull()
+                id?.let { todoRepository.removeTodo(it) }
+            }
+        }
+    }
 
     fun addTodo(taskDescription: String) {
         todoRepository.addTodo(taskDescription)
@@ -115,60 +181,42 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun startLiveSession() {
         val activity = hostActivityRef?.get() ?: run {
-            Log.e(TAG, "Cannot start Live Session: Host Activity reference lost.")
+            Log.e(TAG, "Cannot start Pilot Session: Host Activity reference lost.")
             todoRepository.updateMicStatus(micIsOn = false)
             return
         }
 
-        viewModelScope.launch {
-            if (liveSessionState.value is LiveSessionState.NotReady) return@launch
-
-            session?.let { currentSession ->
-                if (ContextCompat.checkSelfPermission(
-                        activity,
-                        Manifest.permission.RECORD_AUDIO,
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    try {
-                        liveSessionState.update { LiveSessionState.Running }
-                        Log.i(TAG, "API Sync: Live Session Started.")
-                        currentSession.startAudioConversation(::handleFunctionCall)
-                    }
-
-                    catch (e: CancellationException) {
-                        throw e
-                    }
-                    catch (e: Exception) {
-                        Log.e(TAG, "Error starting Live Session: ${e.message}", e)
-                        todoRepository.updateMicStatus(micIsOn = false)
-                        liveSessionState.update { LiveSessionState.Ready }
-                    }
-                } else {
-                    requestAudioPermissionIfNeeded(activity)
-                    todoRepository.updateMicStatus(micIsOn = false)
+        if (ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.RECORD_AUDIO,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            liveSessionState.update { LiveSessionState.Running }
+            Log.i(TAG, "Pilot: Session Started (Streaming Audio)")
+            
+            // Start recording and sending
+            viewModelScope.launch {
+                audioStreamer.startRecording().collect { pcmData ->
+                    // Normalize or Encode to Base64 before sending?
+                    // Pilot v1 expects Base64 encoded audio in a JSON envelope? 
+                    // Or raw binary? Let's assume binary for efficiency if WS supports it,
+                    // but PilotClient sends text. We need Base64.
+                    val base64Audio = android.util.Base64.encodeToString(pcmData, android.util.Base64.NO_WRAP)
+                    pilotClient.send("{\"realtime_input\": {\"media_chunks\": [{\"mime_type\": \"audio/pcm\", \"data\": \"$base64Audio\"}]}}")
                 }
             }
+            
+        } else {
+            requestAudioPermissionIfNeeded(activity)
+            todoRepository.updateMicStatus(micIsOn = false)
         }
     }
 
     private fun stopLiveSession() {
-        viewModelScope.launch {
-            session?.let { currentSession ->
-                if (liveSessionState.value is LiveSessionState.Running) {
-                    try {
-                        currentSession.stopAudioConversation()
-                        liveSessionState.update { LiveSessionState.Ready }
-                        Log.i(TAG, "API Sync: Live Session Stopped.")
-                    }
-                    catch (e: CancellationException) {
-                        throw e
-                    }
-                    catch (e: Exception) {
-                        Log.e(TAG, "Error stopping Live Session: ${e.message}", e)
-                        liveSessionState.update { LiveSessionState.Ready }
-                    }
-                }
-            }
+        if (liveSessionState.value is LiveSessionState.Running) {
+            liveSessionState.update { LiveSessionState.Ready }
+            Log.i(TAG, "Pilot: Session Stopped")
+            audioStreamer.stopRecording()
         }
     }
 
@@ -181,7 +229,7 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
         requestAudioPermissionIfNeeded(activity)
 
         viewModelScope.launch {
-            todoRepository.todos.collect @androidx.annotation.RequiresPermission(android.Manifest.permission.RECORD_AUDIO) { todos ->
+            todoRepository.todos.collect { todos ->
                 val isMicOnInUI = todos.find { it.id == MIC_TODO_ID }
                     ?.let { it as? MicControl }?.isMicOn ?: false
 
@@ -196,144 +244,10 @@ class TodoScreenViewModel @Inject constructor(private val todoRepository: TodoRe
                 }
             }
         }
-
-        viewModelScope.launch {
-            Log.d(TAG, "Start Gemini Live initialization")
-
-            val liveGenerationConfig = liveGenerationConfig {
-                speechConfig = SpeechConfig(voice = Voice("FENRIR"))
-                responseModality = ResponseModality.AUDIO
-            }
-
-            val systemInstruction = content {
-                text(
-                    """
-                **Your Role:** You are a friendly and helpful voice assistant in this app. 
-                Your main job is to change update the tasks in the todo list based on user requests.
-    
-                **Interaction Steps:**
-                **Get the task id to remove or toggle a task:** If you need to remove or check/uncheck a task,
-                    you'll need to retrieve the list of items in the list first to get the task id. Don't share 
-                    the id with the user, just identify the id of the task mentioned and directly pass this id to the 
-                    tool.
-          
-                **Never share the id with the user:** you don't need to share the id with the user. It is 
-                    just here to help you perform the check/uncheck and remove operations to the list.
-    
-                **If Unsure:** If you can't determine the update from the request, politely ask the user to rephrase or try something else.
-                    """.trimIndent(),
-                )
-            }
-
-            val addTodo = FunctionDeclaration(
-                "addTodo",
-                "Add a task to the todo list",
-                mapOf("taskDescription" to Schema.string("A succinct string describing the task")),
-            )
-
-            val removeTodo = FunctionDeclaration(
-                "removeTodo",
-                "Remove a task from the todo list",
-                mapOf("todoId" to Schema.integer("The id of the task to remove from the todo list")),
-            )
-
-            val toggleTodoStatus = FunctionDeclaration(
-                "toggleTodoStatus",
-                "Change the status of the task",
-                mapOf("todoId" to Schema.integer("The id of the task to remove from the todo list")),
-            )
-
-            val getTodoList = FunctionDeclaration(
-                "getTodoList",
-                "Get the list of all the tasks in the todo list",
-                emptyMap(),
-            )
-
-            val generativeModel = Firebase.ai(backend = GenerativeBackend.vertexAI()).liveModel(
-                "gemini-live-2.5-flash-preview-native-audio-09-2025",
-                generationConfig = liveGenerationConfig,
-                systemInstruction = systemInstruction,
-                tools = listOf(
-                    Tool.functionDeclarations(
-                        listOf(getTodoList, addTodo, removeTodo, toggleTodoStatus),
-                    ),
-                ),
-            )
-
-            todoRepository.updateMicStatus(micIsOn = false)
-
-            try {
-                session = generativeModel.connect()
-                liveSessionState.update { LiveSessionState.Ready }
-
-                todoRepository.updateMicStatus(micIsOn = false)
-                Log.i(TAG, "MIC STATE UPDATE: Session connected (LiveSessionState.Ready).")
-            }
-            // Change: Rethrow CancellationException so the coroutine cancels properly
-            catch (e: CancellationException) {
-                throw e
-            }
-            catch (e: Exception) {
-                Log.e(TAG, "Error connecting to the model", e)
-                liveSessionState.update { LiveSessionState.Error }
-                todoRepository.updateMicStatus(micIsOn = false)
-                Log.i(TAG, "MIC STATE UPDATE: Connection Error (LiveSessionState.Error).")
-            }
-        }
-    }
-
-    private fun handleFunctionCall(functionCall: FunctionCallPart): FunctionResponsePart {
-        return when (functionCall.name) {
-            "getTodoList" -> {
-                val todoList = todoRepository.getTodoList().filterNot { it.id == MIC_STATUS_TODO_ID }.reversed()
-                val response = JsonObject(
-                    mapOf(
-                        "success" to JsonPrimitive(true),
-                        "message" to JsonPrimitive("List of tasks in the todo list: $todoList"),
-                    ),
-                )
-                FunctionResponsePart(functionCall.name, response)
-            }
-            "addTodo" -> {
-                val taskDescription = functionCall.args["taskDescription"]!!.jsonPrimitive.content
-                todoRepository.addTodo(taskDescription)
-                val response = JsonObject(
-                    mapOf(
-                        "success" to JsonPrimitive(true),
-                        "message" to JsonPrimitive("Task $taskDescription added to the todo list"),
-                    ),
-                )
-                FunctionResponsePart(functionCall.name, response)
-            }
-            "removeTodo" -> {
-                val taskId = functionCall.args["todoId"]!!.jsonPrimitive.int
-                todoRepository.removeTodo(taskId)
-                val response = JsonObject(
-                    mapOf(
-                        "success" to JsonPrimitive(true),
-                        "message" to JsonPrimitive("Task was removed from the todo list"),
-                    ),
-                )
-                FunctionResponsePart(functionCall.name, response)
-            }
-            "toggleTodoStatus" -> {
-                val taskId = functionCall.args["todoId"]!!.jsonPrimitive.int
-                todoRepository.toggleTodoStatus(taskId)
-                val response = JsonObject(
-                    mapOf(
-                        "success" to JsonPrimitive(true),
-                        "message" to JsonPrimitive("Task was toggled in the todo list"),
-                    ),
-                )
-                FunctionResponsePart(functionCall.name, response)
-            }
-            else -> {
-                val response = JsonObject(
-                    mapOf("error" to JsonPrimitive("Unknown function: ${functionCall.name}")),
-                )
-                FunctionResponsePart(functionCall.name, response)
-            }
-        }
+        
+        // Connect to Pilot Backend
+        Log.i(TAG, "Connecting to Pilot Backend...")
+        pilotClient.connect(PILOT_BACKEND_URL)
     }
 
     fun requestAudioPermissionIfNeeded(activity: Activity) {

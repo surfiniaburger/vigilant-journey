@@ -1,6 +1,8 @@
+
 import asyncio
 import json
 import os
+import time
 from dotenv import load_dotenv
 import vertexai
 
@@ -123,7 +125,7 @@ async def run_single_evaluation(runner, user_query):
     candidate_answer = None
     actual_tool_sequence = []
 
-    import time
+
     start_time = time.time()
 
     async for event in runner.run_async(session_id=session_id, user_id="evaluation_user", new_message=initial_content, run_config=run_config):

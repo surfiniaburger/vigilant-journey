@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gesture Control Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #111;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #video-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 240px;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #3b82f6;
+            transform: scaleX(-1);
+        }
+
+        .ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            color: white;
+            width: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gesture-indicator {
+            position: absolute;
+            bottom: 210px;
+            right: 20px;
+            color: #3b82f6;
+            font-weight: bold;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="canvas-container"></div>
+
+    <!-- UI Panel -->
+    <div class="ui-panel">
+        <h1 class="text-xl font-bold mb-4">3D Gesture Lab</h1>
+
+        <div class="mb-4">
+            <label class="block text-sm mb-1 text-gray-400">Upload GLB/GLTF</label>
+            <input type="file" id="file-upload" accept=".glb,.gltf"
+                class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700 pointer-events-auto cursor-pointer">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm mb-1 text-gray-400">Object Color</label>
+            <input type="color" id="color-picker" value="#3b82f6" class="w-full h-8 rounded cursor-pointer">
+        </div>
+
+        <div class="mb-4 text-xs text-gray-300">
+            <p class="font-bold text-blue-400">Gestures:</p>
+            <ul class="list-disc ml-4">
+                <li>Move hand: Rotate Model</li>
+                <li>Pinch (Thumb + Index): Scale Model</li>
+                <li>Two Hands: Move Model</li>
+            </ul>
+        </div>
+
+        <p class="text-[10px] text-gray-500 mt-4">Fallback: Use Mouse to Rotate/Zoom</p>
+    </div>
+
+    <!-- Feedback UI -->
+    <div class="gesture-indicator" id="gesture-status">Detecting Hands...</div>
+
+    <!-- Hidden Video for Tracking -->
+    <div id="video-container">
+        <video id="webcam" autoplay playsinline></video>
+    </div>
+
+    <!-- Import Maps for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+        // --- Configuration & State ---
+        let scene, camera, renderer, controls, currentModel;
+        let video, handLandmarker;
+        let lastVideoTime = -1;
+        const gestureStatus = document.getElementById('gesture-status');
+
+        // --- MediaPipe Hand Tracking Setup ---
+        import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+
+        async function initMediaPipe() {
+            const vision = await FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+            );
+            handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+                    delegate: "GPU"
+                },
+                runningMode: "VIDEO",
+                numHands: 2
+            });
+            startCamera();
+        }
+
+        async function startCamera() {
+            video = document.getElementById("webcam");
+            const constraints = { video: { width: 640, height: 480 } };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            video.addEventListener("loadeddata", predictWebcam);
+        }
+
+        // --- Three.js Setup ---
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 3;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            // Fallback Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Default Model (A Cube)
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.3 });
+            currentModel = new THREE.Mesh(geometry, material);
+            scene.add(currentModel);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // --- Logic: Map Gestures to 3D ---
+        function handleGestures(results) {
+            if (results.landmarks && results.landmarks.length > 0) {
+                gestureStatus.innerText = "🖐️ Tracking Active";
+
+                const hand1 = results.landmarks[0];
+
+                // 1. Rotation (Based on Index Finger position)
+                const indexFinger = hand1[8];
+                currentModel.rotation.y = (indexFinger.x - 0.5) * 10;
+                currentModel.rotation.x = (indexFinger.y - 0.5) * 10;
+
+                // 2. Scaling (Pinch gesture: distance between Thumb and Index)
+                const thumb = hand1[4];
+                const distance = Math.sqrt(
+                    Math.pow(indexFinger.x - thumb.x, 2) +
+                    Math.pow(indexFinger.y - thumb.y, 2)
+                );
+
+                // If pinched, scale based on distance
+                const scale = Math.max(0.5, distance * 5);
+                currentModel.scale.set(scale, scale, scale);
+
+            } else {
+                gestureStatus.innerText = "📷 Show your hand";
+            }
+        }
+
+        async function predictWebcam() {
+            let startTimeMs = performance.now();
+            if (lastVideoTime !== video.currentTime) {
+                lastVideoTime = video.currentTime;
+                const results = handLandmarker.detectForVideo(video, startTimeMs);
+                handleGestures(results);
+            }
+            requestAnimationFrame(predictWebcam);
+        }
+
+        // --- File Upload Handling ---
+        document.getElementById('file-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const url = URL.createObjectURL(file);
+
+            const loader = new GLTFLoader();
+            loader.load(url, (gltf) => {
+                scene.remove(currentModel);
+                currentModel = gltf.scene;
+
+                // Center model
+                const box = new THREE.Box3().setFromObject(currentModel);
+                const center = box.getCenter(new THREE.Vector3());
+                currentModel.position.sub(center);
+
+                scene.add(currentModel);
+            });
+        });
+
+        // --- UI Interactions ---
+        document.getElementById('color-picker').addEventListener('input', (e) => {
+            const color = e.target.value;
+            currentModel.traverse((node) => {
+                if (node.isMesh) node.material.color.set(color);
+            });
+        });
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Initialize
+        initScene();
+        initMediaPipe();
+        animate();
+
+    </script>
+</body>
+
+</html>

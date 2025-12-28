@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package androidx.xr.glimmer.samples
+package com.surfiniaburger.alora.ui
 
 import android.app.Activity
 import android.util.Log

@@ -28,7 +28,7 @@ from google.genai import types
 from google.adk.memory import VertexAiMemoryBankService
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -140,9 +140,10 @@ async def initialize_services():
     # We import root_agent here, after _memory_service has been initialized.
     # This ensures that when agent.py is loaded, it can successfully call get_memory_service().
     from google_search_agent.agent import create_root_agent
+    root_agent = create_root_agent(memory_service=_memory_service, use_mcp_tools=False)
     runner = Runner(
         app_name=APP_NAME,
-        agent=create_root_agent,
+        agent=root_agent,
         session_service=session_service,
         memory_service=_memory_service,
     )
@@ -245,6 +246,9 @@ async def client_to_agent_messaging(websocket, live_request_queue):
             raise ValueError(f"Mime type not supported: {mime_type}")
 
 
+
+
+
 #
 # FastAPI web app
 #
@@ -258,8 +262,107 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+# --- REST API Request Models ---
+from pydantic import BaseModel
+from typing import Optional, List
+
+class AnalyzeRequest(BaseModel):
+    query: str
+    image: Optional[str] = None  # Base64 encoded image
+    mime_type: Optional[str] = None # e.g., "image/png"
+
+class AnalyzeResponse(BaseModel):
+    text: str # The main analysis text
+    # We could add more fields later like tools used, etc.
+
+@app.post("/analyze")
+async def analyze_endpoint(request: AnalyzeRequest):
+    """
+    Stateless analysis endpoint.
+    Creates a temporary session, runs the agent for one turn, and returns the result.
+    """
+    if not runner:
+        raise HTTPException(status_code=503, detail="Agent runner not initialized")
+
+    # 1. Create a temporary session
+    session_id = f"temp-analysis-{os.urandom(4).hex()}"
+    session = await runner.session_service.create_session(
+        app_name=APP_NAME,
+        user_id="anonymous_web_user",
+        id=session_id
+    )
+
+    # 2. Construct Content
+    parts = [Part.from_text(text=request.query)]
+    if request.image and request.mime_type:
+        try:
+            image_data = base64.b64decode(request.image)
+            parts.append(Part(inline_data=Blob(data=image_data, mime_type=request.mime_type)))
+        except Exception as e:
+             raise HTTPException(status_code=400, detail=f"Invalid base64 image: {str(e)}")
+    
+    content = Content(role="user", parts=parts)
+
+    # 3. Setup Queue and Config
+    live_request_queue = LiveRequestQueue()
+    live_request_queue.send_content(content=content)
+    
+    # We want a single turn response
+    run_config = RunConfig(
+        response_modalities=["TEXT"],
+        session_resumption=types.SessionResumptionConfig()
+    )
+
+    # 4. Run the Agent
+    # We need to run it in a way that we collect the output
+    accumulated_text = ""
+    
+    # 4. Run the Agent using run_async (standard generation) instead of run_live (streaming/audio)
+    # This allows using models like gemini-2.5-flash that aren't Live API compatible yet.
+    accumulated_text = ""
+    
+    try:
+        # Note: run_async signature might differ slightly, adapting from benchmark_prompts.py
+        # runner.run_async(session_id=..., user_id=..., new_message=..., run_config=...)
+        async for event in runner.run_async(
+            session_id=session_id,
+            user_id="anonymous_web_user",
+            new_message=content,
+            run_config=run_config
+        ):
+            # Check for text parts
+            if event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                        accumulated_text += part.text
+            
+            # Stop if turn is complete (though run_async usually handles one turn)
+            if event.turn_complete:
+                break
+                
+    except Exception as e:
+        print(f"Error during analysis: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Cleanup
+        # live_request_queue.close() # Not needed for run_async
+        pass # await runner.session_service.delete_session(session_id)
+
+    return AnalyzeResponse(text=accumulated_text)
 
 
 @app.get("/")
