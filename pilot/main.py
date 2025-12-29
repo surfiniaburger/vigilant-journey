@@ -51,6 +51,11 @@ logging.basicConfig(
 # Load Gemini API Key
 load_dotenv()
 
+# FIX: Unset API keys if running in Vertex AI mode (Project/Location set) to avoid "mutually exclusive" error in Memory Bank
+if os.environ.get("GOOGLE_CLOUD_PROJECT"):
+    for key in ("GOOGLE_API_KEY", "GEMINI_API_KEY"):
+        os.environ.pop(key, None)
+
 APP_NAME = "Alora"
 
 # --- NEW: Define a global placeholder for the memory service ---
