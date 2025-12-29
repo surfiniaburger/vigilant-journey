@@ -22,9 +22,13 @@ export const generateInfographic = async (query: string): Promise<GeneratedImage
   // Actually, to be "safe", we should probably move generation to backend too, 
   // but the backend agent is "Search Agent", not "Image Generation Agent".
   // So I will leave this as is (Client Side) for the Visuals, and use Pilot for Truth.
+  const apiKey = import.meta.env.VITE_API_KEY;
+  if (!apiKey) {
+    throw new Error("VITE_API_KEY environment variable is not set. Please check your .env file.");
+  }
 
   const { GoogleGenAI } = await import("@google/genai");
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); // Still need API key for generation
+  const ai = new GoogleGenAI({ apiKey }); // Still need API key for generation
 
   const prompt = `
 Create an explanation-driven, sparse-text, rich image about: "${query}"
