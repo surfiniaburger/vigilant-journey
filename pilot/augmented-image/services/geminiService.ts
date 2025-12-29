@@ -24,7 +24,7 @@ export const generateInfographic = async (query: string): Promise<GeneratedImage
   // So I will leave this as is (Client Side) for the Visuals, and use Pilot for Truth.
 
   const { GoogleGenAI } = await import("@google/genai");
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY }); // Still need API key for generation
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY }); // Still need API key for generation
 
   const prompt = `
 Create an explanation-driven, sparse-text, rich image about: "${query}"
