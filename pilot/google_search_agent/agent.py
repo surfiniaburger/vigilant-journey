@@ -45,16 +45,21 @@ LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
 INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
 # --- Authentication Configuration ---
-# If running in Cloud Run (GOOGLE_CLOUD_PROJECT is set), we explicitly configure for Vertex AI
+# If running in Cloud Run (GOOGLE_CLOUD_PROJECT is set), we implicitly configure for Vertex AI
+# by using the full resource path for the models.
 _PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 _LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
-HOST_CONFIG = {}
+
 if _PROJECT and _LOCATION:
-    HOST_CONFIG = {
-        "vertexai": True,
-        "project": _PROJECT,
-        "location": _LOCATION,
-    }
+    # Transform short model names to full Vertex Resource IDs
+    # e.g. "gemini-2.5-flash" -> "projects/PROJECT/locations/LOCATION/publishers/google/models/gemini-2.5-flash"
+    
+    def _to_vertex_id(model_name):
+        if model_name.startswith("projects/"): return model_name
+        return f"projects/{_PROJECT}/locations/{_LOCATION}/publishers/google/models/{model_name}"
+
+    LIVE_MODEL = _to_vertex_id(LIVE_MODEL)
+    INTERNAL_MODEL = _to_vertex_id(INTERNAL_MODEL)
 
 
 
@@ -108,7 +113,6 @@ def create_search_agent(callbacks):
         instruction="You are a search specialist. Search Google for information relevant to the user's request. Output a detailed summary of the key findings. Do not check memory.",
         tools=[google_search],
         output_key="search_results",
-        **HOST_CONFIG,
         **callbacks,
     )
 
@@ -119,14 +123,8 @@ def create_analysis_agent(tools, callbacks):
         instruction="You are a research analyst. The message you receive contains search results. Synthesize this information into a final, comprehensive answer. If the search results are empty, say 'No information found'.",
         tools=tools,
         output_key="draft_answer",
-        **HOST_CONFIG,
         **callbacks,
     )
-
-
-class AloraAgent(Agent):
-    """Custom agent class for Alora to avoid 'App name mismatch' warnings from the runner."""
-    pass
 
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
 def create_root_agent(memory_service, use_mcp_tools: bool = True):
@@ -168,7 +166,6 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     safety_and_compliance_agent = Agent(
         name="SafetyAndComplianceAgent",
         model=INTERNAL_MODEL,
-        **HOST_CONFIG,
         instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
         output_key="critique",
         **individual_agent_callbacks,
@@ -177,7 +174,6 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     knn_validator_agent = Agent(
         name="KnnValidatorAgent",
         model=INTERNAL_MODEL,
-        **HOST_CONFIG,
         instruction="Use the knn_validation_tool to get a confidence score for the text in the 'draft_answer' session state key. Output only the final confidence score as a number.",
         tools=[knn_validation_tool],
         output_key="confidence",
@@ -192,7 +188,6 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     reviser_agent = Agent(
         name="ReviserAgent",
         model=INTERNAL_MODEL,
-        **HOST_CONFIG,
         instruction="Revise the text in 'draft_answer' based on the feedback in 'critique' to create an improved version. Overwrite the 'draft_answer' with the new version.",
         output_key="draft_answer",
         **individual_agent_callbacks,
@@ -209,7 +204,6 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     session_summarizer_agent = Agent(
         name="SessionSummarizerAgent",
         model="gemini-2.5-flash",
-        **HOST_CONFIG,
         instruction="Review the conversation history. Check the output from 'DecisionAgent'. If it says 'VALIDATION_PASSED', you MUST accept the 'draft_answer' and present it to the user as your final answer. Do not hallucinate a refusal. If it says 'VALIDATION_FAILED', inform the user that a high-confidence answer could not be found.",
         tools=[save_memory_tool],
         output_key="final_answer",
@@ -235,7 +229,6 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     intelligence_center_agent = Agent(
         name="IntelligenceCenterAgent",
         model=INTERNAL_MODEL,
-        **HOST_CONFIG,
         instruction=(
             "You are the Intelligence Center. Your goal is to answer the user's question efficiently.\n"
             "1. ALWAYS checks long-term memory first using `recall_memory`.\n"
@@ -251,10 +244,9 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     )
 
     # Finally, create and return the root agent
-    root_agent = AloraAgent(
+    root_agent = Agent(
         name="OrchestratorAgent",
         model=LIVE_MODEL,
-        **HOST_CONFIG,
         description="The central AI co-pilot for the vehicle, Alora.",
         instruction=(
             "You are Alora, the friendly and helpful AI co-pilot for the vehicle.\n"
