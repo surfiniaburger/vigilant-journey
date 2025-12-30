@@ -84,11 +84,18 @@ async def initialize_services():
 
     # Initialize Firebase Admin SDK
     if not firebase_admin._apps:
-        firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID", "studio-l13dd")
+        # Use explicit env var, fallback to GCP project, or Error
+        firebase_project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        if not firebase_project_id:
+             # Fallback for local dev if not set (optional, or raise error)
+             logging.warning("FIREBASE_PROJECT_ID not set, defaulting to 'milky-way' (User Requested) but this may fail if credentials mismatch.")
+             firebase_project_id = "milky-way"
+        
+        logging.info(f"Initializing Firebase Admin SDK for project '{firebase_project_id}'...")
         firebase_admin.initialize_app(credentials.ApplicationDefault(), {
             'projectId': firebase_project_id,
         })
-        print(f"Firebase Admin SDK initialized for project '{firebase_project_id}'.")
+        logging.info(f"Firebase Admin SDK initialized.")
 
     # --- Database Connection Setup ---
     storage_type = os.environ.get("SESSION_STORAGE", "mongo")
