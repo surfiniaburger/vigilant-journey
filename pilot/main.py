@@ -271,7 +271,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins for development
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "https://vigilant-journey--gem-creator.us-central1.hosted.app",
+        "https://gem-creator.web.app",
+        "https://gem-creator.firebaseapp.com",
+    ], # explicit origins required for credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
