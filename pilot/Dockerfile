@@ -47,4 +47,4 @@ COPY . .
 
 # Command to run the Gunicorn server with Uvicorn workers.
 # This is a robust way to run an ASGI app in production.
-CMD ["/app/.venv/bin/ddtrace-run", "/app/.venv/bin/gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+CMD ["/app/.venv/bin/gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
