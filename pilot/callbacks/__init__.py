@@ -109,7 +109,7 @@ async def security_check_callback(
         return None
 
     # Use Model Armor for sanitization
-    sanitization_result = sanitize_prompt_with_model_armor(user_prompt)
+    sanitization_result = await sanitize_prompt_with_model_armor(user_prompt)
     
     if not sanitization_result.get("is_safe"):
         reason = sanitization_result.get("reason", "unspecified security concern")
