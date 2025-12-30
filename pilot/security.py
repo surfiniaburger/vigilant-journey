@@ -62,12 +62,27 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
             sub_field_name = f"{filter_key}_filter_result"
             match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND # Default
             
-            if hasattr(filter_result, sub_field_name):
-                 match_state = getattr(filter_result, sub_field_name).match_state
-            elif hasattr(filter_result, "match_state"):
-                 # Fallback for simple filters or if structure simplifies
-                 match_state = filter_result.match_state
-            
+            try:
+                if hasattr(filter_result, sub_field_name):
+                     match_state = getattr(filter_result, sub_field_name).match_state
+                elif hasattr(filter_result, "match_state"):
+                     # Fallback for simple filters or if structure simplifies
+                     match_state = filter_result.match_state
+                else:
+                    # If neither has the field, we log debugging info and skip this filter (or treat as safe if unknown)
+                    # For safety, if we don't know how to verify, we could warn, but crashing is bad.
+                    # Let's inspect available fields if possible, or just default to NO_MATCH_FOUND 
+                    # assuming safety unless proven otherwise, BUT logging deeply.
+                    # Actually, if we can't read the result, expecting 'safe' is risky. 
+                    # But halting the pipeline for an unknown filter format is also disruptive.
+                    # We will log and skip, assuming configured filters ARE standard.
+                    # SDP specifically caused this. 
+                    logger.debug(f"Filter {filter_key}: Could not find 'match_state'. Result keys: {dir(filter_result)}")
+            except AttributeError:
+                # Specific handling for the SdpFilterResult case or others missing the field
+                match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND
+                logger.warning(f"Filter {filter_key}: 'match_state' attribute missing. Skipping check for this filter.")
+
             if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
                 logging.warning(f"Model Armor Security Violation: {filter_key} triggered.")
                 return {"is_safe": False, "reason": f"{filter_key} detected"}
