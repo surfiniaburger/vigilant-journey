@@ -10,7 +10,7 @@ from google.cloud import modelarmor_v1
 logger = logging.getLogger(__name__)
 
 # --- Model Armor Configuration ---
-MODEL_ARMOR_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "us-central1")
+MODEL_ARMOR_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 MODEL_ARMOR_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 MODEL_ARMOR_TEMPLATE_ID = "alora-ma-template" # As per the user's example
 
@@ -44,8 +44,8 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
     """
     client = get_model_armor_client()
     if not client:
-        logging.error("Model Armor client is not available. Bypassing security check.")
-        return {"is_safe": True, "reason": "Client unavailable"}
+        logging.error("Model Armor client is not available. Failing closed for security.")
+        return {"is_safe": False, "reason": "Client unavailable"}
 
     try:
         user_prompt_data = modelarmor_v1.DataItem(text=prompt)
@@ -55,12 +55,27 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
         # Await the async call
         response = await client.sanitize_user_prompt(request=request)
 
-        if response.sanitization_result.filter_results["pi_and_jailbreak"].pi_and_jailbreak_filter_result.match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
-            return {"is_safe": False, "reason": "PI/Jailbreak detected"}
+        # Iterate through all configured filters (PI/Jailbreak, Malicious URI, RAI, SDP, etc.)
+        for filter_key, filter_result in response.sanitization_result.filter_results.items():
+            # Check specific sub-result match_state using key-based lookup (e.g. pi_and_jailbreak -> pi_and_jailbreak_filter_result)
+            # This handles the nested structure seen in previous revisions.
+            sub_field_name = f"{filter_key}_filter_result"
+            match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND # Default
+            
+            if hasattr(filter_result, sub_field_name):
+                 match_state = getattr(filter_result, sub_field_name).match_state
+            elif hasattr(filter_result, "match_state"):
+                 # Fallback for simple filters or if structure simplifies
+                 match_state = filter_result.match_state
+            
+            if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
+                logging.warning(f"Model Armor Security Violation: {filter_key} triggered.")
+                return {"is_safe": False, "reason": f"{filter_key} detected"}
+
         return {"is_safe": True, "reason": "Passed security check"}
     except GoogleAPICallError as e:
         logging.error(f"Model Armor API call failed: {e}", exc_info=True)
-        # Fail open or closed? For security, failing closed is safer.
+        # Fail closed is safer.
         return {"is_safe": False, "reason": f"API Error: {e}"}
     except Exception as e:
         logging.error(f"An unexpected error occurred during prompt sanitization: {e}", exc_info=True)

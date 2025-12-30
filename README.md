@@ -97,7 +97,7 @@ cd pilot
 # Run with ddtrace wrapper
 export DD_SERVICE=pilot
 export DD_ENV=local
-uv run ddtrace-run uvicorn main:app --host 0.0.0.0 --port 8080
+uv run ddtrace-run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 ### Evaluation Suite
