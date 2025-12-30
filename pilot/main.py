@@ -261,8 +261,15 @@ async def client_to_agent_messaging(websocket, live_request_queue):
 async def lifespan(app: FastAPI):
     """Initializes the agent runner when the app starts."""
     global runner
+    print("DEBUG: Entering lifespan...")
     if os.environ.get("APP_ENV") != "test":
-        runner = await initialize_services()
+        print("DEBUG: Calling initialize_services...")
+        try:
+            runner = await initialize_services()
+            print("DEBUG: initialize_services completed.")
+        except Exception as e:
+            print(f"ERROR: initialize_services failed: {e}")
+            raise e
     yield
 
 app = FastAPI(lifespan=lifespan)
