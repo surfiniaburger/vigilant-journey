@@ -12,6 +12,8 @@ env:
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   - variable: VITE_API_KEY
-    secret: VITE_API_KEY
+    secret: API_KEY
   - variable: VITE_GOOGLE_MAPS_API_KEY
     secret: VITE_GOOGLE_MAPS_API_KEY
+  - variable: VITE_BACKEND_URL
+    secret: BACKEND_URL
