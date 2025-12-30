@@ -49,6 +49,6 @@ ENV SESSION_STORAGE=memory
 # Copy the rest of the application source code
 COPY . .
 
-# Command to run the Gunicorn server with Uvicorn workers.
-# This is a robust way to run an ASGI app in production.
-CMD ["/app/.venv/bin/gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+# Command to run Uvicorn directly.
+# This avoids Gunicorn worker scaling issues and protocol mismatches in Cloud Run.
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
