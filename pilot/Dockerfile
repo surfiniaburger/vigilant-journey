@@ -4,6 +4,9 @@ FROM python:3.12-slim
 # Use bash and exit on pipeline failures
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Ensure python logs are unbuffered
+ENV PYTHONUNBUFFERED=1
+
 # Install uv, a modern Python package installer, from its official release
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
