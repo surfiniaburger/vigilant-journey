@@ -5,6 +5,7 @@ from google.adk.tools.tool_context import ToolContext
 from google.adk.tools.base_tool import BaseTool
 from google.adk.models import LlmRequest, LlmResponse
 from google.genai import types as genai_types
+from google.genai.types import Content, Part
 from security import sanitize_prompt_with_model_armor
 import json
 
