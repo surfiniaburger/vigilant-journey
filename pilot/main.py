@@ -78,8 +78,8 @@ def get_memory_service():
 async def initialize_services():
     """Initializes the services needed for the agent."""
     global _memory_service # NEW: Declare that we are modifying the global variable
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gem-creator")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
     if not all([project_id, location]):
         raise ValueError(
             "Missing one or more required Google Cloud environment variables: "
