@@ -44,6 +44,7 @@ RUN uv venv && \
 
 # Add the virtual environment's bin directory to the system's PATH
 ENV PATH="/app/.venv/bin:$PATH"
+ENV SESSION_STORAGE=memory
 
 # Copy the rest of the application source code
 COPY . .

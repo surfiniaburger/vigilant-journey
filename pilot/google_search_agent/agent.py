@@ -109,6 +109,11 @@ def create_analysis_agent(tools, callbacks):
         **callbacks,
     )
 
+
+class AloraAgent(Agent):
+    """Custom agent class for Alora to avoid 'App name mismatch' warnings from the runner."""
+    pass
+
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
 def create_root_agent(memory_service, use_mcp_tools: bool = True):
     """

@@ -61,7 +61,7 @@ if os.environ.get("GOOGLE_CLOUD_PROJECT"):
     for key in ("GOOGLE_API_KEY", "GEMINI_API_KEY"):
         os.environ.pop(key, None)
 
-APP_NAME = "Alora"
+APP_NAME = "agents"
 
 # --- NEW: Define a global placeholder for the memory service ---
 _memory_service = None
