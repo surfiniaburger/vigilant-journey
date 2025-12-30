@@ -137,27 +137,22 @@ Return ONLY valid JSON. DO NOT CHAT. DO NOT ADD MARKDOWN formatting:
 
     // Helper to robustly extract the first valid JSON object
     const extractJSON = (str: string): any => {
-      const startIndex = str.indexOf('{');
-      if (startIndex === -1) throw new Error("No JSON object found");
+      try {
+        const startIndex = str.indexOf('{');
+        const endIndex = str.lastIndexOf('}');
 
-      let braceCount = 0;
-      let endIndex = -1;
-
-      for (let i = startIndex; i < str.length; i++) {
-        if (str[i] === '{') braceCount++;
-        else if (str[i] === '}') {
-          braceCount--;
-          if (braceCount === 0) {
-            endIndex = i;
-            break;
-          }
+        if (startIndex !== -1 && endIndex !== -1) {
+          const jsonStr = str.substring(startIndex, endIndex + 1);
+          return JSON.parse(jsonStr);
         }
+        return JSON.parse(str);
+      } catch (e) {
+        // If parsing fails, check if it's a security refusal (plain text)
+        if (str.length > 0 && !str.includes("{")) {
+          throw new Error(`Response format error (Security/Text): ${str.substring(0, 100)}...`);
+        }
+        throw new Error(`No JSON object found. Raw: ${str.substring(0, 50)}...`);
       }
-
-      if (endIndex === -1) throw new Error("Malformed JSON: No closing brace");
-
-      const jsonStr = str.substring(startIndex, endIndex + 1);
-      return JSON.parse(jsonStr);
     };
 
     return extractJSON(text) as AnalysisResult;

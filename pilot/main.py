@@ -287,6 +287,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://localhost:3000",
         "http://localhost:8080",
         "https://vigilant-journey--gem-creator.us-central1.hosted.app",
         "https://gem-creator.web.app",
