@@ -203,7 +203,7 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
 
     session_summarizer_agent = Agent(
         name="SessionSummarizerAgent",
-        model="gemini-2.5-flash",
+        model=INTERNAL_MODEL,
         instruction="Review the conversation history. Check the output from 'DecisionAgent'. If it says 'VALIDATION_PASSED', you MUST accept the 'draft_answer' and present it to the user as your final answer. Do not hallucinate a refusal. If it says 'VALIDATION_FAILED', inform the user that a high-confidence answer could not be found.",
         tools=[save_memory_tool],
         output_key="final_answer",
