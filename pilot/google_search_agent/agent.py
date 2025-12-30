@@ -24,6 +24,7 @@ from callbacks import (
     before_agent_callback,
     before_model_callback,
     before_tool_callback,
+    security_check_callback,
 )
 from .knn_validator import knn_validation_tool
 from .memory_tool import create_memory_tools

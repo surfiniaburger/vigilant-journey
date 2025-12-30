@@ -25,6 +25,7 @@ dependencies = [
     { name = "google-auth-oauthlib" },
     { name = "google-cloud-aiplatform" },
     { name = "google-cloud-logging" },
+    { name = "google-cloud-modelarmor" },
     { name = "google-cloud-secret-manager" },
     { name = "google-cloud-storage" },
     { name = "google-generativeai" },
@@ -87,6 +88,7 @@ requires-dist = [
     { name = "google-auth-oauthlib" },
     { name = "google-cloud-aiplatform" },
     { name = "google-cloud-logging" },
+    { name = "google-cloud-modelarmor" },
     { name = "google-cloud-secret-manager" },
     { name = "google-cloud-storage" },
     { name = "google-generativeai", specifier = ">=0.8.5" },
@@ -1039,6 +1041,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/14/9c/d42ecc94f795a6545930e5f846a7ae59ff685ded8bc086648dd2bee31a1a/google_cloud_logging-3.12.1.tar.gz", hash = "sha256:36efc823985055b203904e83e1c8f9f999b3c64270bcda39d57386ca4effd678", size = 289569, upload-time = "2025-04-22T20:50:24.71Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/41/f8a3197d39b773a91f335dee36c92ef26a8ec96efe78d64baad89d367df4/google_cloud_logging-3.12.1-py2.py3-none-any.whl", hash = "sha256:6817878af76ec4e7568976772839ab2c43ddfd18fbbf2ce32b13ef549cd5a862", size = 229466, upload-time = "2025-04-22T20:50:23.294Z" },
+]
+
+[[package]]
+name = "google-cloud-modelarmor"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/91/b7d05ebec528f6f217a1a5374c1965f7521a61b12c57982aee3468d62484/google_cloud_modelarmor-0.3.0.tar.gz", hash = "sha256:1373f354f391ae51a9e970b25688018de4943e3aaf5cfab1dce498433f40784a", size = 152915, upload-time = "2025-10-20T14:56:32.235Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/72/b819cc7e41806a97a6bf35b2d65a2e36d6df025e67e5c5db1fe827674fac/google_cloud_modelarmor-0.3.0-py3-none-any.whl", hash = "sha256:806fa3f65bcb22c6c2fa4519557e80bdbbed2ad4b452c89bfad6778d112b9933", size = 134151, upload-time = "2025-10-20T14:53:11.035Z" },
 ]
 
 [[package]]

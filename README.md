@@ -53,21 +53,60 @@ We re-architected the system into a **Predictive** "Intelligence Center". The ag
 
 ### 🔄 The Metamorphosis
 This shift transforms the agent from a simple tool-user to a state-aware orchestrator.
+### 👁️ Phase 3: Multimodal Co-Pilot ("Alora")
+We further evolved the architecture to handle **Vision** capabilities while maintaining the strict tool definitions of the backend agents.
+*   **The Challenge**: The `IntelligenceCenterAgent` and its tools (Search, Research) are text-based and "blind" to images.
+*   **The Flow**: The **Orchestrator (Alora)** acts as the vision layer.
+    1.  **See**: Alora receives the user's image + query.
+    2.  **Describe**: Alora generates a high-fidelity text description of the image (colors, objects, text).
+    3.  **Delegate**: Alora passes this *description* + the original query to the `IntelligenceCenterAgent`.
+    4.  **Solve**: The backend agents research the *concept* of the image (e.g., specific car part) without needing raw pixel access.
+
 ![Metamorphosis](docs/architecture/4_metamorphosis.png)
 
-## 4. Current Limitations (The "Honest" Part)
+## 4. Security & Guardrails (Model Armor) 🛡️
+We integrated **Google Cloud Model Armor** to sanitize inputs before they ever reach our agent logic.
+*   **Mechanism**: A `before_model_callback` intercepts every request.
+*   **Filters**: We use the `alora-ma-template` which enforces:
+    *   **PII Detection**: Blocks sharing sensitive personal info.
+    *   **Jailbreak/Attack**: Prevents prompt injection attempts.
+    *   **Malicious URIs**: Filters unsafe links.
+*   **Result**: If a thread is detected, the prompt is scrubbed and replaced with a system refusal instruction, protecting the LLM context.
+
+## 5. Current Limitations (The "Honest" Part)
 *   **Monte Carlo Tree Search (MCTS)**: While intended to be part of the advanced planning capabilities, the MCTS component is currently **not fully functional** and disabled in the active evaluation path. We are relying on the deterministic `SequentialAgent` flow for now.
 *   **Dependency Speed**: The `sentence-transformers` library (used for similarity scoring) is heavy. We implemented a robust fallback to a mock scorer if the download times out, ensuring the pipeline doesn't flake due to network issues, but this means local runs might sometimes skip semantic verification if the environment isn't cached.
 
 ## How to Run
+
+### Local Server Development
+You can run the pilot server locally for development.
+
+**Option 1: Standard Run (Fast & Simple)**
+Use this for quick logic iteration.
+```bash
+cd pilot
+# Run via Uvicorn module
+uv run python -m uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+**Option 2: With Datadog Tracing (Full Observability)**
+Use this to debug traces and LLM Observability spans locally.
+```bash
+cd pilot
+# Run with ddtrace wrapper
+export DD_SERVICE=pilot
+export DD_ENV=local
+uv run ddtrace-run uvicorn main:app --host 0.0.0.0 --port 8080
+```
+
+### Evaluation Suite
 ```bash
 # Full Suite (Tiers 1-3)
 cd pilot
-# Run the pipeline (ensure evaluation/test_evaluation_pipeline.py exists)
 uv run python -m pytest evaluation/test_evaluation_pipeline.py
 ```
 *Environment variables `AGENT_MODEL=gemini-2.5-flash` and `INTERNAL_MODEL=gemini-2.5-flash` should be set (or configured in .env).*
 
 
 
-https://pilot-v1-684569726907.us-central1.run.app
