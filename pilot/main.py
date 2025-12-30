@@ -30,7 +30,12 @@ from google.adk.memory import VertexAiMemoryBankService
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from callbacks import log_queue_var
+
+# ... (Previous code)
+
+
 
 #from google_search_agent.agent import root_agent
 
@@ -315,11 +320,18 @@ class AnalyzeResponse(BaseModel):
     text: str # The main analysis text
     # We could add more fields later like tools used, etc.
 
+from fastapi.responses import FileResponse, StreamingResponse
+from callbacks import log_queue_var
+
+# ... (Previous code)
+
 @app.post("/analyze")
 async def analyze_endpoint(request: AnalyzeRequest):
     """
-    Stateless analysis endpoint.
-    Creates a temporary session, runs the agent for one turn, and returns the result.
+    Stateless analysis endpoint (STREAMING).
+    Streams NDJSON:
+    - {"log": "Status update..."}
+    - {"result": {"text": "Final Analysis"}}
     """
     if not runner:
         raise HTTPException(status_code=503, detail="Agent runner not initialized")
@@ -332,7 +344,6 @@ async def analyze_endpoint(request: AnalyzeRequest):
         id=session_id
     )
 
-    # 2. Construct Content
     parts = [Part.from_text(text=request.query)]
     if request.image and request.mime_type:
         try:
@@ -342,53 +353,97 @@ async def analyze_endpoint(request: AnalyzeRequest):
              raise HTTPException(status_code=400, detail=f"Invalid base64 image: {str(e)}")
     
     content = Content(role="user", parts=parts)
-
-    # 3. Setup Queue and Config
-    live_request_queue = LiveRequestQueue()
-    live_request_queue.send_content(content=content)
-    
-    # We want a single turn response
     run_config = RunConfig(
         response_modalities=["TEXT"],
         session_resumption=types.SessionResumptionConfig()
     )
 
-    # 4. Run the Agent
-    # We need to run it in a way that we collect the output
-    accumulated_text = ""
-    
-    # 4. Run the Agent using run_async (standard generation) instead of run_live (streaming/audio)
-    # This allows using models like gemini-2.5-flash that aren't Live API compatible yet.
-    accumulated_text = ""
-    
-    try:
-        # Note: run_async signature might differ slightly, adapting from benchmark_prompts.py
-        # runner.run_async(session_id=..., user_id=..., new_message=..., run_config=...)
-        async for event in runner.run_async(
-            session_id=session_id,
-            user_id="anonymous_web_user",
-            new_message=content,
-            run_config=run_config
-        ):
-            # Check for text parts
-            if event.content and event.content.parts:
-                for part in event.content.parts:
-                    if part.text:
-                        accumulated_text += part.text
-            
-            # Stop if turn is complete (though run_async usually handles one turn)
-            if event.turn_complete:
-                break
-                
-    except Exception as e:
-        print(f"Error during analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Cleanup
-        # live_request_queue.close() # Not needed for run_async
-        pass # await runner.session_service.delete_session(session_id)
+    # Setup Queues
+    log_queue = asyncio.Queue()
+    # token = log_queue_var.set(log_queue) # REMOVED from here
 
-    return AnalyzeResponse(text=accumulated_text)
+    async def event_generator():
+        token = log_queue_var.set(log_queue) # ADDED here (inside generator context)
+        try:
+            # --- ROBUST IMPLEMENTATION ---
+            # We spawn a producer task that pushes (Type, Data) to the queue.
+            # Main loop yields from queue.
+            
+            output_queue = asyncio.Queue()
+            
+            async def agent_producer():
+                try:
+                    async for event in runner.run_async(
+                            session_id=session_id,
+                            user_id="anonymous_web_user",
+                            new_message=content,
+                            run_config=run_config
+                    ):
+                        if event.content and event.content.parts:
+                            for part in event.content.parts:
+                                if part.text:
+                                    output_queue.put_nowait(("TEXT", part.text))
+                except Exception as e:
+                    output_queue.put_nowait(("ERROR", str(e)))
+                finally:
+                    output_queue.put_nowait(("DONE", None))
+
+            producer = asyncio.create_task(agent_producer())
+            final_text = ""
+            
+            try:
+                while True:
+                    # 1. Drain pending logs immediately
+                    while not log_queue.empty():
+                        msg = log_queue.get_nowait()
+                        yield json.dumps(msg) + "\n"
+
+                    # 2. Wait for Next Event (Log or Token)
+                    log_task = asyncio.create_task(log_queue.get())
+                    out_task = asyncio.create_task(output_queue.get())
+                    
+                    done, pending = await asyncio.wait(
+                        [log_task, out_task], 
+                        return_when=asyncio.FIRST_COMPLETED
+                    )
+
+                    for task in done:
+                        if task == log_task:
+                            # Got a log
+                            msg = task.result()
+                            yield json.dumps(msg) + "\n"
+                            out_task.cancel() # Cancel wait on output
+                        elif task == out_task:
+                            # Got output
+                            type_, val = task.result()
+                            log_task.cancel() # Cancel wait on log
+
+                            if type_ == "TEXT":
+                                final_text += val
+                            elif type_ == "ERROR":
+                                yield json.dumps({"log": f"❌ Error: {val}"}) + "\n"
+                            elif type_ == "DONE":
+                                # Final Result
+                                yield json.dumps({"result": {"text": final_text}}) + "\n"
+                                return
+
+            except Exception as e:
+                yield json.dumps({"log": f"❌ Stream Error: {e}"}) + "\n"
+            finally:
+                # Cleanup producer if it's still running
+                try:
+                    producer.cancel()
+                except:
+                    pass
+
+        finally:
+            try:
+                log_queue_var.reset(token)
+            except Exception as e:
+                print(f"Warning: Failed to reset log_queue_var: {e}")
+            # await runner.session_service.delete_session(session_id)
+
+    return StreamingResponse(event_generator(), media_type="application/x-ndjson")
 
 
 @app.get("/")

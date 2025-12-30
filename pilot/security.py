@@ -6,13 +6,12 @@ from typing import Dict, Any, Optional
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import modelarmor_v1
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
 # --- Model Armor Configuration ---
-MODEL_ARMOR_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
-MODEL_ARMOR_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-MODEL_ARMOR_TEMPLATE_ID = "alora-ma-template" # As per the user's example
+# Config is now deferred to function scope to ensure env vars are loaded
 
 @lru_cache(maxsize=1)
 def get_model_armor_client() -> Optional[modelarmor_v1.ModelArmorAsyncClient]:
@@ -22,8 +21,11 @@ def get_model_armor_client() -> Optional[modelarmor_v1.ModelArmorAsyncClient]:
     """
     try:
         logging.info("Initializing ModelArmorAsyncClient...")
+        load_dotenv() # Ensure env vars are loaded
+        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+        
         # The endpoint needs to be specified for the REST transport
-        client_options = {"api_endpoint": f"modelarmor.{MODEL_ARMOR_LOCATION}.rep.googleapis.com"}
+        client_options = {"api_endpoint": f"modelarmor.{location}.rep.googleapis.com"}
         # Use AsyncClient. Transport 'rest' might not be available for Async, defaults to grpc-async usually.
         # But let's try allowing default transport or specify 'grpc_async' if needed. 
         # Safest is to let library decide or stick to rest if supported, but typically async prefers grpc.
@@ -48,8 +50,12 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
         return {"is_safe": False, "reason": "Client unavailable"}
 
     try:
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gem-creator")
+        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+        template_id = "alora-ma-template"
+
         user_prompt_data = modelarmor_v1.DataItem(text=prompt)
-        template_path = f"projects/{MODEL_ARMOR_PROJECT_ID}/locations/{MODEL_ARMOR_LOCATION}/templates/{MODEL_ARMOR_TEMPLATE_ID}"
+        template_path = f"projects/{project_id}/locations/{location}/templates/{template_id}"
         request = modelarmor_v1.SanitizeUserPromptRequest(name=template_path, user_prompt_data=user_prompt_data)
         
         # Await the async call

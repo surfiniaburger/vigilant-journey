@@ -78,9 +78,23 @@ Generate a stunning visual that captures the essence of the topic through imager
   }
 };
 
-export const analyzeImageRegions = async (query: string, imageBase64: string): Promise<AnalysisResult> => {
+export const analyzeImageRegions = async (query: string, imageBase64: string, onLog?: (message: string) => void): Promise<AnalysisResult> => {
 
   console.log(`Sending analysis request to Pilot: ${BACKEND_URL}/analyze`);
+
+  // ... (Prompt construction is unchanged, skipping lines 85-113 for brevity in this replacement if possible? No, replace_file_content needs contiguous block. I'll include the prompt to be safe or target the body.)
+  // Actually, I can target from line 115 (try block start) to 203.
+  // But I also need to update the signature at line 81.
+  // So I will start at line 81.
+
+  // Wait, I can only replace one block.
+  // I will replace the signature AND the entire body.
+  // That is huge.
+  // Alternatively, I can do it in two chunks using `multi_replace`.
+  // Chunk 1: Signature.
+  // Chunk 2: The try/catch block logic.
+
+
 
   const prompt = `
 Analyze this image about "${query}" and identify interesting regions to annotate.
@@ -130,35 +144,82 @@ Return ONLY valid JSON. DO NOT CHAT. DO NOT ADD MARKDOWN formatting:
       throw new Error(`Pilot Backend Error (${response.status}): ${errorText}`);
     }
 
-    const data = await response.json();
-    const text = data.text;
+    if (!response.body) {
+      throw new Error("No response body received from Pilot.");
+    }
 
-    if (!text) throw new Error("No analysis received from Pilot.");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalResult: AnalysisResult | null = null;
 
-    // Helper to robustly extract the first valid JSON object
-    const extractJSON = (str: string): any => {
-      try {
-        const startIndex = str.indexOf('{');
-        const endIndex = str.lastIndexOf('}');
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
 
-        if (startIndex !== -1 && endIndex !== -1) {
-          const jsonStr = str.substring(startIndex, endIndex + 1);
-          return JSON.parse(jsonStr);
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk;
+
+      let boundary = buffer.lastIndexOf('\n');
+      if (boundary === -1) continue;
+
+      const completeData = buffer.substring(0, boundary);
+      buffer = buffer.substring(boundary + 1);
+
+      const lines = completeData.split('\n');
+      for (const line of lines) {
+        if (line.trim() === '') continue;
+        try {
+          const data = JSON.parse(line);
+          if (data.log) {
+            console.log("Pilot Log:", data.log);
+            if (onLog) onLog(data.log);
+          } else if (data.result) {
+            console.log("Pilot Result (Raw):", data.result);
+            if (data.result.text) {
+              finalResult = extractJSON(data.result.text) as AnalysisResult;
+            } else {
+              finalResult = data.result as AnalysisResult;
+            }
+          } else {
+            // Fallback for direct result
+            console.log("Unknown data:", data);
+            finalResult = data as AnalysisResult;
+          }
+        } catch (e) {
+          console.warn("Skipping invalid JSON line:", line);
         }
-        return JSON.parse(str);
-      } catch (e) {
-        // If parsing fails, check if it's a security refusal (plain text)
-        if (str.length > 0 && !str.includes("{")) {
-          throw new Error(`Response format error (Security/Text): ${str.substring(0, 100)}...`);
-        }
-        throw new Error(`No JSON object found. Raw: ${str.substring(0, 50)}...`);
       }
-    };
+    }
 
-    return extractJSON(text) as AnalysisResult;
+    if (!finalResult) {
+      throw new Error("Stream ended without a final analysis result.");
+    }
+
+    return finalResult;
 
   } catch (error) {
     console.error("Pilot Analysis Error:", error);
     throw error;
+  }
+};
+
+// Helper to robustly extract the first valid JSON object
+const extractJSON = (str: string): any => {
+  try {
+    const startIndex = str.indexOf('{');
+    const endIndex = str.lastIndexOf('}');
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      const jsonStr = str.substring(startIndex, endIndex + 1);
+      return JSON.parse(jsonStr);
+    }
+    return JSON.parse(str);
+  } catch (e) {
+    // If parsing fails, check if it's a security refusal (plain text)
+    if (str.length > 0 && !str.includes("{")) {
+      throw new Error(`Response format error (Security/Text): ${str.substring(0, 100)}...`);
+    }
+    throw new Error(`No JSON object found. Raw: ${str.substring(0, 50)}...`);
   }
 };

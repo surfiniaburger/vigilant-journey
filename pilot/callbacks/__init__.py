@@ -1,4 +1,6 @@
 import logging
+import asyncio
+import contextvars
 from typing import Optional, Dict, Any
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools.tool_context import ToolContext
@@ -13,6 +15,20 @@ import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# --- STREAMING LOGS CONTEXT ---
+# This ContextVar holds the asyncio.Queue for the CURRENT request.
+# If set, callbacks will push user-friendly log messages to it.
+log_queue_var: contextvars.ContextVar[Optional[asyncio.Queue]] = contextvars.ContextVar("log_queue", default=None)
+
+def _emit_log(message: str):
+    """Helper to emit a log message to the current queue if available."""
+    queue = log_queue_var.get()
+    if queue:
+        # We push a dict that will be JSON-serialized later
+        try:
+            queue.put_nowait({"log": message})
+        except asyncio.QueueFull:
+            pass # Should not happen with unbounded queue
 
 async def after_agent_callback(callback_context: CallbackContext) -> None:
     """
@@ -44,8 +60,10 @@ async def after_agent_callback(callback_context: CallbackContext) -> None:
         session = getattr(invocation_ctx, 'session', None)
 
         if memory_service and session:
+            _emit_log("🧠 Consolidating Long-Term Memory...")
             await memory_service.add_session_to_memory(session)
             logger.info(f"*** Successfully triggered memory generation for session: {session.id} ***")
+            _emit_log("✅ Memory Updated")
         else:
             logger.warning("*** Memory service or session not found in invocation context. Cannot save to memory. ***")
 
@@ -56,7 +74,24 @@ async def after_agent_callback(callback_context: CallbackContext) -> None:
 # --- The rest of your logging callbacks remain the same ---
 
 async def before_agent_callback(callback_context: CallbackContext) -> None:
-    logger.info(f"==> BEFORE AGENT: {callback_context.agent_name}")
+    agent_name = callback_context.agent_name
+    logger.info(f"==> BEFORE AGENT: {agent_name}")
+    
+    # Map Agent Names to User-Friendly Emojis/Text
+    if agent_name == "KnnValidatorAgent":
+        _emit_log("🏎️ Validating Terminology (Mercedes Jargon)...")
+    elif agent_name == "ReviserAgent":
+        _emit_log("✍️ Refining Response Tone...")
+    elif agent_name == "SessionSummarizerAgent":
+        _emit_log("📝 Summarizing Context...")
+    elif agent_name == "DeepResearchWorkflow":
+        _emit_log("📚 Conducting Deep Research...")
+    elif agent_name == "IntelligenceCenterAgent":
+        _emit_log("🧠 Routing Query via Intelligence Center...")
+    elif agent_name == "OrchestratorAgent":
+        _emit_log("🤖 Orchestrating Workflow...")
+    else:
+        _emit_log(f"🤖 Activating {agent_name}...")
 
 async def before_model_callback(callback_context: CallbackContext, llm_request: LlmRequest) -> None:
     logger.info(f"--> BEFORE MODEL call for {callback_context.agent_name}")
@@ -80,10 +115,11 @@ async def after_model_callback(callback_context: CallbackContext, llm_response: 
 
 async def before_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext) -> None:
     logger.info(f"---> BEFORE TOOL: Calling {tool.name} with args: {args}")
+    # Generic tool logging
+    _emit_log(f"🛠️ Using Tool: {tool.name}...")
 
 async def after_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict[str, Any]) -> None:
     logger.info(f"<--- AFTER TOOL: {tool.name} responded.")
-
 
 # Helper function (internal)
 async def security_check_callback(
@@ -116,6 +152,8 @@ async def security_check_callback(
         logger.debug("Skipping Model Armor check for internal context prompt.")
         return None
 
+    _emit_log("🛡️ Verifying Safety (Model Armor)...")
+
     # Use Model Armor for sanitization, await the result
     sanitization_result = await sanitize_prompt_with_model_armor(user_prompt)
     
@@ -125,6 +163,7 @@ async def security_check_callback(
             f"Model Armor blocked prompt in session {callback_context._invocation_context.session.id}. "
             f"Reason: '{reason}'. Prompt: '{user_prompt[:200]}...'"
         )
+        _emit_log(f"⛔️ Security Block: {reason}")
         return LlmResponse(
             content=Content(
                 parts=[Part(text="Your request could not be processed due to a security policy.")],
@@ -134,4 +173,5 @@ async def security_check_callback(
         )
     
     logger.info("Prompt passed Model Armor security check.")
+    _emit_log("✅ Safety Check Passed")
     return None
