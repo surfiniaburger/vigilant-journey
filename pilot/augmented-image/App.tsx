@@ -36,17 +36,7 @@ function App() {
   // Analysis phrase state
   const [analysisPhrase, setAnalysisPhrase] = useState(ANALYSIS_PHRASES[0]);
 
-  // Effect to cycle analysis phrases
-  // Effect to cycle analysis phrases - DISABLED for Real Streaming Logs
-  // useEffect(() => {
-  //   if (status !== 'analyzing') return;
-  //   let index = 0;
-  //   const interval = setInterval(() => {
-  //     index = (index + 1) % ANALYSIS_PHRASES.length;
-  //     setAnalysisPhrase(ANALYSIS_PHRASES[index]);
-  //   }, 1800);
-  //   return () => clearInterval(interval);
-  // }, [status]);
+
 
   const processSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;

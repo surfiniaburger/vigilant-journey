@@ -82,17 +82,7 @@ export const analyzeImageRegions = async (query: string, imageBase64: string, on
 
   console.log(`Sending analysis request to Pilot: ${BACKEND_URL}/analyze`);
 
-  // ... (Prompt construction is unchanged, skipping lines 85-113 for brevity in this replacement if possible? No, replace_file_content needs contiguous block. I'll include the prompt to be safe or target the body.)
-  // Actually, I can target from line 115 (try block start) to 203.
-  // But I also need to update the signature at line 81.
-  // So I will start at line 81.
 
-  // Wait, I can only replace one block.
-  // I will replace the signature AND the entire body.
-  // That is huge.
-  // Alternatively, I can do it in two chunks using `multi_replace`.
-  // Chunk 1: Signature.
-  // Chunk 2: The try/catch block logic.
 
 
 

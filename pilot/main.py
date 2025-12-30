@@ -320,8 +320,7 @@ class AnalyzeResponse(BaseModel):
     text: str # The main analysis text
     # We could add more fields later like tools used, etc.
 
-from fastapi.responses import FileResponse, StreamingResponse
-from callbacks import log_queue_var
+
 
 # ... (Previous code)
 
@@ -433,7 +432,7 @@ async def analyze_endpoint(request: AnalyzeRequest):
                 # Cleanup producer if it's still running
                 try:
                     producer.cancel()
-                except:
+                except Exception:
                     pass
 
         finally:
