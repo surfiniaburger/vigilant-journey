@@ -44,6 +44,23 @@ CONFIDENCE_THRESHOLD = 0.05
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
 INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
+# --- Authentication Configuration ---
+# If running in Cloud Run (GOOGLE_CLOUD_PROJECT is set), we implicitly configure for Vertex AI
+# by using the full resource path for the models.
+_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
+
+if _PROJECT and _LOCATION:
+    # Transform short model names to full Vertex Resource IDs
+    # e.g. "gemini-2.5-flash" -> "projects/PROJECT/locations/LOCATION/publishers/google/models/gemini-2.5-flash"
+    
+    def _to_vertex_id(model_name):
+        if model_name.startswith("projects/"): return model_name
+        return f"projects/{_PROJECT}/locations/{_LOCATION}/publishers/google/models/{model_name}"
+
+    LIVE_MODEL = _to_vertex_id(LIVE_MODEL)
+    INTERNAL_MODEL = _to_vertex_id(INTERNAL_MODEL)
+
 
 
 # --- Input Schema ---
@@ -108,11 +125,6 @@ def create_analysis_agent(tools, callbacks):
         output_key="draft_answer",
         **callbacks,
     )
-
-
-class AloraAgent(Agent):
-    """Custom agent class for Alora to avoid 'App name mismatch' warnings from the runner."""
-    pass
 
 # --- FACTORY FUNCTION FOR CREATING THE ROOT AGENT ---
 def create_root_agent(memory_service, use_mcp_tools: bool = True):

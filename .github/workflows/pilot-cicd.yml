@@ -103,5 +103,6 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/pilot/pilot:${{ github.sha }} \
             --region us-central1 \
             --platform managed \
+            --no-use-http2 \
             --allow-unauthenticated \
             --set-env-vars "DD_API_KEY=${{ secrets.DD_API_KEY }},DD_LLMOBS_ENABLED=1,DD_LLMOBS_ML_APP=alora,DD_SERVICE=pilot,DD_ENV=production,SESSION_STORAGE=memory,FIREBASE_PROJECT_ID=gem-creator,GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},GOOGLE_CLOUD_LOCATION=us-central1"
