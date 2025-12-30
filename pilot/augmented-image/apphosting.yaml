@@ -16,4 +16,4 @@ env:
   - variable: VITE_GOOGLE_MAPS_API_KEY
     secret: VITE_GOOGLE_MAPS_API_KEY
   - variable: VITE_BACKEND_URL
-    value: "https://pilot-684569726907.us-central1.run.app"
+    secret: BACKEND_URL
