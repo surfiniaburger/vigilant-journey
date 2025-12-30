@@ -81,7 +81,8 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
             except AttributeError:
                 # Specific handling for the SdpFilterResult case or others missing the field
                 match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND
-                logger.warning(f"Filter {filter_key}: 'match_state' attribute missing. Skipping check for this filter.")
+                # Downgraded to debug to avoid noise in CI
+                logger.debug(f"Filter {filter_key}: 'match_state' attribute missing. Skipping check for this filter.")
 
             if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
                 logging.warning(f"Model Armor Security Violation: {filter_key} triggered.")

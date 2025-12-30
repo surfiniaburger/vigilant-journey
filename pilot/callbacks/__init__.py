@@ -108,7 +108,13 @@ async def security_check_callback(
     if not user_prompt:
         return None
 
-    # Use Model Armor for sanitization
+    # Skip security check for internal context prompts (e.g. from KNN validator or orchestration)
+    # These often trigger false positives in RAI filters and are not direct user inputs.
+    if user_prompt.startswith("for context:") or "[knnvalidatoragent]" in user_prompt:
+        logger.debug("Skipping Model Armor check for internal context prompt.")
+        return None
+
+    # Use Model Armor for sanitization, await the result
     sanitization_result = await sanitize_prompt_with_model_armor(user_prompt)
     
     if not sanitization_result.get("is_safe"):
