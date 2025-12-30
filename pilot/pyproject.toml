@@ -41,6 +41,7 @@ dependencies = [
     "python-socketio",
     "requests",
     "scikit-learn>=1.7.2",
+    "google-cloud-modelarmor",
     "scipy",
     "sounddevice",
     "soundfile",

@@ -18,6 +18,12 @@ jobs:
       GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
       GOOGLE_CLOUD_LOCATION: us-central1
       AGENT_ENGINE_ID: ${{ secrets.AGENT_ENGINE_ID }}
+      # Datadog CI Visibility & Tracing
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
+      DD_CIVISIBILITY_ENABLED: true
+      DD_ENV: ci
+      DD_SERVICE: pilot-eval
+      
       # Use a standard multimodal model for evaluation as the live audio model
       # does not support the generateContent API used by the test runner.
       AGENT_MODEL: "gemini-2.5-flash"
@@ -71,8 +77,8 @@ jobs:
         # Install the package with test extras (pytest, sentence-transformers)
         uv pip install ".[test]"
         
-        # Run the evaluation pipeline
-        pytest evaluation/test_evaluation_pipeline.py -v
+        # Run the evaluation pipeline with Datadog Tracing
+        ddtrace-run pytest evaluation/test_evaluation_pipeline.py -v
 
     - name: Upload Evaluation Reports
       uses: actions/upload-artifact@v4
