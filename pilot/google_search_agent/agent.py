@@ -44,7 +44,9 @@ CONFIDENCE_THRESHOLD = 0.05
 LIVE_MODEL = os.getenv("AGENT_MODEL", "gemini-2.5-flash")
 INTERNAL_MODEL = os.getenv("INTERNAL_MODEL", "gemini-2.5-flash")
 
+
 # --- Authentication Configuration ---
+
 # If running in Cloud Run (GOOGLE_CLOUD_PROJECT is set), we implicitly configure for Vertex AI
 # by using the full resource path for the models.
 _PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
