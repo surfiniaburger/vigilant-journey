@@ -1,0 +1,61 @@
+flowchart TD
+    %% Nodes
+    Start(["🚀 Start: User Request"])
+    Orchestrator["🤖 Orchestrator Agent<br/>(Alora)"]
+    ModelArmor{"🛡️ Safety Check"}
+    Vision["👁️ Vision Analysis"]
+    
+    subgraph IntelligenceCenter ["🧠 Intelligence Center"]
+        Router["Intelligence Center Agent"]
+        MemoryCheck{"📚 Memory Hit?"}
+        Recall["Recall Long-Term Memory"]
+        
+        subgraph DeepResearch ["🔍 Deep Research Workflow"]
+            Search["🔎 Search Agent"]
+            Analysis["📊 Analysis Agent"]
+            Draft["📝 Draft Answer"]
+            
+            subgraph ValidationLoop ["🔄 Critique & Refine Loop"]
+                Validator["✅ Parallel Validator"]
+                Decision{"Is Valid?"}
+                Reviser["✍️ Reviser Agent"]
+            end
+            
+            Summarizer["📑 Session Summarizer"]
+        end
+    end
+    
+    FinalOutput(["🏁 Final JSON Output"])
+    SaveMemory[("💾 Vector DB")]
+
+    %% Flow
+    Start --> Orchestrator
+    Orchestrator --> ModelArmor
+    ModelArmor -- Unsafe --> EndRefusal([⛔ Refusal])
+    ModelArmor -- Safe --> Vision
+    Vision --> |"I see a turbocharger..."| Router
+    
+    Router --> MemoryCheck
+    MemoryCheck -- Yes --> Recall
+    Recall --> FinalOutput
+    
+    MemoryCheck -- No --> Search
+    Search --> |Google Results| Analysis
+    Analysis --> Draft
+    Draft --> Validator
+    Validator --> Decision
+    
+    Decision -- "Pass (Confidence > 0.8)" --> Summarizer
+    Decision -- "Fail / Critique" --> Reviser
+    Reviser --> Validator
+    
+    Summarizer --> SaveMemory
+    Summarizer --> FinalOutput
+    
+    %% Styles
+    style Orchestrator fill:#EEF,stroke:#333
+    style IntelligenceCenter fill:#EFE,stroke:#333
+    style DeepResearch fill:#FFE,stroke:#333
+    style ValidationLoop fill:#EEF,stroke:#333,stroke-dasharray: 5 5
+    style ModelArmor fill:#FDD,stroke:#F00
+    style FinalOutput fill:#DDF,stroke:#00F,stroke-width:2px

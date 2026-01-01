@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor User as 👤 User
+    participant Frontend as 📱 Augmented Canvas<br/>(React/Vite)
+    participant Backend as 🧠 Pilot Backend<br/>(Cloud Run)
+    participant Auth as 🛡️ Auth/Security<br/>(Vertex/Model Armor)
+    participant Alora as 🤖 Alora Agent<br/>(Orchestrator)
+
+    User->>Frontend: Uploads Image / Asks Question
+    activate Frontend
+    Frontend->>Frontend: Compresses Image (Blob)
+    Frontend->>Backend: POST /analyze {text, image}
+    activate Backend
+    
+    Backend->>Auth: Validate Credentials (Vertex AI)
+    Auth-->>Backend: OK
+    
+    Backend->>Alora: Invoke OrchestratorAgent
+    activate Alora
+    
+    Alora->>Auth: Security Check (Model Armor)
+    
+    alt Unsafe Content
+        Auth-->>Alora: BLOCK (Refusal)
+        Alora-->>Backend: Return Refusal JSON
+        Backend-->>Frontend: 400 Bad Request
+        Frontend-->>User: Show Error
+    else Safe Content
+        Auth-->>Alora: APPROVED
+        
+        Alora->>Alora: Analyze Image (Vision)
+        Alora->>Alora: Delegate to Intelligence Center
+        
+        note right of Alora: Detailed Agent & Tool<br/>Execution happens here<br/>(See Diagram 6)
+        
+        Alora-->>Backend: Stream Events (Logs)
+        Backend-->>Frontend: SSE/WebSocket Logs
+        
+        Alora-->>Backend: Final JSON Result
+        deactivate Alora
+        
+        Backend-->>Frontend: Return JSON {segments, facts}
+    end
+    
+    deactivate Backend
+    
+    Frontend->>Frontend: Parse JSON & Render Widgets
+    Frontend-->>User: Display Augmented Overlay
+    deactivate Frontend
