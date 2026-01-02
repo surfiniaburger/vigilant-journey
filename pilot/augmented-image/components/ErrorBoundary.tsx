@@ -10,7 +10,7 @@ function ErrorFallback({ resetError, error }: { resetError: () => void, error: E
                     Something went wrong. The error has been logged.
                 </p>
                 <pre className="bg-black/50 p-4 rounded text-sm text-red-400 overflow-auto mb-6 max-h-48">
-                    {String(error)}
+                    {error.stack || String(error)}
                 </pre>
                 <button
                     onClick={resetError}
