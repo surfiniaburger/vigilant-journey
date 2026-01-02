@@ -6,16 +6,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // --- Datadog RUM Initialization ---
 import { datadogRum } from '@datadog/browser-rum';
 
 datadogRum.init({
-  applicationId: '5dbfaf08-4635-42e2-8420-9d9e91592888',
-  clientToken: 'pub86086537789c1572ddab92888b6fdad0',
-  site: 'us5.datadoghq.com',
-  service: 'pilot-frontend',
-  env: 'production',
+  applicationId: import.meta.env.VITE_DATADOG_APPLICATION_ID,
+  clientToken: import.meta.env.VITE_DATADOG_CLIENT_TOKEN,
+  site: import.meta.env.VITE_DATADOG_SITE,
+  service: import.meta.env.VITE_DATADOG_SERVICE,
+  env: import.meta.env.MODE,
   // Specify a version number to identify the deployed version of your application in Datadog 
   // version: '1.0.0', 
   sessionSampleRate: 100,
@@ -35,6 +36,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );

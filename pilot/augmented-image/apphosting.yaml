@@ -17,3 +17,11 @@ env:
     secret: VITE_GOOGLE_MAPS_API_KEY
   - variable: VITE_BACKEND_URL
     secret: BACKEND_URL
+  - variable: VITE_DATADOG_APPLICATION_ID
+    secret: DATADOG_APPLICATION_ID
+  - variable: VITE_DATADOG_CLIENT_TOKEN
+    secret: DATADOG_CLIENT_TOKEN
+  - variable: VITE_DATADOG_SITE
+    secret: DATADOG_SITE
+  - variable: VITE_DATADOG_SERVICE
+    secret: DATADOG_SERVICE
