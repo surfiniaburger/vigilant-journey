@@ -17,7 +17,7 @@
     "type": "query alert",
 "query": "sum(last_5m):trace.pilot.security_block.count{service:pilot,env:production} > 10",
     "message": "High rate of Model Armor blocks detected. Potential Jailbreak attempt. Initiating Incident Response. {{#is_alert}} @webhook-datadog-incident {{/is_alert}}",
-    "tags": ["service:pilot", "security", "severity:sev-3"],
+"tags": ["service:pilot", "security", "env:production", "severity:sev-3"],
     "options": {
       "thresholds": {
         "critical": 10
