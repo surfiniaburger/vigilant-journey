@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 import bleach
 import vertexai
+from ddtrace.llmobs import LLMObs
 
 # New imports for Firebase Admin
 import firebase_admin
@@ -45,6 +46,18 @@ import logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
+# --- Datadog LLM Observability Init ---
+if os.environ.get("DD_LLMOBS_ENABLED"):
+    try:
+        LLMObs.enable(
+            ml_app=os.environ.get("DD_LLMOBS_ML_APP", "alora"),
+            integrations_enabled=True,
+            agentless_enabled=False
+        )
+        logging.info("Datadog LLMObs enabled via SDK.")
+    except Exception as e:
+        logging.warning(f"Failed to enable LLMObs: {e}")
 
 # Your ADK agent code follows...
 # from google.adk.agents import LlmAgent

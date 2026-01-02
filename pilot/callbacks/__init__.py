@@ -1,6 +1,8 @@
+# /Users/surfiniaburger/Desktop/vigilant-journey/pilot/callbacks/__init__.py
 import logging
 import asyncio
 import contextvars
+import os
 from typing import Optional, Dict, Any
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools.tool_context import ToolContext
@@ -11,14 +13,19 @@ from google.genai.types import Content, Part
 from security import sanitize_prompt_with_model_armor
 import json
 
+# Datadog Imports
+from ddtrace.llmobs import LLMObs
+
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- STREAMING LOGS CONTEXT ---
-# This ContextVar holds the asyncio.Queue for the CURRENT request.
-# If set, callbacks will push user-friendly log messages to it.
 log_queue_var: contextvars.ContextVar[Optional[asyncio.Queue]] = contextvars.ContextVar("log_queue", default=None)
+
+# --- DATADOG SPAN CONTEXT ---
+# Holds the active LLM span for the current asyncio task to bridge before/after callbacks.
+current_llm_span: contextvars.ContextVar[Optional[Any]] = contextvars.ContextVar("current_llm_span", default=None)
 
 def _emit_log(message: str):
     """Helper to emit a log message to the current queue if available."""
@@ -96,6 +103,40 @@ async def before_agent_callback(callback_context: CallbackContext) -> None:
 async def before_model_callback(callback_context: CallbackContext, llm_request: LlmRequest) -> None:
     logger.info(f"--> BEFORE MODEL call for {callback_context.agent_name}")
     
+    # --- DATADOG INSTRUMENTATION (START) ---
+    if os.environ.get("DD_LLMOBS_ENABLED"):
+        try:
+            model_name = "gemini-2.5-flash" # Default
+            # Attempt to extract model from request if available (ADK specific)
+            # llm_request doesn't always expose it cleanly, but we can default or guess.
+            
+            # Start manual span
+            span = LLMObs.llm(
+                model_name=model_name, 
+                model_provider="google_vertex_ai",
+                name="adk_agent_generation",
+                ml_app=os.environ.get("DD_LLMOBS_ML_APP", "alora")
+            )
+            # Annotate Input
+            # Extract text from contents
+            input_text = ""
+            if llm_request.contents:
+                for content in llm_request.contents:
+                    for part in content.parts:
+                        if part.text:
+                            input_text += f"{content.role}: {part.text}\n"
+            
+            LLMObs.annotate(
+                input_data=input_text,
+                tags={"agent_name": callback_context.agent_name}
+            )
+            
+            # Store span in contextvar to finish it later
+            current_llm_span.set(span)
+        except Exception as e:
+            logger.warning(f"Datadog LLMObs Start Failed: {e}")
+    # ----------------------------------------
+
     # --- SECURITY CHECK ---
     # Run Model Armor check. If it fails, we scrub the prompt to force a refusal.
     # We cannot abort the turn here (callback returns None), so we override the input.
@@ -112,6 +153,34 @@ async def before_model_callback(callback_context: CallbackContext, llm_request: 
 
 async def after_model_callback(callback_context: CallbackContext, llm_response: LlmResponse) -> None:
     logger.info(f"<-- AFTER MODEL call for {callback_context.agent_name}")
+
+    # --- DATADOG INSTRUMENTATION (FINISH) ---
+    span = current_llm_span.get()
+    if span:
+        try:
+            # Extract output text
+            output_text = ""
+            if llm_response.content and llm_response.content.parts:
+                output_text = "".join([p.text for p in llm_response.content.parts if p.text])
+            
+            # Annotate Output
+            LLMObs.annotate(output_data=output_text)
+
+            # Annotate Usage (if available in llm_response)
+            # ADK LlmResponse structure varies, check for usage_metadata
+            # usage = getattr(llm_response, "usage_metadata", None)
+            # if usage:
+            #    LLMObs.annotate(metrics={
+            #        "input_tokens": usage.prompt_token_count,
+            #        "output_tokens": usage.candidates_token_count
+            #    })
+            
+            # Finish span
+            span.finish()
+            current_llm_span.set(None) # Clear config
+        except Exception as e:
+            logger.warning(f"Datadog LLMObs Finish Failed: {e}")
+    # ----------------------------------------
 
 async def before_tool_callback(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext) -> None:
     logger.info(f"---> BEFORE TOOL: Calling {tool.name} with args: {args}")
