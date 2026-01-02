@@ -51,4 +51,5 @@ COPY . .
 
 # Command to run Uvicorn directly.
 # This avoids Gunicorn worker scaling issues and protocol mismatches in Cloud Run.
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "ddtrace-run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+
