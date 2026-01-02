@@ -106,6 +106,7 @@ uv run ddtrace-run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 cd pilot
 uv run python -m pytest evaluation/test_evaluation_pipeline.py
 ```
+
 *Environment variables `AGENT_MODEL=gemini-2.5-flash` and `INTERNAL_MODEL=gemini-2.5-flash` should be set (or configured in .env).*
 
 
