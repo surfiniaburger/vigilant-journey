@@ -90,7 +90,7 @@ The root object returned by the analysis.
 | `label` | `string` | Short title of the identified region (1-4 words). |
 | `format` | `enum` | Visualization style: `"compact"`, `"stats"`, `"detailed"`, `"mini"`. |
 | `description` | `string` | Rich text explaining the component's function or significance (30-50 words). |
-| `category` | `enum` | Semantic type: `"concept"`, `"data"`, `"process"`, `"highlight"`, `"detail"`, `"context"`. |
+| `category` | `enum` | Semantic type: `"concept"`, `"data"`, `"process"`, `"structure"`, `"highlight"`, `"detail"`, `"context"`. |
 | `icon` | `string` | Single emoji character representing the item. |
 | `bounds` | `object` | Relative coordinates (0-100%) for the UI overlay box: `{x, y, width, height}`. |
 | `stats` | `array` | Optional list of key-value pairs (see below). |
