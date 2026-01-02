@@ -8,6 +8,9 @@ from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import modelarmor_v1
 from dotenv import load_dotenv
 
+# Trace Import
+from ddtrace import tracer
+
 logger = logging.getLogger(__name__)
 
 # --- Model Armor Configuration ---
@@ -44,65 +47,77 @@ async def sanitize_prompt_with_model_armor(prompt: str) -> Dict[str, Any]:
     Uses Google Cloud Model Armor to check a prompt for safety violations.
     Async version.
     """
-    client = get_model_armor_client()
-    if not client:
-        logging.error("Model Armor client is not available. Failing closed for security.")
-        return {"is_safe": False, "reason": "Client unavailable"}
+    # Start Custom Trace Span
+    with tracer.trace("pilot.security_block", resource="model_armor_check") as span:
+        client = get_model_armor_client()
+        if not client:
+            logging.error("Model Armor client is not available. Failing closed for security.")
+            span.set_tag("error", True)
+            span.set_tag("error.msg", "Model Armor client unavailable")
+            return {"is_safe": False, "reason": "Client unavailable"}
 
-    try:
-        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gem-creator")
-        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-        template_id = "alora-ma-template"
+        try:
+            project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gem-creator")
+            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+            template_id = "alora-ma-template"
 
-        user_prompt_data = modelarmor_v1.DataItem(text=prompt)
-        template_path = f"projects/{project_id}/locations/{location}/templates/{template_id}"
-        request = modelarmor_v1.SanitizeUserPromptRequest(name=template_path, user_prompt_data=user_prompt_data)
-        
-        # Await the async call
-        response = await client.sanitize_user_prompt(request=request)
-
-        # Iterate through all configured filters (PI/Jailbreak, Malicious URI, RAI, SDP, etc.)
-        for filter_key, filter_result in response.sanitization_result.filter_results.items():
-            # Check specific sub-result match_state using key-based lookup (e.g. pi_and_jailbreak -> pi_and_jailbreak_filter_result)
-            # This handles the nested structure seen in previous revisions.
-            sub_field_name = f"{filter_key}_filter_result"
-            match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND # Default
+            user_prompt_data = modelarmor_v1.DataItem(text=prompt)
+            template_path = f"projects/{project_id}/locations/{location}/templates/{template_id}"
+            request = modelarmor_v1.SanitizeUserPromptRequest(name=template_path, user_prompt_data=user_prompt_data)
             
-            try:
-                if hasattr(filter_result, sub_field_name):
-                     match_state = getattr(filter_result, sub_field_name).match_state
-                elif hasattr(filter_result, "match_state"):
-                     # Fallback for simple filters or if structure simplifies
-                     match_state = filter_result.match_state
-                else:
-                    # If neither has the field, we log debugging info and skip this filter (or treat as safe if unknown)
-                    # For safety, if we don't know how to verify, we could warn, but crashing is bad.
-                    # Let's inspect available fields if possible, or just default to NO_MATCH_FOUND 
-                    # assuming safety unless proven otherwise, BUT logging deeply.
-                    # Actually, if we can't read the result, expecting 'safe' is risky. 
-                    # But halting the pipeline for an unknown filter format is also disruptive.
-                    # We will log and skip, assuming configured filters ARE standard.
-                    # SDP specifically caused this. 
-                    logger.debug(f"Filter {filter_key}: Could not find 'match_state'. Result keys: {dir(filter_result)}")
-            except AttributeError:
-                # Specific handling for the SdpFilterResult case or others missing the field
-                match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND
-                # Downgraded to debug to avoid noise in CI
-                logger.debug(f"Filter {filter_key}: 'match_state' attribute missing. Skipping check for this filter.")
+            # Await the async call
+            response = await client.sanitize_user_prompt(request=request)
 
-            if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
-                if filter_key == "rai":
-                    logging.warning(f"Model Armor Security Violation: {filter_key} triggered. (AUDIT MODE: ALLOWING)")
-                    # return {"is_safe": False, "reason": f"{filter_key} detected"} # Bypass for testing
-                else:
-                    logging.warning(f"Model Armor Security Violation: {filter_key} triggered.")
-                    return {"is_safe": False, "reason": f"{filter_key} detected"}
+            # Iterate through all configured filters (PI/Jailbreak, Malicious URI, RAI, SDP, etc.)
+            for filter_key, filter_result in response.sanitization_result.filter_results.items():
+                # Check specific sub-result match_state using key-based lookup (e.g. pi_and_jailbreak -> pi_and_jailbreak_filter_result)
+                # This handles the nested structure seen in previous revisions.
+                sub_field_name = f"{filter_key}_filter_result"
+                match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND # Default
+                
+                try:
+                    if hasattr(filter_result, sub_field_name):
+                         match_state = getattr(filter_result, sub_field_name).match_state
+                    elif hasattr(filter_result, "match_state"):
+                         # Fallback for simple filters or if structure simplifies
+                         match_state = filter_result.match_state
+                    else:
+                        # If neither has the field, we log debugging info and skip this filter (or treat as safe if unknown)
+                        # For safety, if we don't know how to verify, we could warn, but crashing is bad.
+                        # Let's inspect available fields if possible, or just default to NO_MATCH_FOUND 
+                        # assuming safety unless proven otherwise, BUT logging deeply.
+                        # Actually, if we can't read the result, expecting 'safe' is risky. 
+                        # But halting the pipeline for an unknown filter format is also disruptive.
+                        # We will log and skip, assuming configured filters ARE standard.
+                        # SDP specifically caused this. 
+                        logger.debug(f"Filter {filter_key}: Could not find 'match_state'. Result keys: {dir(filter_result)}")
+                except AttributeError:
+                    # Specific handling for the SdpFilterResult case or others missing the field
+                    match_state = modelarmor_v1.FilterMatchState.NO_MATCH_FOUND
+                    # Downgraded to debug to avoid noise in CI
+                    logger.debug(f"Filter {filter_key}: 'match_state' attribute missing. Skipping check for this filter.")
 
-        return {"is_safe": True, "reason": "Passed security check"}
-    except GoogleAPICallError as e:
-        logging.error(f"Model Armor API call failed: {e}", exc_info=True)
-        # Fail closed is safer.
-        return {"is_safe": False, "reason": f"API Error: {e}"}
-    except Exception as e:
-        logging.error(f"An unexpected error occurred during prompt sanitization: {e}", exc_info=True)
-        return {"is_safe": False, "reason": f"Unexpected Error: {e}"}
+                if match_state == modelarmor_v1.FilterMatchState.MATCH_FOUND:
+                    if filter_key == "rai":
+                        logging.warning(f"Model Armor Security Violation: {filter_key} triggered. (AUDIT MODE: ALLOWING)")
+                        # return {"is_safe": False, "reason": f"{filter_key} detected"} # Bypass for testing
+                    else:
+                        logging.warning(f"Model Armor Security Violation: {filter_key} triggered.")
+                        # --- DATADOG CUSTOM METRIC ---
+                        span.set_tag("security_violation", True)
+                        span.set_tag("violation_type", filter_key)
+                        span.set_metric("count", 1) # Explicit count for sum aggregation
+                        return {"is_safe": False, "reason": f"{filter_key} detected"}
+
+            return {"is_safe": True, "reason": "Passed security check"}
+        except GoogleAPICallError as e:
+            logging.error(f"Model Armor API call failed: {e}", exc_info=True)
+            span.set_tag("error", True)
+            span.set_tag("error.msg", str(e))
+            # Fail closed is safer.
+            return {"is_safe": False, "reason": f"API Error: {e}"}
+        except Exception as e:
+            logging.error(f"An unexpected error occurred during prompt sanitization: {e}", exc_info=True)
+            span.set_tag("error", True)
+            span.set_tag("error.msg", str(e))
+            return {"is_safe": False, "reason": f"Unexpected Error: {e}"}

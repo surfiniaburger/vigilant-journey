@@ -1,0 +1,41 @@
+[
+  {
+    "name": "[Alora] High Latency Alert",
+    "type": "query alert",
+"query": "avg(last_5m):p95:trace.fastapi.request.duration{service:pilot,resource:analyze,env:production} > 5",
+    "message": "Latency on /analyze is critical (>5s). Check Vertex AI Quota or Cloud Run Scaling. @pagerduty",
+    "tags": ["service:pilot", "env:production", "severity:sev-2"],
+    "options": {
+      "thresholds": {
+        "critical": 5,
+        "warning": 3
+      }
+    }
+  },
+  {
+    "name": "[Alora] Security Attack Detected",
+    "type": "query alert",
+"query": "sum(last_5m):trace.pilot.security_block.count{service:pilot,env:production} > 10",
+    "message": "High rate of Model Armor blocks detected. Potential Jailbreak attempt. Initiating Incident Response. {{#is_alert}} @webhook-datadog-incident {{/is_alert}}",
+"tags": ["service:pilot", "security", "env:production", "severity:sev-3"],
+    "options": {
+      "thresholds": {
+        "critical": 10
+      },
+      "renotify_interval": 60
+    }
+  },
+  {
+    "name": "[Alora] Container Memory Critical",
+    "type": "query alert",
+"query": "avg(last_5m):run.container.memory.utilization{service:pilot,env:production} > 0.9",
+    "message": "Memory utilization is >90%. Service may crash (OOM). Check SessionSummarizerAgent context window.",
+"tags": ["service:pilot", "infra", "env:production", "severity:sev-1"],
+    "options": {
+      "thresholds": {
+        "critical": 0.9,
+        "warning": 0.8
+      }
+    }
+  }
+]

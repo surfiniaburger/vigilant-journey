@@ -1,0 +1,70 @@
+{
+  "title": "Alora Pilot - Executive Health 🏥",
+  "description": "Unified view of AI Health, Security, and Infrastructure.",
+  "widgets": [
+    {
+      "definition": {
+        "title": "Response Latency (p95)",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:trace.fastapi.request.duration{service:pilot,resource:analyze} by {env}.rollup(p95)",
+            "aggregator": "avg",
+            "conditional_formats": [
+               { "comparator": ">", "value": 5, "palette": "white_on_red" },
+               { "comparator": ">", "value": 3, "palette": "white_on_yellow" }
+            ]
+          }
+        ],
+        "autoscale": true
+      },
+      "layout": { "x": 0, "y": 0, "w": 4, "h": 2 }
+    },
+    {
+      "definition": {
+        "title": "Model Armor Security Blocks 🛡️",
+        "type": "timeseries",
+        "requests": [
+          {
+"q": "sum:trace.pilot.security_block.count{service:pilot} by {env}.as_count()",
+            "display_type": "bars",
+            "style": { "palette": "warm", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "show_legend": true
+      },
+      "layout": { "x": 4, "y": 0, "w": 4, "h": 2 }
+    },
+    {
+      "definition": {
+        "title": "LLM Token Usage 💰",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:llm.usage.total_tokens{app:alora} by {model}.as_count()",
+            "display_type": "area"
+          }
+        ]
+      },
+      "layout": { "x": 8, "y": 0, "w": 4, "h": 2 }
+    },
+    {
+      "definition": {
+        "title": "Infrastructure Health (CPU/Mem)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:run.container.memory.utilization{service:pilot} * 100",
+            "alias": "Memory %"
+          },
+          {
+            "q": "avg:run.container.cpu.utilization{service:pilot} * 100",
+            "alias": "CPU %"
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 2, "w": 8, "h": 3 }
+    }
+  ],
+  "layout_type": "ordered"
+}
