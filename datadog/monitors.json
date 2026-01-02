@@ -28,7 +28,7 @@
   {
     "name": "[Alora] Container Memory Critical",
     "type": "query alert",
-    "query": "avg(last_5m):run.container.memory.utilization{service:pilot} > 0.9",
+"query": "avg(last_5m):run.container.memory.utilization{service:pilot,env:production} > 0.9",
     "message": "Memory utilization is >90%. Service may crash (OOM). Check SessionSummarizerAgent context window.",
     "tags": ["service:pilot", "infra", "severity:sev-1"],
     "options": {
