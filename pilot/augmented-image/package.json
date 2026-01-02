@@ -11,6 +11,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@datadog/browser-rum": "^6.25.1",
     "@google/genai": "^1.33.0",
     "express": "^5.2.1",
     "framer-motion": "^12.23.26",
