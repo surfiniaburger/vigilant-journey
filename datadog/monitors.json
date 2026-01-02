@@ -2,7 +2,7 @@
   {
     "name": "[Alora] High Latency Alert",
     "type": "query alert",
-    "query": "avg(last_5m):p95:trace.fastapi.request.duration{service:pilot,resource:analyze} > 5",
+"query": "avg(last_5m):p95:trace.fastapi.request.duration{service:pilot,resource:analyze,env:production} > 5",
     "message": "Latency on /analyze is critical (>5s). Check Vertex AI Quota or Cloud Run Scaling. @pagerduty",
     "tags": ["service:pilot", "env:production", "severity:sev-2"],
     "options": {
