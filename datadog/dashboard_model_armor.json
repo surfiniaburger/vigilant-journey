@@ -26,7 +26,7 @@
         "type": "timeseries",
         "requests": [
           {
-            "q": "sum:trace.pilot.security_block.count{*} by {env}.as_count()",
+"q": "sum:trace.pilot.security_block.count{service:pilot} by {env}.as_count()",
             "display_type": "bars",
             "style": { "palette": "warm", "line_type": "solid", "line_width": "normal" }
           }
