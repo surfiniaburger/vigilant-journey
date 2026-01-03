@@ -95,9 +95,24 @@ Use this to debug traces and LLM Observability spans locally.
 ```bash
 cd pilot
 # Run with ddtrace wrapper
-export DD_SERVICE=pilot
 export DD_ENV=local
 uv run ddtrace-run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+## 6. Audio Integration (ElevenLabs) 🎧
+We have integrated **ElevenLabs TTS** to provide on-demand audio insights for our widgets.
+
+### Features
+*   **On-Demand Generation**: Audio is synthesized only when requested (clicked) to optimize costs.
+*   **Custom Waveform**: A custom canvas-based visualizer mimics the ElevenLabs UI style.
+*   **Caching**: Generated audio files are stored in a public **Google Cloud Storage** bucket (`audio_assets/`) and served via CDN to avoid re-generating the same audio.
+
+### Configuration
+Required environment variables in `.env` or Google Cloud Run:
+*   `ELEVENLABS_API_KEY`: Your API Key.
+*   `AUDIO_BUCKET_NAME`: GCS Bucket name (defaults to `vigilant-journey-assets`).
+
+The service automatically creates the bucket and sets public-read permissions if it doesn't exist.
 ```
 
 ### Evaluation Suite

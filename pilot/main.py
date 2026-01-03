@@ -6,6 +6,8 @@ import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 
+load_dotenv() # Load env vars early
+
 import bleach
 import vertexai
 from ddtrace.llmobs import LLMObs
@@ -47,6 +49,8 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
+from services.audio_service import audio_service
+
 # --- Datadog LLM Observability Init ---
 if os.environ.get("DD_LLMOBS_ENABLED"):
     try:
@@ -67,7 +71,7 @@ if os.environ.get("DD_LLMOBS_ENABLED"):
 #
 
 # Load Gemini API Key
-load_dotenv()
+# load_dotenv() # Moved to top
 
 # FIX: Unset API keys if running in Vertex AI mode (Project/Location set) to avoid "mutually exclusive" error in Memory Bank
 if os.environ.get("GOOGLE_CLOUD_PROJECT"):
@@ -307,6 +311,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
         "https://vigilant-journey--gem-creator.us-central1.hosted.app",
         "https://gem-creator.web.app",
         "https://gem-creator.firebaseapp.com",
@@ -436,6 +442,30 @@ async def analyze_endpoint(request: AnalyzeRequest):
                                 yield json.dumps({"log": f"❌ Error: {val}"}) + "\n"
                             elif type_ == "DONE":
                                 # Final Result
+                                # Attempt to generate audio from 'audio_intro' if present
+                                try:
+                                    # Simple heuristic to find JSON start/end if there's markdown
+                                    json_str = final_text
+                                    if not json_str.strip():
+                                        raise ValueError("Empty response text")
+                                    
+                                    s = json_str.find('{')
+                                    e = json_str.rfind('}')
+                                    if s != -1 and e != -1:
+                                        json_str = json_str[s:e+1]
+                                    
+                                    data = json.loads(json_str)
+                                    if "audio_intro" in data:
+                                        intro = data["audio_intro"]
+                                        yield json.dumps({"log": "🎙️ Generatng ElevenLabs Audio..."}) + "\n"
+                                        audio_url = audio_service.generate_and_upload(intro)
+                                        data["audio_url"] = audio_url # Add URL to response
+                                        final_text = json.dumps(data) # Re-serialize
+                                        yield json.dumps({"log": "✅ Audio Generated & Attached!"}) + "\n"
+                                except Exception as e:
+                                    print(f"Audio Gen Error: {e}")
+                                    yield json.dumps({"log": f"⚠️ Audio Generation Skipped: {e}"}) + "\n"
+
                                 yield json.dumps({"result": {"text": final_text}}) + "\n"
                                 return
 
@@ -456,6 +486,27 @@ async def analyze_endpoint(request: AnalyzeRequest):
             # await runner.session_service.delete_session(session_id)
 
     return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+
+
+
+class SynthesizeRequest(BaseModel):
+    text: str
+    voice_id: Optional[str] = "JBFqnCBsd6RMkjVDRZzb"
+
+@app.post("/synthesize")
+async def synthesize_endpoint(request: SynthesizeRequest):
+    """
+    On-Demand TTS generation.
+    Returns: {"audio_url": "..."}
+    """
+    try:
+        # Check cache or DB here if desired to save costs on repeated clicks
+        # For now, generate fresh
+        audio_url = audio_service.generate_and_upload(request.text, request.voice_id)
+        return {"audio_url": audio_url}
+    except Exception as e:
+        print(f"Synthesis Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/")

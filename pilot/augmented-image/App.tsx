@@ -8,7 +8,7 @@ import { generateInfographic, analyzeImageRegions } from './services/geminiServi
 import { GeneratedImage, AnalysisResult } from './types';
 import { AugmentedCanvas } from './components/AugmentedCanvas';
 import { LoadingState } from './components/LoadingState';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type AppStatus = 'idle' | 'generating' | 'analyzing' | 'complete';
@@ -218,8 +218,15 @@ function App() {
                 className="w-full h-full flex flex-col"
               >
                 {status === 'complete' && (
-                  <div className="text-center mb-2 flex-none z-20">
+                  <div className="text-center mb-2 flex-none z-20 flex flex-col items-center gap-2">
                     <h2 className="text-xl font-bold text-white capitalize shadow-black drop-shadow-md">{query}</h2>
+                    {data.analysis?.audio_url && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-md border border-white/10 animate-fade-in-up">
+                        <Volume2 size={14} className="text-cyan-400 animate-pulse" />
+                        <span className="text-xs text-cyan-200">Playing Audio Commentary...</span>
+                        <audio src={data.analysis.audio_url} autoPlay />
+                      </div>
+                    )}
                   </div>
                 )}
 

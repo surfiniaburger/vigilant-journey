@@ -38,6 +38,8 @@ export interface Segment {
 
 export interface AnalysisResult {
   segments: Segment[];
+  audio_url?: string;
+  audio_intro?: string;
 }
 
 export interface GeneratedImage {
