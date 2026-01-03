@@ -25,6 +25,11 @@ datadogRum.init({
   trackResources: true,
   trackLongTasks: true,
   defaultPrivacyLevel: 'mask-user-input',
+  allowedTracingUrls: [
+    import.meta.env.VITE_BACKEND_URL,
+    // Add localhost for dev testing if needed:
+    // "http://localhost:8080" 
+  ],
 });
 // ----------------------------------
 
