@@ -8,18 +8,21 @@ logger = logging.getLogger(__name__)
 
 class AudioService:
     def __init__(self):
-        self.api_key = os.environ.get("ELEVENLABS_API_KEY")
-        self.bucket_name = os.environ.get("AUDIO_BUCKET_NAME", "vigilant-journey-assets")
-        self.client = None
-        self.storage_client = None
+        raw_key = os.environ.get("ELEVENLABS_API_KEY", "")
+        # Robust Sanitization: Strip whitespace, newlines, and potential quotes
+        self.api_key = raw_key.strip().strip("'").strip('"')
         
+        # Remove common copy-paste artifacts if present
+        if "ELEVENLABS_API_KEY=" in self.api_key:
+             self.api_key = self.api_key.split("=")[1].strip()
+
         if self.api_key:
             try:
                 self.client = ElevenLabs(api_key=self.api_key)
             except Exception as e:
                  logger.error(f"Failed to init ElevenLabs client: {e}")
         else:
-            logger.warning("ELEVENLABS_API_KEY not set.")
+            logger.warning("ELEVENLABS_API_KEY not set or empty.")
 
         try:
             self.storage_client = storage.Client()
