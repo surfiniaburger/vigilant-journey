@@ -50,8 +50,8 @@ class MongoSessionService(SessionService):
         self.db = self.client.get_database("adk_sessions")
         self.sessions = self.db.get_collection("sessions")
 
-    async def create_session(self, app_name: str, user_id: str, **kwargs) -> Session:
-        session_id = str(uuid4())
+    async def create_session(self, app_name: str, user_id: str, id: str = None, **kwargs) -> Session:
+        session_id = id or str(uuid4())
         session_data = {
             "session_id": session_id,
             "app_name": app_name,
@@ -63,7 +63,7 @@ class MongoSessionService(SessionService):
             id=session_id, app_name=app_name, user_id=user_id, **kwargs
         )
 
-    async def get_session(self, session_id: str) -> Session | None:
+    async def get_session(self, session_id: str, **kwargs) -> Session | None:
         session_data = await self.sessions.find_one({"session_id": session_id})
         if session_data:
             return Session(

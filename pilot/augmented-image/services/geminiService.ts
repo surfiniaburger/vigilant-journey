@@ -105,6 +105,7 @@ Provide this data:
 - "category": "concept" | "data" | "process" | "structure"
 - "icon": A single relevant emoji.
 - "stats": Array of facts (ONLY for stats/detailed formats) { "label", "value" }
+- "audio_intro": A 1-2 sentence engaging summary suitable for text-to-speech audio.
 - "sourceUrl": A relevant Wikipedia or educational URL found via search.
 - "sourceName": Short name for the source.
 - "bounds": { "x": number (0-100), "y": number (0-100), "width": number (0-100), "height": number (0-100) }
