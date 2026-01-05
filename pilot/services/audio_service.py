@@ -9,12 +9,13 @@ logger = logging.getLogger(__name__)
 class AudioService:
     def __init__(self):
         raw_key = os.environ.get("ELEVENLABS_API_KEY", "")
+        self.bucket_name = os.environ.get("AUDIO_BUCKET_NAME", "vigilant-journey-assets")
         # Robust Sanitization: Strip whitespace, newlines, and potential quotes
-        self.api_key = raw_key.strip().strip("'").strip('"')
-        
+        self.api_key = raw_key.strip().strip("\"'")
+
         # Remove common copy-paste artifacts if present
-        if "ELEVENLABS_API_KEY=" in self.api_key:
-             self.api_key = self.api_key.split("=")[1].strip()
+        if self.api_key.startswith("ELEVENLABS_API_KEY="):
+            self.api_key = self.api_key.split("=", 1)[1].strip()
 
         if self.api_key:
             try:
