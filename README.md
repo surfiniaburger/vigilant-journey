@@ -124,5 +124,19 @@ uv run python -m pytest evaluation/test_evaluation_pipeline.py
 
 *Environment variables `AGENT_MODEL=gemini-2.5-flash` and `INTERNAL_MODEL=gemini-2.5-flash` should be set (or configured in .env).*
 
+## 7. Observability & Incident Management 📊
+We utilize **Datadog** for full-stack observability, including APM traces, RUM, and Incident Management.
+
+### Incident Reporting (Jan 2026)
+We have compiled a comprehensive incident report analyzing the stability of the Pilot launch and Outage tracking.
+
+*   **Report**: [Alora Incident Report (PDF)](datadog/Alora%20Incident%20Report%20_%20Datadog.pdf)
+*   **Visualization Note**: The incidents in this report were **manually simulated** to demonstrate the Incident Management workflow and generate representative visualization snapshots for the dataset.
+
+This report covers:
+*   **Incident Trends**: Breakdown of SEV-1/SEV-2 outages.
+*   **Response Metrics**: MTTR (Mean Time to Repair) analysis.
+*   **Post-Mortems**: Action items derived from simulated API and Audio failures.
+
 
 
