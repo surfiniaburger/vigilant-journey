@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AgentStat } from './useDatadogStream';
-import { BarChart2, Activity } from 'lucide-react';
+import { BarChart2 } from 'lucide-react';
 
 export function WidgetAgents({ agents }: { agents: AgentStat[] }) {
     return (
