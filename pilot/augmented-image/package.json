@@ -14,11 +14,14 @@
     "@datadog/browser-rum": "^6.25.1",
     "@datadog/browser-rum-react": "^6.25.1",
     "@google/genai": "^1.33.0",
+    "clsx": "^2.1.1",
     "express": "^5.2.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.561.0",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "recharts": "^3.6.0",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
