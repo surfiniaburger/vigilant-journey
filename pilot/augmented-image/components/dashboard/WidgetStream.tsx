@@ -13,9 +13,7 @@ export function WidgetStream({ events }: { events: StreamEvent[] }) {
                 {events.map((event) => (
                     <div key={event.id} className="flex gap-2 items-start opacity-80 hover:opacity-100">
                         <span className="text-zinc-500 shrink-0">{event.time}</span>
-                        <span className={`shrink-0 ${event.level === 'error' ? 'text-red-400' : 'text-blue-400'
-                            }`}>
-                            [{event.source.toUpperCase()}]
+                        <span className={`shrink-0 ${event.level === 'error' ? 'text-red-400' : 'text-blue-400'}`}>
                         </span>
                         <span className="text-zinc-300 break-all">{event.message}</span>
                     </div>
