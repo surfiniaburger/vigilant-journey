@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 // Types mimicking Datadog Schema
 export interface DashboardMetrics {
