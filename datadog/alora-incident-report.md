@@ -29,7 +29,7 @@ A total of 3 incidents were declared in this reporting period dating \[January 1
 
 # Outage Tracking
 
-During this reporting period, **2** incidents were classified as an outage (a SEV-1 or SEV-2 incident). SEV-1 incidents are defined as **critical functionality unavailable for all users (e.g., API 500 errors)**, while SEV-2 incidents are defined as **significant degradation of a core feature (e.g., Audio failing)**. Over the course of this reporting period, the portion of incidents considered to be outages has trended **[upward]** reaching a weekly **maximum** percentage of **66%**. The mean customer impact of these outages was **42 minutes**, reaching a weekly maximum value of **60 minutes**.
+During this reporting period, **2** incidents were classified as an outage (a SEV-1 or SEV-2 incident). SEV-1 incidents are defined as **critical functionality unavailable for all users (e.g., API 500 errors)**, while SEV-2 incidents are defined as **significant degradation of a core feature (e.g., Audio failing)**. Over the course of this reporting period, the portion of incidents considered to be outages has trended **upward** reaching a weekly **maximum** percentage of **66%**. The mean customer impact of these outages was **42 minutes**, reaching a weekly maximum value of **60 minutes**.
 
 Analyzing these outages reveals the following patterns:
 
