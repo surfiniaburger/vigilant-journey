@@ -13,7 +13,12 @@ interface DashboardSheetProps {
 }
 
 export function DashboardSheet({ isOpen, onClose }: DashboardSheetProps) {
+
     const { metrics, agents, stream } = useDatadogStream(isOpen);
+
+    // Dynamic Calculations
+    const totalCost = metrics.reduce((sum, m) => sum + m.cost, 0).toFixed(1);
+    const avgLatency = Math.round(agents.reduce((sum, a) => sum + a.latency, 0) / (agents.length || 1));
 
     return (
         <AnimatePresence>
@@ -60,11 +65,11 @@ export function DashboardSheet({ isOpen, onClose }: DashboardSheetProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
                                     <span className="text-xs text-zinc-500 uppercase">Input Token Cost</span>
-                                    <div className="text-xl font-mono text-purple-400">96.1¢</div>
+                                    <div className="text-xl font-mono text-purple-400">{totalCost}¢</div>
                                 </div>
                                 <div className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
                                     <span className="text-xs text-zinc-500 uppercase">Avg Latency</span>
-                                    <div className="text-xl font-mono text-emerald-400">142ms</div>
+                                    <div className="text-xl font-mono text-emerald-400">{avgLatency}ms</div>
                                 </div>
                             </div>
 
@@ -76,7 +81,7 @@ export function DashboardSheet({ isOpen, onClose }: DashboardSheetProps) {
 
                             <div className="text-center pt-8 pb-4">
                                 <p className="text-[10px] text-zinc-600 uppercase tracking-widest">
-                                    Powered by Datadog & CoinPulse Architecture
+                                    Powered by Datadog  Architecture
                                 </p>
                             </div>
                         </div>

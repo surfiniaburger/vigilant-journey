@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 // Types mimicking Datadog Schema
 export interface DashboardMetrics {
@@ -78,7 +79,7 @@ export const useDatadogStream = (isActive: boolean) => {
                 const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
                 const isError = Math.random() > 0.95;
                 setStream(prev => [{
-                    id: Math.random().toString(36).substring(7),
+                    id: uuidv4(),
                     time: new Date().toLocaleTimeString(),
                     message: isError ? "Connection Timeout: ElevenLabs API" : msg,
                     level: isError ? 'error' : 'info',
