@@ -29,19 +29,19 @@ A total of 3 incidents were declared in this reporting period dating \[January 1
 
 # Outage Tracking
 
-During this reporting period, \__\_ incidents were classified as an outage (a SEV-1 or SEV-2 incident). SEV-1 incidents are defined as \__\_, while SEV-2 incidents are defined as \__\_. Over the course of this reporting period, the portion of incidents considered to be outages has trended \[downward/upward\] reaching a weekly \[minimum/maximum\] percentage of \__\_. The mean customer impact of these outages was \__\_, reaching a weekly maximum value of \__\_.
+During this reporting period, **2** incidents were classified as an outage (a SEV-1 or SEV-2 incident). SEV-1 incidents are defined as **critical functionality unavailable for all users (e.g., API 500 errors)**, while SEV-2 incidents are defined as **significant degradation of a core feature (e.g., Audio failing)**. Over the course of this reporting period, the portion of incidents considered to be outages has trended **upward** reaching a weekly **maximum** percentage of **66%**. The mean customer impact of these outages was **42 minutes**, reaching a weekly maximum value of **60 minutes**.
 
 Analyzing these outages reveals the following patterns:
 
-1. 
+1. **Tight Coupling to External APIs**: Both outages (API Crash & Audio Failure) stemmed from synchronous dependencies on Vertex AI and ElevenLabs. When they hiccuped, the app crashed.
 
-2. 
+2. **Lack of Client-Side Resilience**: The frontend had no "retry logic" or "offline mode", turning minor backend errors into full user-facing outages.
 
 To reduce the number of outages, it is recommended that the following steps are taken:
 
-1. 
+1. **Implement Circuit Breakers**: Wrap external calls in a circuit breaker to fail fast and serve cached/default content instead of crashing.
 
-2. 
+2. **Asynchronous Audio**: Move TTS generation to a background queue so it doesn't block the main analysis flow.
 
 [![https://us5.datadoghq.com/s/e022494b-d508-11f0-be9a-8a035bedc65e/cxb-nai-95n](https://p.us5.datadoghq.com/s/image/e022494b-d508-11f0-be9a-8a035bedc65e/cxb-nai-95n.png)](https://us5.datadoghq.com/s/e022494b-d508-11f0-be9a-8a035bedc65e/cxb-nai-95n)
 

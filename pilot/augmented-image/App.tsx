@@ -10,6 +10,7 @@ import { AugmentedCanvas } from './components/AugmentedCanvas';
 import { LoadingState } from './components/LoadingState';
 import { Search, RefreshCw, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DashboardSheet } from './components/dashboard/DashboardSheet';
 
 type AppStatus = 'idle' | 'generating' | 'analyzing' | 'complete';
 
@@ -30,6 +31,7 @@ const ANALYSIS_PHRASES = [
 function App() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<AppStatus>('idle');
+  const [isDashboardOpen, setDashboardOpen] = useState(false);
   const [data, setData] = useState<{ image: GeneratedImage; analysis: AnalysisResult | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,6 +119,13 @@ function App() {
                 <RefreshCw size={14} /> New Search
               </button>
             )}
+            <button
+              onClick={() => setDashboardOpen(true)}
+              className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-2 transition-colors border border-cyan-500/20 px-3 py-1.5 rounded-full hover:bg-cyan-500/10"
+            >
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              Live Dashboard
+            </button>
           </div>
         </header>
 
@@ -261,6 +270,9 @@ function App() {
 
           </AnimatePresence>
         </main>
+
+        <DashboardSheet isOpen={isDashboardOpen} onClose={() => setDashboardOpen(false)} />
+
       </div>
     </div>
   );
