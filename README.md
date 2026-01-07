@@ -131,7 +131,7 @@ We utilize **Datadog** for full-stack observability, including APM traces, RUM, 
 We have compiled a comprehensive incident report analyzing the stability of the Pilot launch and Outage tracking.
 
 *   **Report**: [Alora Incident Report (PDF)](datadog/Alora%20Incident%20Report%20_%20Datadog.pdf)
-*   **Visualization Note**: The incidents in this report were **manually simulated** to demonstrate the Incident Management workflow and generate representative visualization snapshots for the dataset.
+*   **Methodology**: These incidents were **manually declared and managed directly within the Datadog platform** to demonstrate the end-to-end Incident Management lifecycle, generating authoritative reports from system records.
 
 This report covers:
 *   **Incident Trends**: Breakdown of SEV-1/SEV-2 outages.
