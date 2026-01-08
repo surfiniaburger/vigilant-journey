@@ -14,9 +14,14 @@ async def test_postgres_session_persistence():
     
     Requires: Local Postgres running (docker-compose up).
     """
+    # Check for Postgres availability
+    try:
+        service_1 = get_local_postgres_session_service()
+    except Exception:
+        pytest.skip("Local Postgres not available - Skipping integration test")
+
     # 1. Setup
     # We use the factory which pulls from env vars (defaults to localhost:5432)
-    service_1 = get_local_postgres_session_service()
     
     # Create a unique session
     user_id = f"test_user_{uuid.uuid4()}"

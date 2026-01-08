@@ -2,6 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, AsyncMock
+import json
 from main import app, start_agent_session, initialize_services
 
 client = TestClient(app)
@@ -22,7 +23,7 @@ async def test_websocket_endpoint(mocker):
     mocker.patch("main.agent_to_client_messaging")
     mocker.patch("main.client_to_agent_messaging")
 
-    with client.websocket_connect("/ws/123?is_audio=false&token=test-token") as websocket:
+    with client.websocket_connect("/ws/123?is_audio=false", headers={"Sec-WebSocket-Protocol": "Bearer, test-token"}) as websocket:
         # If the connection is successful, the with block will execute without raising an exception.
         pass
 
@@ -40,7 +41,7 @@ async def test_start_agent_session_with_memory(mock_initialize_services, mocker)
 
     # Assert that create_session was called with the correct arguments
     mock_runner.session_service.create_session.assert_called_with(
-        app_name="Alora",
+        app_name="agents",
         user_id="test_user",
     )
 
@@ -80,3 +81,58 @@ async def test_initialize_services(
     )
     mock_runner.assert_called_once()
     assert runner == mock_runner.return_value
+
+@patch("main.audio_service")
+def test_synthesize_endpoint(mock_audio_service):
+    """Test the /synthesize endpoint."""
+    mock_audio_service.generate_and_upload.return_value = "https://fake.url/audio.mp3"
+    
+    response = client.post("/synthesize", json={"text": "Hello"})
+    
+    assert response.status_code == 200
+    assert response.json() == {"audio_url": "https://fake.url/audio.mp3"}
+    mock_audio_service.generate_and_upload.assert_called_once_with("Hello", "JBFqnCBsd6RMkjVDRZzb")
+
+@pytest.mark.asyncio
+async def test_analyze_endpoint(mocker):
+    """Test the /analyze endpoint with streaming response."""
+    # Mock the global runner
+    mock_runner = MagicMock()
+    mocker.patch("main.runner", mock_runner)
+    
+    # Mock run_async to yield an event
+    from google.adk.events import Event
+    from google.genai.types import Content, Part
+    
+    async def mock_run_gen(*args, **kwargs):
+        # Yield a text part
+        yield Event(
+            source="agent", 
+            content=Content(parts=[Part(text="Analysis result")])
+        )
+    mock_runner.run_async.side_effect = mock_run_gen
+    
+    # Needs session service to create temp session
+    mock_runner.session_service.create_session = AsyncMock(return_value=MagicMock())
+
+    with client.stream("POST", "/analyze", json={"query": "test query"}) as response:
+        assert response.status_code == 200
+        # Consume the stream
+        lines = list(response.iter_lines())
+        
+        # We expect NDJSON lines. 
+        # The logic in main.py puts ("TEXT", "Analysis result") into output queue
+        # Then the streaming loop consumes it and yields {"result": {"text": ...}} eventually
+        # Or intermediate parts?
+        # Let's check main.py logic:
+        # It aggregates TEXT types.
+        # It waits for DONE.
+        
+    # Since our mock generator ends, the 'finally' block in agent_producer sends DONE.
+    # The consumer loop should see DONE and yield the result.
+    
+    # Verify we got some JSON
+    assert len(lines) > 0
+    last_line = json.loads(lines[-1])
+    # The analyze endpoint aggregates text and returns a "result" object at the end
+    assert "result" in last_line or "log" in last_line

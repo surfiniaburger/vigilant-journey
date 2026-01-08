@@ -19,7 +19,11 @@ async def test_complex_user_journey():
     4. We verify the full history is available for the Agent to "see".
     """
     # 1. Setup Session
-    service = get_local_postgres_session_service()
+    try:
+        service = get_local_postgres_session_service()
+    except Exception:
+        pytest.skip("Local Postgres not available - Skipping integration test")
+
     user_id = f"journey_user_{uuid.uuid4()}"
     app_name = "JourneyApp"
     
@@ -73,7 +77,11 @@ async def test_memory_edge_case_rapid_updates():
     """
     Edge Case: Rapid fire messages verifying they remain in order in the DB.
     """
-    service = get_local_postgres_session_service()
+    try:
+        service = get_local_postgres_session_service()
+    except Exception:
+        pytest.skip("Local Postgres not available - Skipping integration test")
+
     user_id = f"speed_user_{uuid.uuid4()}"
     app_name = "SpeedApp"
     session = await service.create_session(app_name=app_name, user_id=user_id)
