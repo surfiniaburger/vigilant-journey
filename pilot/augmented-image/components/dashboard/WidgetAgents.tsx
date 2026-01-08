@@ -27,9 +27,9 @@ export function WidgetAgents({ agents }: { agents: AgentStat[] }) {
                                 <td className="py-2 text-right text-zinc-400">{agent.latency}ms</td>
                                 <td className="py-2 text-right">
                                     {agent.errorRate > 0 ? (
-                                        <span className="text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">Err</span>
+                                        <span aria-label="Status: Error" className="text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">Err</span>
                                     ) : (
-                                        <span className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">OK</span>
+                                        <span aria-label="Status: OK" className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">OK</span>
                                     )}
                                 </td>
                             </tr>
