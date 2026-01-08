@@ -1,0 +1,37 @@
+name: Augmented Image Frontend CI
+
+on:
+  push:
+    branches: [ main, feature/expand-pilot-tests ]
+    paths:
+      - 'pilot/augmented-image/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pilot/augmented-image/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: pilot/augmented-image/package-lock.json
+
+    - name: Install dependencies
+      working-directory: pilot/augmented-image
+      run: npm ci
+
+    - name: Build
+      working-directory: pilot/augmented-image
+      run: npm run build
+
+    - name: Run tests
+      working-directory: pilot/augmented-image
+      run: npm run test -- --run
