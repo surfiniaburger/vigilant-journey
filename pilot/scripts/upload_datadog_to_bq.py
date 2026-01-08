@@ -3,7 +3,7 @@ import json
 import os
 import argparse
 from google.cloud import bigquery
-from google.api_core.exceptions import Conflict
+from google.api_core.exceptions import NotFound
 
 def upload_dashboard_to_bq(json_path, project_id, dataset_id, table_id):
     # Initialize BigQuery client
