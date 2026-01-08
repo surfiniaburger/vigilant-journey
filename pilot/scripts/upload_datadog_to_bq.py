@@ -62,6 +62,7 @@ def upload_dashboard_to_bq(json_path, project_id, dataset_id, table_id):
             print("New rows have been added.")
         else:
             print(f"Encountered errors while inserting rows: {errors}")
+            exit(1)
     else:
         print("No widgets found to insert.")
 
