@@ -47,11 +47,11 @@ describe('App Integration Flow', () => {
             audio_url: 'http://example.com/audio.mp3'
         };
 
-        (geminiService.generateInfographic as any).mockImplementation(async () => {
+        vi.mocked(geminiService.generateInfographic).mockImplementation(async () => {
             await new Promise(r => setTimeout(r, 10));
             return mockImage;
         });
-        (geminiService.analyzeImageRegions as any).mockImplementation(async () => {
+        vi.mocked(geminiService.analyzeImageRegions).mockImplementation(async () => {
             await new Promise(r => setTimeout(r, 10));
             return mockAnalysis;
         });
