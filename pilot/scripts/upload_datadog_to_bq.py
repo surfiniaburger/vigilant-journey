@@ -32,7 +32,7 @@ def upload_dashboard_to_bq(json_path, project_id, dataset_id, table_id):
     try:
         table = client.get_table(table_ref)
         print(f"Table {table_id} already exists.")
-    except Exception:
+    except NotFound:
         print(f"Creating table {table_id}...")
         table = bigquery.Table(table_ref, schema=schema)
         client.create_table(table)
