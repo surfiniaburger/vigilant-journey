@@ -27,7 +27,11 @@ async def test_memory_tool_flow():
     
     # Mock Context
     session = Session(id="sess_123", app_name="TestApp", user_id="user_456", events=[], state={})
-    ctx = ToolContext(session=session, state={})
+    # Mock Context
+    session = Session(id="sess_123", app_name="TestApp", user_id="user_456", events=[], state={})
+    ctx = MagicMock()
+    ctx.session = session
+    ctx.state = {}
 
     # 3. Test Save Flow
     save_resp = await save_tool.func(ctx, "User likes blue.")
