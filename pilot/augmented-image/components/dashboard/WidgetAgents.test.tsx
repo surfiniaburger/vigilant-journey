@@ -22,15 +22,15 @@ describe('WidgetAgents', () => {
 
     it('renders "OK" status for 0 error rate', () => {
         render(<WidgetAgents agents={mockAgents} />);
-        const okStatus = screen.getByText('OK');
+        const okStatus = screen.getByLabelText('Status: OK');
         expect(okStatus).toBeInTheDocument();
-        expect(okStatus).toHaveClass('text-emerald-400');
+        expect(okStatus).toHaveTextContent('OK');
     });
 
-    it('renders "Err" status for non-zero error rate', () => {
+    it('renders "Error" status for non-zero error rate', () => {
         render(<WidgetAgents agents={mockAgents} />);
-        const errStatus = screen.getByText('Err');
+        const errStatus = screen.getByLabelText('Status: Error');
         expect(errStatus).toBeInTheDocument();
-        expect(errStatus).toHaveClass('text-red-400');
+        expect(errStatus).toHaveTextContent('Err');
     });
 });

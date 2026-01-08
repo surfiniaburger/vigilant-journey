@@ -16,7 +16,7 @@ interface Props {
 
 export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning = false }) => {
   const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
-  
+
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -45,17 +45,17 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
 
   return (
     <div className="w-full h-full flex items-center justify-center p-2 md:p-4 relative">
-      
+
       {/* Container Wrapper */}
-      <div 
+      <div
         ref={containerRef}
         className={`relative max-w-full max-h-full shadow-2xl rounded-xl border border-white/10 bg-gray-900 group ${isScanning ? 'overflow-hidden' : ''}`}
         style={{ aspectRatio: '16 / 9' }}
       >
-        
+
         {/* The Image */}
-        <img 
-          src={`data:${image.mimeType};base64,${image.base64}`} 
+        <img
+          src={`data:${image.mimeType};base64,${image.base64}`}
           alt="Generated Infographic"
           className={`w-full h-full object-contain rounded-xl transition-all duration-700 ease-in-out ${activeSegmentId !== null ? 'blur-[3px] opacity-50 scale-[1.01]' : 'opacity-100 scale-100'}`}
         />
@@ -66,7 +66,7 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
         {/* SCANNING MODE OVERLAY */}
         <AnimatePresence>
           {isScanning && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -79,11 +79,11 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ opacity: [0.2, 0.5, 0.2], scale: [0.95, 1.05, 0.95] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-32 h-32 rounded-full bg-white/10 blur-3xl"
-                  />
+                <motion.div
+                  animate={{ opacity: [0.2, 0.5, 0.2], scale: [0.95, 1.05, 0.95] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-32 h-32 rounded-full bg-white/10 blur-3xl"
+                />
               </div>
             </motion.div>
           )}
@@ -92,10 +92,11 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
         {/* Interactive Hitboxes Layer */}
         {!isScanning && analysis?.segments && analysis.segments.map((segment, index) => {
           const isActive = activeSegmentId === index;
-          
+
           return (
             <div
               key={index}
+              data-testid={`segment-hitbox-${index}`}
               style={{
                 left: `${segment.bounds.x}%`,
                 top: `${segment.bounds.y}%`,
@@ -108,20 +109,20 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: 1, 
+                animate={{
+                  opacity: 1,
                   scale: isActive ? 1.05 : 1,
                   borderColor: isActive ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.15)',
                   backgroundColor: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                 }}
                 className="w-full h-full border-2 rounded-lg cursor-pointer transition-colors duration-300 relative"
               >
-                  {!isActive && activeSegmentId === null && (
-                      <>
-                        <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-cyan-400 rounded-full animate-ping" />
-                        <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-cyan-400 rounded-full" />
-                      </>
-                  )}
+                {!isActive && activeSegmentId === null && (
+                  <>
+                    <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-cyan-400 rounded-full animate-ping" />
+                    <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-cyan-400 rounded-full" />
+                  </>
+                )}
               </motion.div>
             </div>
           );
@@ -131,7 +132,7 @@ export const AugmentedCanvas: React.FC<Props> = ({ image, analysis, isScanning =
       {/* CENTERED MODAL OVERLAY */}
       <AnimatePresence>
         {activeSegment && (
-          <div 
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4"
           >
             <motion.div
