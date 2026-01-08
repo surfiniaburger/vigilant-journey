@@ -68,7 +68,7 @@ async def test_main_logic_success(mock_open_file, mock_init_services, mock_runne
     await benchmark_prompts.main()
 
     # Assert
-    mock_open_file.assert_called()
+    mock_open_file.assert_any_call(benchmark_prompts.EVALUATION_DATASET_PATH, 'r')
     assert mock_init_services.called
     assert mock_runner.session_service.create_session.called
     assert mock_util.pytorch_cos_sim.called
