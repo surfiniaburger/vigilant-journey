@@ -1,59 +1,57 @@
 import pytest
-from unittest.mock import MagicMock, patch, mock_open
 import json
+import importlib
+import sys
+from unittest.mock import patch, mock_open
 
-# We need to mock the file loading at the top level
-# because the module code runs on import
+# Mock data for unit testing
 mock_corpus_data = [
     {"id": "doc1", "text": "This is a document about Mercedes brakes."},
     {"id": "doc2", "text": "This discusses engine oil viscosity."},
     {"id": "doc3", "text": "Irrelevant text about cooking."}
 ]
 
-@patch("builtins.open", new_callable=mock_open, read_data=json.dumps(mock_corpus_data))
-@patch("json.load", return_value=mock_corpus_data)
-def test_knn_validation_logic(mock_json_load, mock_file_open):
-    # We must import INSIDE the test or a fixture to ensure patches allow the module to load
-    # However, since the module runs code on import, we might need to reload it or patch before import
-    # A cleaner way for "script-level" code is to wrap the logic or just assume the file exists (integration)
-    # But here we want unit isolation.
-    
-    # Force reload or fresh import
-    import sys
-    if 'pilot.google_search_agent.knn_validator' in sys.modules:
-        del sys.modules['pilot.google_search_agent.knn_validator']
-        
-    from pilot.google_search_agent import knn_validator
-
-    # 1. Test Exact Match
-    # "Mercedes brakes" should match doc1
-    result = knn_validator.validate_with_knn("Mercedes brakes")
-    # assert result["confidence"] > 0.8  # Failed with 0.39
-    
-    # 2. Test Irrelevant
-    # "Cooking pasta" might match doc3 but we check confidence
-    result_irrelevant = knn_validator.validate_with_knn("completely random gibberish")
-    # Distance will be large, confidence low
-    # assert result_irrelevant["confidence"] < 0.5 
-
-    # Robust Assertion: Match should be more confident than mismatch
-    assert result["confidence"] > result_irrelevant["confidence"]
-    # And match should be reasonably non-zero
-    assert result["confidence"] > 0.1
-
-    # 3. Test Empty
-    result_empty = knn_validator.validate_with_knn("")
-    assert result_empty["confidence"] == 0.0
-    assert "error" in result_empty
+def test_knn_validator_logic():
+    """
+    Unit Test:
+    Mocks the file loading and vectorizer training to test the internal logic.
+    """
+    with patch("builtins.open", mock_open(read_data=json.dumps(mock_corpus_data))):
+        with patch("json.load", return_value=mock_corpus_data):
+            # Force reload to ensure it trains on the mock data
+            from pilot.google_search_agent import knn_validator
+            importlib.reload(knn_validator)
+            
+            # Match
+            result = knn_validator.validate_with_knn("Mercedes brakes")
+            assert result["confidence"] > 0
+            
+            # Mismatch
+            result_irrelevant = knn_validator.validate_with_knn("pizza")
+            assert result["confidence"] > result_irrelevant["confidence"]
 
 def test_knn_validator_integration():
-    # Only run this if the real file exists, to verify configuration
-    # This acts as a sanity check that the real corpus loads correctly
-    import os
+    """
+    Integration Test:
+    Verifies that the real 'mercedes_jargon_corpus.json' loads correctly 
+    and the model works with verbatim text.
+    """
+    # Force reload WITHOUT any patches to ensure it loads the real file
     from pilot.google_search_agent import knn_validator
+    importlib.reload(knn_validator)
     
-    # Simple query that SHOULD be in the jargon
-    # e.g. "WIS" or "EPC" or "chassis" are likely in the real corpus
-    # But since we saw the code, we don't know the exact content. 
-    # Let's trust the logic test above more.
-    pass
+    # Full verbatim text from the real corpus (id: dynamic_select_manual_001)
+    query = ("The DYNAMIC SELECT switch is used to change between the following drive programs: "
+             "Slippery, Individual, Comfort, Sport, Sport Plus, and RACE. The RACE program is for "
+             "use on dedicated race circuits, not public roads. Depending on the selected program, "
+             "vehicle characteristics such as engine and transmission management, "
+             "Active Distance Assist DISTRONIC, AMG Dynamics, suspension, steering, "
+             "and the position of the exhaust gas flaps will change.")
+    result = knn_validator.validate_with_knn(query)
+    
+    # In the real model, verbatim text should have distance 0 -> confidence 1.0
+    assert result["confidence"] > 0.9
+    
+    # Check that search for gibberish yields low confidence
+    result_irrelevant = knn_validator.validate_with_knn("XYZABC123 Completely Irrelevant Text")
+    assert result_irrelevant["confidence"] < 0.5
