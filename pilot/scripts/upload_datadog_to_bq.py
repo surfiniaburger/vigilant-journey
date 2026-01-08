@@ -14,7 +14,7 @@ def upload_dashboard_to_bq(json_path, project_id, dataset_id, table_id):
     try:
         client.get_dataset(dataset_ref)
         print(f"Dataset {dataset_id} already exists.")
-    except Exception:
+    except NotFound:
         print(f"Creating dataset {dataset_id}...")
         client.create_dataset(bigquery.Dataset(dataset_ref))
 
