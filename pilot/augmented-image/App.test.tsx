@@ -92,7 +92,7 @@ describe('App Integration Flow', () => {
     });
 
     it('handles errors during generation gracefully', async () => {
-        (geminiService.generateInfographic as any).mockRejectedValue(new Error('Generation Failed'));
+        vi.mocked(geminiService.generateInfographic).mockRejectedValue(new Error('Generation Failed'));
 
         render(<App />);
 
