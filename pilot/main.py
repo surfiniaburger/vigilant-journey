@@ -144,8 +144,26 @@ async def initialize_services():
             async def list_sessions(self, **kwargs): return list(self.sessions.values())
         session_service = InMemorySessionService()
     else:
-        # Default to MongoDB (Legacy)
-        session_service = await get_mongo_session_service()
+        # Default to MongoDB (Legacy) with Graceful Fallback
+        try:
+            session_service = await get_mongo_session_service()
+        except Exception as e:
+            logging.error(f"Failed to initialize MongoDB storage: {e}. Falling back to 'memory'.")
+            print(f"FALLBACK: Using InMemorySessionService because MongoDB failed.")
+            from google.adk.sessions import BaseSessionService, Session
+            class InMemorySessionService(BaseSessionService):
+                def __init__(self): self.sessions = {}
+                async def create_session(self, app_name, user_id, **kwargs):
+                    s_id = str(kwargs.get("id", f"session-{len(self.sessions)}"))
+                    session = Session(id=s_id, app_name=app_name, user_id=user_id, events=[], state={})
+                    self.sessions[s_id] = session
+                    return session
+                async def get_session(self, session_id, **kwargs): return self.sessions.get(session_id)
+                async def update_session(self, session, **kwargs): self.sessions[session.id] = session
+                async def append_event(self, session, event, **kwargs): session.events.append(event); await self.update_session(session)
+                async def delete_session(self, session_id, **kwargs): self.sessions.pop(session_id, None)
+                async def list_sessions(self, **kwargs): return list(self.sessions.values())
+            session_service = InMemorySessionService()
 
     agent_engine_id = os.environ.get("AGENT_ENGINE_ID")
     if not agent_engine_id:
@@ -330,10 +348,15 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 from pydantic import BaseModel
 from typing import Optional, List
 
+class DocumentPart(BaseModel):
+    data: str # Base64
+    mime_type: str
+
 class AnalyzeRequest(BaseModel):
     query: str
     image: Optional[str] = None  # Base64 encoded image
     mime_type: Optional[str] = None # e.g., "image/png"
+    documents: Optional[List[DocumentPart]] = None 
 
 class AnalyzeResponse(BaseModel):
     text: str # The main analysis text
@@ -369,6 +392,14 @@ async def analyze_endpoint(request: AnalyzeRequest):
             parts.append(Part(inline_data=Blob(data=image_data, mime_type=request.mime_type)))
         except Exception as e:
              raise HTTPException(status_code=400, detail=f"Invalid base64 image: {str(e)}")
+    
+    if request.documents:
+        for doc in request.documents:
+            try:
+                doc_data = base64.b64decode(doc.data)
+                parts.append(Part(inline_data=Blob(data=doc_data, mime_type=doc.mime_type)))
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid base64 document: {str(e)}")
     
     content = Content(role="user", parts=parts)
     run_config = RunConfig(

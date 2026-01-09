@@ -42,6 +42,12 @@ export interface AnalysisResult {
   audio_intro?: string;
 }
 
+export interface TechnicalDocument {
+  data: string; // Base64
+  mimeType: string;
+  name: string;
+}
+
 export interface GeneratedImage {
   base64: string;
   mimeType: string;

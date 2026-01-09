@@ -11,7 +11,7 @@ from google.adk.agents import (
 
 
 from google.adk.agents.invocation_context import InvocationContext
-from google.adk.events import Event
+from google.adk.events import Event, EventActions
 from google.adk.tools import agent_tool, google_search, preload_memory_tool
 from google.genai.types import Content, Part
 from pydantic import BaseModel, Field
@@ -27,7 +27,13 @@ from callbacks import (
 )
 from .knn_validator import knn_validation_tool
 from .memory_tool import create_memory_tools
-#from main import get_memory_service
+from .telemetry_agent import create_telemetry_agent
+from .judge_agent import create_judge_agent
+from .vision_agent import create_vision_agent
+from .audio_context_tool import audio_context_tool
+from .bigquery_tool import bigquery_history_tool
+from .ingestion_agent import create_ingestion_agent
+from .safety_agent import create_safety_oracle_agent, safety_check_tool
 
 # --- Configure Logging ---
 logging.basicConfig(
@@ -72,6 +78,18 @@ class WorkflowInput(BaseModel):
     )
 
 
+# --- High-Fidelity Research Schemas ---
+from typing import Literal
+
+class Feedback(BaseModel):
+    """Model for providing evaluation feedback on research quality."""
+    grade: Literal["pass", "fail"] = Field(
+        description="Evaluation result. 'pass' if the research is sufficient, 'fail' if it needs revision."
+    )
+    comment: str = Field(
+        description="Detailed explanation of the evaluation, highlighting strengths and/or weaknesses."
+    )
+
 # --- NEW: Deterministic Decision Agent (Replaces LLM Agent) ---
 class DeterministicDecisionAgent(BaseAgent):
     """A custom, code-driven agent that makes a decision based on session state."""
@@ -106,6 +124,25 @@ class DeterministicDecisionAgent(BaseAgent):
             author=self.name,
             content=Content(parts=[Part(text=output_text)]),
         )
+
+class EscalationChecker(BaseAgent):
+    """Checks the quality gate and escalates to stop the loop if grade is 'pass'."""
+
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        state = ctx.session.state
+        grade = state.get("critique_grade")
+        
+        if grade == "pass":
+            logger.info("Quality gate PASSED. Escalating to stop loop.")
+            yield Event(
+                author=self.name,
+                actions=EventActions(escalate=True)
+            )
+        else:
+            logger.info(f"Quality gate FAILED (grade: {grade}). Loop continues.")
+            yield Event(author=self.name)
 
 # --- HELPER FUNCTIONS FOR AGENT CREATION (TIER 1 TESTING) ---
 def create_search_agent(callbacks):
@@ -161,17 +198,27 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     researcher_agent = SequentialAgent(
         name="ResearcherAgent",
         sub_agents=[search_agent, analysis_agent],
-        before_agent_callback=before_agent_callback,
-        after_agent_callback=after_agent_callback,
     )
 
     safety_and_compliance_agent = Agent(
         name="SafetyAndComplianceAgent",
         model=INTERNAL_MODEL,
-        instruction="Review the text in 'draft_answer'. If it is safe, complete, and accurate, output only the word 'APPROVED'. Otherwise, provide a brief critique and place it in the 'critique' session state key.",
-        output_key="critique",
+        instruction="Review the text in 'draft_answer'. Evaluate if it is safe, complete, and accurate. Use the `safety_check` tool for an explicit security verification of the content. Your response must be JSON matching the Feedback schema.",
+        output_schema=Feedback,
+        output_key="research_feedback",
+        tools=[safety_check_tool],
         **individual_agent_callbacks,
     )
+
+    # Bridge between LLM Feedback schema and the Decision/Escalation logic
+    class FeedbackBridgeAgent(BaseAgent):
+        async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+            feedback = ctx.session.state.get("research_feedback", {})
+            ctx.session.state["critique"] = "APPROVED" if feedback.get("grade") == "pass" else feedback.get("comment", "REJECTED")
+            ctx.session.state["critique_grade"] = feedback.get("grade", "fail")
+            yield Event(author=self.name)
+
+    feedback_bridge = FeedbackBridgeAgent(name="FeedbackBridge")
 
     knn_validator_agent = Agent(
         name="KnnValidatorAgent",
@@ -196,10 +243,11 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
     )
 
     decision_agent = DeterministicDecisionAgent(name="DecisionAgent")
+    escalation_checker = EscalationChecker(name="EscalationChecker")
 
     critique_and_refine_loop = LoopAgent(
         name="CritiqueAndRefineLoop",
-        sub_agents=[parallel_validator, decision_agent, reviser_agent],
+        sub_agents=[parallel_validator, feedback_bridge, decision_agent, escalation_checker, reviser_agent],
         max_iterations=2,
     )
 
@@ -220,24 +268,60 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
             critique_and_refine_loop,
             session_summarizer_agent,
         ],
-        before_agent_callback=before_agent_callback,
-        after_agent_callback=after_agent_callback,
     )
 
     research_task_tool = agent_tool.AgentTool(
         agent=deep_research_workflow,
     )
 
+    # --- Specialized Telemetry Pipeline ---
+    telemetry_agent = create_telemetry_agent(individual_agent_callbacks)
+    judge_agent = create_judge_agent(individual_agent_callbacks)
+
+    telemetry_pipeline = SequentialAgent(
+        name="TelemetryPipeline",
+        sub_agents=[telemetry_agent, judge_agent],
+    )
+
+    telemetry_task_tool = agent_tool.AgentTool(
+        agent=telemetry_pipeline,
+    )
+
+    # --- Specialized Vision Bit ---
+    vision_agent = create_vision_agent(individual_agent_callbacks)
+    vision_task_tool = agent_tool.AgentTool(agent=vision_agent)
+
+    # --- Specialized Ingestion Bit ---
+    ingestion_agent = create_ingestion_agent(individual_agent_callbacks)
+    ingestion_task_tool = agent_tool.AgentTool(agent=ingestion_agent)
+
+    # --- Specialized Safety Oracle Bit ---
+    safety_oracle_agent = create_safety_oracle_agent(individual_agent_callbacks)
+    safety_oracle_tool = agent_tool.AgentTool(agent=safety_oracle_agent)
+
     intelligence_center_agent = Agent(
         name="IntelligenceCenterAgent",
         model=INTERNAL_MODEL,
         instruction=(
-            "You are the Intelligence Center. Your goal is to answer the user's question efficiently.\n"
-            "1. ALWAYS checks long-term memory first using `recall_memory`.\n"
-            "2. If the answer is found in memory, answer directly. Do NOT perform new research.\n"
-            "3. If the answer is NOT in memory, use the `DeepResearchWorkflow` tool to research it."
+            "You are the Intelligence Center. Your goal is to answer the user's question by fusing multiple domains.\n"
+            "1.  **Ingest**: If the user provides a document (PDF, CSV) or image that needs deep parsing/classification, use `IngestionAgent` first.\n"
+            "2.  **Memory**: ALWAYS check long-term memory with `recall_memory`.\n"
+            "3.  **Recent Context**: If you need situational awareness of the current audio, use `get_recent_audio_context`.\n"
+            "4.  **Vision**: If an image is present and requires general scene description (rather than document extraction), use `VisionAgent`.\n"
+            "5.  **Telemetry**: If the query relates to vehicle health/telemetry, use `TelemetryPipeline`.\n"
+            "6.  **Historical**: If the user asks about historical trends, lap times, or past performance, use `bigquery_history_tool`.\n"
+            "7.  **Web Search**: If information is missing, use `DeepResearchWorkflow` for broad web research.\n"
+            "Synthesize all inputs (Ingestion, Vision, Telemetry, Audio, Memory, History) into a single, cohesive answer."
         ),
-        tools=[recall_memory_tool, research_task_tool],
+        tools=[
+            recall_memory_tool, 
+            research_task_tool, 
+            telemetry_task_tool, 
+            vision_task_tool,
+            audio_context_tool,
+            bigquery_history_tool,
+            ingestion_task_tool
+        ],
         **individual_agent_callbacks,
     )
 
@@ -254,15 +338,12 @@ def create_root_agent(memory_service, use_mcp_tools: bool = True):
             "You are Alora, the friendly and helpful AI co-pilot for the vehicle.\n"
             "1.  **Greeting**: Greet the user primarily in chat contexts.\n"
             "2.  **Tool Usage**: You MUST use the 'IntelligenceCenterAgent' tool to find answers.\n"
-            "3.  **Image Analysis**: If the user provides an image:\n"
-            "    a. You (Alora) have vision. The 'IntelligenceCenterAgent' tool is BLIND.\n"
-            "    b. Describe the image in high detail (what objects, text, colors, etc. you see).\n"
-            "    c. Send this *text description* + the user's query to the 'IntelligenceCenterAgent' tool.\n"
-            "    d. Do NOT say 'I cannot see the image'. You can! Only the tool cannot.\n"
+            "3.  **Handoff**: The 'IntelligenceCenterAgent' is responsible for fusing Vision, Telemetry, History, and Audio. "
+            "Pass the user's query directly to it.\n"
             "4.  **Final Output**: Present the final answer to the user. "
             "If the user requests JSON output, output ONLY JSON and skip the greeting."
         ),
-        tools=[preload_memory_tool.PreloadMemoryTool(), main_workflow_tool],
+        tools=[preload_memory_tool.PreloadMemoryTool(), safety_oracle_tool, main_workflow_tool],
         **individual_agent_callbacks,
     )
     

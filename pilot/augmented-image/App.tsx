@@ -5,10 +5,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { generateInfographic, analyzeImageRegions } from './services/geminiService';
-import { GeneratedImage, AnalysisResult } from './types';
 import { AugmentedCanvas } from './components/AugmentedCanvas';
 import { LoadingState } from './components/LoadingState';
-import { Search, RefreshCw, Volume2 } from 'lucide-react';
+import { Search, RefreshCw, Volume2, Paperclip, FileText, X } from 'lucide-react';
+import { AnalysisResult, GeneratedImage, TechnicalDocument } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardSheet } from './components/dashboard/DashboardSheet';
 
@@ -34,9 +34,46 @@ function App() {
   const [isDashboardOpen, setDashboardOpen] = useState(false);
   const [data, setData] = useState<{ image: GeneratedImage; analysis: AnalysisResult | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDocs, setPendingDocs] = useState<TechnicalDocument[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Analysis phrase state
   const [analysisPhrase, setAnalysisPhrase] = useState(ANALYSIS_PHRASES[0]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newDocs: TechnicalDocument[] = [];
+
+    for (const file of Array.from(files)) {
+      const f = file as File;
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(f);
+        });
+
+        newDocs.push({
+          name: f.name,
+          mimeType: f.type,
+          data: base64
+        });
+      } catch (err) {
+        console.error("Error reading file:", f.name, err);
+      }
+    }
+
+    setPendingDocs(prev => [...prev, ...newDocs]);
+    setIsUploading(false);
+  };
+
+  const removeDoc = (index: number) => {
+    setPendingDocs(prev => prev.filter((_, i) => i !== index));
+  };
 
 
 
@@ -59,16 +96,18 @@ function App() {
       setAnalysisPhrase("Connecting to Intelligence Center..."); // Initial
 
       // Step 2: Analyze Image with Streaming Logs
-      console.log('Analyzing image...');
+      console.log('Analyzing image with documents:', pendingDocs.length);
       const analysis = await analyzeImageRegions(
         searchQuery,
         image.base64,
+        pendingDocs,
         (logMessage) => setAnalysisPhrase(logMessage) // Callback updates UI
       );
 
       console.log('Analysis complete:', analysis);
       setData({ image, analysis });
       setStatus('complete');
+      setPendingDocs([]); // Clear after success
 
     } catch (err: any) {
       console.error(err);
@@ -153,7 +192,7 @@ function App() {
 
                 <form onSubmit={handleSearch} className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full opacity-50 group-hover:opacity-100 transition duration-500 blur"></div>
-                  <div className="relative bg-black rounded-full flex items-center p-2">
+                  <div className="relative bg-black rounded-full flex items-center p-2 pr-4">
                     <Search className="ml-4 text-gray-400 w-6 h-6 shrink-0" />
                     <input
                       type="text"
@@ -162,23 +201,38 @@ function App() {
                       placeholder="Show me the latest AMG engine..."
                       className="w-full bg-transparent text-white p-4 text-lg focus:outline-none placeholder-gray-600"
                     />
+
+                    <label className="p-3 text-gray-400 hover:text-cyan-400 cursor-pointer transition-colors relative group/tooltip">
+                      <Paperclip size={20} className={isUploading ? "animate-spin" : ""} />
+                      <input type="file" className="hidden" multiple accept=".pdf,.csv,.txt" onChange={handleFileUpload} />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap pointer-events-none">
+                        Add Technical Context (PDF/CSV)
+                      </span>
+                    </label>
                     <button
                       type="submit"
-                      disabled={!query.trim()}
-                      className="hidden md:block px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!query.trim() || isUploading}
+                      className="hidden md:block px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                     >
                       Generate
                     </button>
-                    {/* Mobile Button Icon */}
-                    <button
-                      type="submit"
-                      disabled={!query.trim()}
-                      className="md:hidden p-3 bg-white text-black rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                    >
-                      <Search size={20} />
-                    </button>
                   </div>
                 </form>
+
+                {/* Pending Docs UI */}
+                {pendingDocs.length > 0 && (
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {pendingDocs.map((doc, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-xs text-cyan-200">
+                        <FileText size={12} />
+                        <span className="max-w-[100px] truncate">{doc.name}</span>
+                        <button onClick={() => removeDoc(i)} className="hover:text-white transition-colors">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Suggestions Pills */}
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -274,7 +328,7 @@ function App() {
         <DashboardSheet isOpen={isDashboardOpen} onClose={() => setDashboardOpen(false)} />
 
       </div>
-    </div>
+    </div >
   );
 }
 
