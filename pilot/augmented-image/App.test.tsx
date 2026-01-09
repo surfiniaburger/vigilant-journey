@@ -51,9 +51,10 @@ describe('App Integration Flow', () => {
             await new Promise(r => setTimeout(r, 10));
             return mockImage;
         });
-        vi.mocked(geminiService.analyzeImageRegions).mockImplementation(async () => {
+        vi.mocked(geminiService.analyzeImageRegions).mockImplementation(async (query, imageBase64, documents, onLog) => {
             await new Promise(r => setTimeout(r, 10));
-            return mockAnalysis;
+            if (onLog) onLog("Simulating backend logic...");
+            return mockAnalysis as any;
         });
 
         render(<App />);

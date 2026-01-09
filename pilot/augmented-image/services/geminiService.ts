@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import { AnalysisResult, GeneratedImage } from "../types";
+import { AnalysisResult, GeneratedImage, TechnicalDocument } from "../types";
 
 // Detect backend URL (Cloud Run or Local)
 // Ideally this should be in an env var, but for this POC we'll use a relative path if served from same origin, or default
@@ -78,7 +78,7 @@ Generate a stunning visual that captures the essence of the topic through imager
   }
 };
 
-export const analyzeImageRegions = async (query: string, imageBase64: string, onLog?: (message: string) => void): Promise<AnalysisResult> => {
+export const analyzeImageRegions = async (query: string, imageBase64: string, documents?: TechnicalDocument[], onLog?: (message: string) => void): Promise<AnalysisResult> => {
 
   console.log(`Sending analysis request to Pilot: ${BACKEND_URL}/analyze`);
 
@@ -126,7 +126,11 @@ Return ONLY valid JSON. DO NOT CHAT. DO NOT ADD MARKDOWN formatting:
       body: JSON.stringify({
         query: prompt,
         image: imageBase64,
-        mime_type: "image/png"
+        mime_type: "image/png",
+        documents: documents?.map(doc => ({
+          data: doc.data,
+          mime_type: doc.mimeType
+        }))
       })
     });
 
